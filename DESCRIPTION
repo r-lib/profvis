@@ -8,5 +8,6 @@ Authors@R: c(
 Description: Visualize profiling data
 Depends: R (>= 3.0)
 Imports:
-  lineprof
+    lineprof (>= 0.1.9001),
+    htmlwidgets (>= 0.3.2)
 License: GPL-2
