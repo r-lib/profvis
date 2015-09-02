@@ -1,0 +1,12 @@
+Package: profvis
+Title: Visualize profiling data
+Version: 0.0.0.9000
+Authors@R: c(
+    person("Chang", "Winston", email = "winston@rstudio.com", role = c("aut", "cre")),
+    person(family = "RStudio", role = "cph")
+    )
+Description: Visualize profiling data
+Depends: R (>= 3.0)
+Imports:
+  lineprof
+License: GPL-2
