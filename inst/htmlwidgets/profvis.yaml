@@ -2,4 +2,5 @@ dependencies:
   - name: profvis
     version: 0.0.0.9000
     src: "htmlwidgets/lib/profvis"
+    script: profvis.js
     stylesheet: profvis.css
