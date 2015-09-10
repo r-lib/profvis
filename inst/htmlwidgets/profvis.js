@@ -14,7 +14,19 @@ HTMLWidgets.widget({
 
   renderValue: function(el, x, instance) {
 
-    el.innerText = x.message;
+    files = x.message.files;
+
+    var content = '<table class="profvis-code">';
+    for (i=0; i<files.length; i++) {
+      var lines = files[i].content.split("\n");
+
+      for (j=0; j<lines.length; j++) {
+        content += "<tr><td><pre><code>" + lines[j] + "</code></pre></td></tr>";
+      }
+    }
+    content += "</table>";
+
+    el.innerHTML = content;
 
   },
 
