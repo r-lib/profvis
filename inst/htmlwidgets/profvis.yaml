@@ -1,7 +1,5 @@
-# (uncomment to add a dependency)
-# dependencies:
-#  - name:
-#    version:
-#    src:
-#    script:
-#    stylesheet:
+dependencies:
+  - name: profvis
+    version: 0.0.0.9000
+    src: "htmlwidgets/lib/profvis"
+    stylesheet: profvis.css

@@ -16,7 +16,7 @@ HTMLWidgets.widget({
 
     files = x.message.files;
 
-    var content = '<table class="profvis-code">';
+    var content = '<table class="profvis-table">';
     for (i=0; i<files.length; i++) {
       var lines = files[i].content.split("\n");
 
