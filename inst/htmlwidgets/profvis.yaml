@@ -4,3 +4,8 @@ dependencies:
     src: "htmlwidgets/lib/profvis"
     script: profvis.js
     stylesheet: profvis.css
+  - name: lodash
+    version: 3.10.1
+    src: "htmlwidgets/lib/lodash"
+    script:
+      - lodash.min.js

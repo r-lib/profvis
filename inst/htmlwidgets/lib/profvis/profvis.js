@@ -7,7 +7,7 @@
   curly:false,
   indent:2
 */
-/*global profvis */
+/*global profvis, _ */
 
 profvis = (function() {
   var profvis = {};
