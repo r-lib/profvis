@@ -10,17 +10,19 @@ table.profvis-table {
 
 table.profvis-table tr {
     border-width: 1px 0;
-    border-color: #ddd;
+    border-color: #eee;
     border-style: solid;
 }
 
 
 table.profvis-table .time {
-  padding-left: 4em;
+  padding: 0 2em 0 4em;
 }
 
 
 table.profvis-table .timebar {
-  padding-left: 1em;
-  width: 4em;
+  padding-left: 0;
+  border-left: 1px solid black;
+  min-width: 5em;
+  width: 5em;
 }
