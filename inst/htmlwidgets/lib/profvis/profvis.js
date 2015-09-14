@@ -18,8 +18,18 @@ profvis = (function() {
       var data = simplifyRef(prof, file.filename);
 
       data = collapseByLineId(data);
-      data = getLineTimesFile(data, file.filename);
 
+      // Sum up times for each line id group
+      _.map(data, function(group) {
+        // Calculate the time for each group
+        var time = _.reduce(group.value, function(total, x) {
+          return total + x.time;
+        }, 0);
+
+        group.time = time;
+      });
+
+      // Create array of objects with info for each line of code.
       var lines = file.content.split("\n");
       var lineData = [];
       for (var i=0; i<lines.length; i ++) {
@@ -31,6 +41,7 @@ profvis = (function() {
         };
       }
 
+      // Copy times from `data` to `lineData`.
       _.map(data, function(lineTime) {
         var lineNum = lineTime.lineNum - 1;
         lineData[lineNum].time = lineTime.time;
@@ -44,20 +55,6 @@ profvis = (function() {
 
     return times;
   };
-
-  function getLineTimesFile(prof) {
-    prof = _.map(prof, function(group) {
-      // Calculate the time for each group
-      var time = _.reduce(group.value, function(total, x) {
-        return total + x.time;
-      }, 0);
-
-      group.time = time;
-      return group;
-    });
-
-    return prof;
-  }
 
 
   // Simplify an array of profile data objects based on the object's ref's
