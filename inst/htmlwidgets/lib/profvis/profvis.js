@@ -12,7 +12,33 @@
 profvis = (function() {
   var profvis = {};
 
-  profvis.getLineTimes = function(prof, files) {
+  profvis.generateHTMLtable = function(message) {
+    var prof = colToRows(message.prof);
+    var allFileTimes = getLineTimes(prof, message.files);
+
+    var content = '<table class="profvis-table">';
+    for (var i=0; i < allFileTimes.length; i++) {
+      var fileData = allFileTimes[i];
+
+      content += '<tr><th>' + fileData.filename + '</th><th></th></tr>';
+
+      for (var j=0; j<fileData.lineData.length; j++) {
+        var line = fileData.lineData[j];
+        content += "<tr>" +
+          '<td class="code"><pre><code>' + escapeHTML(line.content) + '</code></pre></td>' +
+          '<td class="time">' + (Math.round(line.time * 100) / 100) + '</td>' +
+          '<td class="timebar">' +
+            '<div style="width: ' + Math.round(line.propTime * 100) + '%; background-color: black;">&nbsp;</div>' +
+          '</td>' +
+          '</tr>';
+      }
+    }
+    content += "</table>";
+
+    return content;
+  };
+
+  function getLineTimes(prof, files) {
     // Calculate times for each file
     var times = _.map(files, function(file) {
       var data = simplifyRef(prof, file.filename);
@@ -56,7 +82,7 @@ profvis = (function() {
     calcProportionalTimes(times);
 
     return times;
-  };
+  }
 
 
   // Calculate proportional times, relative to the longest time in the data
@@ -122,7 +148,7 @@ profvis = (function() {
 
   // Transform column-oriented data (an object with arrays) to row-oriented data
   // (an array of objects).
-  profvis.colToRows = function(x) {
+  function colToRows(x) {
     var colnames = _.keys(x);
     if (colnames.length === 0)
       return {};
@@ -138,7 +164,7 @@ profvis = (function() {
     }
 
     return newdata;
-  };
+  }
 
   // Given an object of format { a: 1, b: 2 }, return an array of objects with
   // format [ { name: a, value: 1 }, { name: b, value: 2 } ].
@@ -152,6 +178,17 @@ profvis = (function() {
 
     return _.values(x);
   }
+
+  // Escape an HTML string.
+  function escapeHTML(text) {
+    return text
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+   }
+
 
   return profvis;
 })();
