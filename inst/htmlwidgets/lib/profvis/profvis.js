@@ -7,7 +7,7 @@
   curly:false,
   indent:2
 */
-/*global profvis, _ */
+/*global profvis:true, _ */
 
 profvis = (function() {
   var profvis = {};
@@ -45,7 +45,7 @@ profvis = (function() {
     return times;
   };
 
-  function getLineTimesFile(prof, filename) {
+  function getLineTimesFile(prof) {
     prof = _.map(prof, function(group) {
       // Calculate the time for each group
       var time = _.reduce(group.value, function(total, x) {
