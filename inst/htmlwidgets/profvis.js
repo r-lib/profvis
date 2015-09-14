@@ -27,6 +27,9 @@ HTMLWidgets.widget({
         content += "<tr>" +
           '<td class="code"><pre><code>' + line.content + '</code></pre></td>' +
           '<td class="time">' + (Math.round(line.time * 100) / 100) + '</td>' +
+          '<td class="timebar">' +
+            '<div style="width: ' + Math.round(line.propTime * 100) + '%; background-color: black;">&nbsp;</div>' +
+          '</td>' +
           '</tr>';
       }
     }

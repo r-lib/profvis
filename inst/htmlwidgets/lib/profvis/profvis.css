@@ -18,3 +18,9 @@ table.profvis-table tr {
 table.profvis-table .time {
   padding-left: 4em;
 }
+
+
+table.profvis-table .timebar {
+  padding-left: 1em;
+  width: 4em;
+}

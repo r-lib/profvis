@@ -53,9 +53,28 @@ profvis = (function() {
       };
     });
 
+    calcProportionalTimes(times);
+
     return times;
   };
 
+
+  // Calculate proportional times, relative to the longest time in the data
+  // set. Modifies data in place.
+  function calcProportionalTimes(times) {
+    var fileTimes = _.map(times, function(fileData) {
+      var lineTimes = _.pluck(fileData.lineData, 'time');
+      return _.max(lineTimes);
+    });
+
+    var maxTime = _.max(fileTimes);
+
+    _.map(times, function(fileData) {
+      _.map(fileData.lineData, function(lineData) {
+        lineData.propTime = lineData.time / maxTime;
+      });
+    });
+  }
 
   // Simplify an array of profile data objects based on the object's ref's
   // filename and line number combinations.
