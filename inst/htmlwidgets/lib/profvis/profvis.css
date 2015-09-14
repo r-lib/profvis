@@ -13,3 +13,8 @@ table.profvis-table tr {
     border-color: #ddd;
     border-style: solid;
 }
+
+
+table.profvis-table .time {
+  padding-left: 4em;
+}

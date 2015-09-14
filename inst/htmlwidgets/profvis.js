@@ -13,21 +13,26 @@ HTMLWidgets.widget({
   },
 
   renderValue: function(el, x, instance) {
-
-    files = x.message.files;
+    var prof = profvis.colToRows(x.message.prof);
+    var allFileTimes = profvis.getLineTimes(prof, x.message.files);
 
     var content = '<table class="profvis-table">';
-    for (i=0; i<files.length; i++) {
-      var lines = files[i].content.split("\n");
+    for (i=0; i < allFileTimes.length; i++) {
+      var fileData = allFileTimes[i];
 
-      for (j=0; j<lines.length; j++) {
-        content += "<tr><td><pre><code>" + lines[j] + "</code></pre></td></tr>";
+      content += '<tr><th>' + fileData.filename + '</th><th></th></tr>';
+
+      for (j=0; j<fileData.lineData.length; j++) {
+        var line = fileData.lineData[j];
+        content += "<tr>" +
+          '<td class="code"><pre><code>' + line.content + '</code></pre></td>' +
+          '<td class="time">' + (Math.round(line.time * 100) / 100) + '</td>' +
+          '</tr>';
       }
     }
     content += "</table>";
 
     el.innerHTML = content;
-
   },
 
   resize: function(el, width, height, instance) {
