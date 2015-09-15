@@ -9,3 +9,8 @@ dependencies:
     src: "htmlwidgets/lib/lodash"
     script:
       - lodash.min.js
+  - name: d3
+    version: 3.5.6
+    src: "htmlwidgets/lib/d3"
+    script:
+      - d3.min.js
