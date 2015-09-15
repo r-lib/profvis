@@ -149,9 +149,9 @@ profvis = (function() {
   // Transform column-oriented data (an object with arrays) to row-oriented data
   // (an array of objects).
   function colToRows(x) {
-    var colnames = _.keys(x);
+    var colnames = d3.keys(x);
     if (colnames.length === 0)
-      return {};
+      return [];
 
     var newdata = [];
     for (var i=0; i < x[colnames[0]].length; i++) {
