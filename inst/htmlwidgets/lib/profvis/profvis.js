@@ -12,7 +12,7 @@
 profvis = (function() {
   var profvis = {};
 
-  profvis.generateHTMLtable = function(message) {
+  profvis.generateTable = function(el, message) {
     // Convert object-with-arrays format prof data to array-of-objects format
     var prof = colToRows(message.prof);
     prof.forEach(function(x) {
@@ -22,6 +22,7 @@ profvis = (function() {
     var allFileTimes = getLineTimes(prof, message.files);
 
     var content = '<table class="profvis-table">';
+
     for (var i=0; i < allFileTimes.length; i++) {
       var fileData = allFileTimes[i];
 
@@ -31,14 +32,59 @@ profvis = (function() {
         var line = fileData.lineData[j];
         content += "<tr>" +
           '<td class="code"><pre><code>' + escapeHTML(line.content) + '</code></pre></td>' +
-          '<td class="time">' + (Math.round(line.time * 100) / 100) + '</td>' +
+          '<td class="time">' + (Math.round(line.sumTime * 100) / 100) + '</td>' +
           '<td class="timebar">' +
             '<div style="width: ' + Math.round(line.propTime * 100) + '%; background-color: black;">&nbsp;</div>' +
+          '</td>' +
+          '<td class="timehist" data-filename="' + line.filename +
+              '" data-linenum="' + line.lineNum + '">' +
+            '<div></div>' +
           '</td>' +
           '</tr>';
       }
     }
     content += "</table>";
+
+    el.innerHTML = content;
+
+    // Add histograms for each line
+    allFileTimes.map(function(fileData) {
+      fileData.lineData.map(function(line) {
+        if (line.times.length === 0) return;
+        var width = 100;
+        var height = 12;
+        var x = d3.scale.linear()
+          .domain([0, d3.max(line.times)])
+          .range([0, width]);
+
+        // Generate a histogram using twenty uniformly-spaced bins.
+        var data = d3.layout.histogram()
+          .bins(x.ticks(10))
+          (line.times);
+
+        var y = d3.scale.linear()
+          .domain([0, d3.max(data, function(d) { return d.y; })])
+          .range([height, 0]);
+
+        var svg = d3
+          .select('[data-filename="' + line.filename + '"][data-linenum="' + line.lineNum + '"] div').append('svg')
+          .attr("width", width)
+          .attr("height", height)
+          .append("g");
+
+        var bar = svg.selectAll(".bar")
+            .data(data)
+          .enter().append("g")
+            .attr("class", "bar")
+            .attr("transform", function(d) { return "translate(" + x(d.x) + "," + y(d.y) + ")"; });
+
+        bar.append("rect")
+            .attr("x", 1)
+            .attr("width", x(data[0].dx) - 1)
+            .attr("height", function(d) { return height - y(d.y); });
+      });
+
+    });
 
     return content;
   };
@@ -112,6 +158,7 @@ profvis = (function() {
         lineData.propTime = lineData.sumTime / maxTime;
       });
     });
+
   }
 
   // Simplify an array of profile data objects based on the object's ref's

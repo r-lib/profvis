@@ -13,9 +13,7 @@ HTMLWidgets.widget({
   },
 
   renderValue: function(el, x, instance) {
-    var content = profvis.generateHTMLtable(x.message);
-
-    el.innerHTML = content;
+    profvis.generateTable(el, x.message);
   },
 
   resize: function(el, width, height, instance) {

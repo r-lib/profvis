@@ -26,3 +26,8 @@ table.profvis-table .timebar {
   min-width: 5em;
   width: 5em;
 }
+
+
+table.profvis-table .timehist {
+  min-width: 100px;
+}
