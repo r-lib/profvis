@@ -47,15 +47,24 @@ profvis = (function() {
 
     el.innerHTML = content;
 
+
+    // Calculate longest time sample
+    var maxTime = d3.max(allFileTimes, function(fileData) {
+      return d3.max(fileData.lineData, function(line) {
+        return d3.max(line.times);
+      });
+    });
+
+    var width = 100;
+    var height = 12;
+    var x = d3.scale.linear()
+      .domain([0, maxTime])
+      .range([0, width]);
+
     // Add histograms for each line
     allFileTimes.map(function(fileData) {
       fileData.lineData.map(function(line) {
         if (line.times.length === 0) return;
-        var width = 100;
-        var height = 12;
-        var x = d3.scale.linear()
-          .domain([0, d3.max(line.times)])
-          .range([0, width]);
 
         // Generate a histogram using twenty uniformly-spaced bins.
         var data = d3.layout.histogram()
