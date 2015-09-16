@@ -7,13 +7,18 @@
   curly:false,
   indent:2
 */
-/*global profvis:true, _ */
+/*global profvis:true, d3 */
 
 profvis = (function() {
   var profvis = {};
 
   profvis.generateHTMLtable = function(message) {
+    // Convert object-with-arrays format prof data to array-of-objects format
     var prof = colToRows(message.prof);
+    prof.forEach(function(x) {
+      x.ref = colToRows(x.ref);
+    });
+
     var allFileTimes = getLineTimes(prof, message.files);
 
     var content = '<table class="profvis-table">';
@@ -40,25 +45,26 @@ profvis = (function() {
 
   function getLineTimes(prof, files) {
     // Calculate times for each file
-    var times = _.map(files, function(file) {
+    var times = files.map(function(file) {
       var data = simplifyRef(prof, file.filename);
 
-      data = collapseByLineId(data);
+      data = d3.nest()
+        .key(function(d) { return d.file; })
+        .key(function(d) { return d.lineNum; })
+        .rollup(function(leaves) {
+          return {
+            file: leaves[0].file,
+            lineNum: leaves[0].lineNum,
+            time: d3.sum(leaves, function(d) { return d.time; })
+          };
+        })
+        .map(data);
 
-      // Sum up times for each line id group
-      _.map(data, function(group) {
-        // Calculate the time for each group
-        var time = _.reduce(group.value, function(total, x) {
-          return total + x.time;
-        }, 0);
-
-        group.time = time;
-      });
 
       // Create array of objects with info for each line of code.
       var lines = file.content.split("\n");
       var lineData = [];
-      for (var i=0; i<lines.length; i ++) {
+      for (var i=0; i<lines.length; i++) {
         lineData[i] = {
           filename: file.filename,
           lineNum: i + 1,
@@ -68,9 +74,10 @@ profvis = (function() {
       }
 
       // Copy times from `data` to `lineData`.
-      _.map(data, function(lineTime) {
-        var lineNum = lineTime.lineNum - 1;
-        lineData[lineNum].time = lineTime.time;
+      d3.map(data).forEach(function(temp, fileInfo) {
+        d3.map(fileInfo).forEach(function(temp, lineInfo) {
+          lineData[lineInfo.lineNum - 1].time = lineInfo.time;
+        });
       });
 
       return {
@@ -88,15 +95,15 @@ profvis = (function() {
   // Calculate proportional times, relative to the longest time in the data
   // set. Modifies data in place.
   function calcProportionalTimes(times) {
-    var fileTimes = _.map(times, function(fileData) {
-      var lineTimes = _.pluck(fileData.lineData, 'time');
-      return _.max(lineTimes);
+    var fileTimes = times.map(function(fileData) {
+      var lineTimes = fileData.lineData.map(function(x) { return x.time; });
+      return d3.max(lineTimes);
     });
 
-    var maxTime = _.max(fileTimes);
+    var maxTime = d3.max(fileTimes);
 
-    _.map(times, function(fileData) {
-      _.map(fileData.lineData, function(lineData) {
+    times.map(function(fileData) {
+      fileData.lineData.map(function(lineData) {
         lineData.propTime = lineData.time / maxTime;
       });
     });
@@ -105,44 +112,28 @@ profvis = (function() {
   // Simplify an array of profile data objects based on the object's ref's
   // filename and line number combinations.
   function simplifyRef(prof, file) {
-    // First find the file and line number in the ref, discarding all other
-    // ref content.
-    var data = _.map(prof, function(item) {
-      // Only modify items where the ref includes the file
-      if (item.ref === undefined || !_.includes(item.ref.path, file))
-        return null;
+    // Find the file and line number in the ref, discarding all other
+    // ref content. If there are multiple matches for the file in a single ref,
+    // return an item for each match.
+    var data = prof.map(function(item) {
+      var matchRows = item.ref
+        .filter(function(row) {
+          return row.path === file;
+        });
 
-      var idx = _.lastIndexOf(item.ref.path, file);
-      var lineNum = item.ref.line[idx];
-      return {
-        file: file,
-        lineNum: lineNum,
-        time: item.time
-      };
+      var res = matchRows.map(function(row) {
+        return {
+          file: row.path,
+          lineNum: row.line,
+          time: item.time
+        };
+      });
+
+      return res;
     });
 
-    // Remove items that didn't include the file
-    data = _.reject(data, function(item) {
-      return item === null;
-    });
-
-    return data;
-  }
-
-
-  function collapseByLineId(prof) {
-    var data = _.groupBy(prof, function(row) {
-      return row.file + "#" + row.lineNum;
-    });
-
-    data = objToArray(data);
-
-    _.map(data, function(group) {
-      group.file = group.value[0].file;
-      group.lineNum = group.value[0].lineNum;
-    });
-
-    return data;
+    // Flatten the array of arrays
+    return d3.merge(data);
   }
 
 
@@ -166,18 +157,6 @@ profvis = (function() {
     return newdata;
   }
 
-  // Given an object of format { a: 1, b: 2 }, return an array of objects with
-  // format [ { name: a, value: 1 }, { name: b, value: 2 } ].
-  function objToArray(x) {
-    x = _.mapValues(x, function(value, key) {
-      return {
-        name: key,
-        value: value
-      };
-    });
-
-    return _.values(x);
-  }
 
   // Escape an HTML string.
   function escapeHTML(text) {
