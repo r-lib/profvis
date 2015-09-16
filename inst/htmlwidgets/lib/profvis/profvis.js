@@ -52,10 +52,13 @@ profvis = (function() {
         .key(function(d) { return d.file; })
         .key(function(d) { return d.lineNum; })
         .rollup(function(leaves) {
+          var times = leaves.map(function(d) { return d.time; });
+
           return {
             file: leaves[0].file,
             lineNum: leaves[0].lineNum,
-            time: d3.sum(leaves, function(d) { return d.time; })
+            times: times,
+            sumTime: d3.sum(times)
           };
         })
         .map(data);
@@ -69,14 +72,16 @@ profvis = (function() {
           filename: file.filename,
           lineNum: i + 1,
           content: lines[i],
-          time: 0
+          times: [],
+          sumTime: 0
         };
       }
 
       // Copy times from `data` to `lineData`.
       d3.map(data).forEach(function(temp, fileInfo) {
         d3.map(fileInfo).forEach(function(temp, lineInfo) {
-          lineData[lineInfo.lineNum - 1].time = lineInfo.time;
+          lineData[lineInfo.lineNum - 1].times = lineInfo.times;
+          lineData[lineInfo.lineNum - 1].sumTime = lineInfo.sumTime;
         });
       });
 
@@ -96,7 +101,7 @@ profvis = (function() {
   // set. Modifies data in place.
   function calcProportionalTimes(times) {
     var fileTimes = times.map(function(fileData) {
-      var lineTimes = fileData.lineData.map(function(x) { return x.time; });
+      var lineTimes = fileData.lineData.map(function(x) { return x.sumTime; });
       return d3.max(lineTimes);
     });
 
@@ -104,7 +109,7 @@ profvis = (function() {
 
     times.map(function(fileData) {
       fileData.lineData.map(function(lineData) {
-        lineData.propTime = lineData.time / maxTime;
+        lineData.propTime = lineData.sumTime / maxTime;
       });
     });
   }
