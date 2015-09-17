@@ -56,7 +56,7 @@ profvis = (function() {
     });
 
     var width = 100;
-    var height = 12;
+    var height = 15;
     var x = d3.scale.linear()
       .domain([0, maxTime])
       .range([0, width]);
@@ -77,9 +77,15 @@ profvis = (function() {
 
         var svg = d3
           .select('[data-filename="' + line.filename + '"][data-linenum="' + line.lineNum + '"] div').append('svg')
-          .attr("width", width)
-          .attr("height", height)
+            .attr("width", width)
+            .attr("height", height)
           .append("g");
+
+        svg.append("rect")
+          .attr("width", "100%")
+          .attr("height", "100%")
+          .attr("opacity", 0.05);
+
 
         var bar = svg.selectAll(".bar")
             .data(data)
