@@ -15,9 +15,6 @@ profvis = (function() {
   profvis.generateTable = function(el, message) {
     // Convert object-with-arrays format prof data to array-of-objects format
     var prof = colToRows(message.prof);
-    prof.forEach(function(x) {
-      x.ref = colToRows(x.ref);
-    });
 
     var allFileTimes = getLineTimes(prof, message.files);
 
@@ -105,32 +102,21 @@ profvis = (function() {
   };
 
   function getLineTimes(prof, files) {
-    // Calculate times for each file
-    var times = files.map(function(file) {
-      var data = simplifyRef(prof, file.filename);
+    // Drop entries with null or "" filename
+    prof = prof.filter(function(row) {
+      return row.filename !== null &&
+             row.filename !== "";
+    });
 
-      data = d3.nest()
-        .key(function(d) { return d.file; })
-        .key(function(d) { return d.lineNum; })
-        .rollup(function(leaves) {
-          var times = leaves.map(function(d) { return d.time; });
-
-          return {
-            file: leaves[0].file,
-            lineNum: leaves[0].lineNum,
-            times: times,
-            sumTime: d3.sum(times)
-          };
-        })
-        .map(data);
-
-
+    // Gather line-by-line file contents
+    var fileLineTimes = files.map(function(file) {
       // Create array of objects with info for each line of code.
       var lines = file.content.split("\n");
       var lineData = [];
+      var filename = file.filename;
       for (var i=0; i<lines.length; i++) {
         lineData[i] = {
-          filename: file.filename,
+          filename: filename,
           lineNum: i + 1,
           content: lines[i],
           times: [],
@@ -138,37 +124,59 @@ profvis = (function() {
         };
       }
 
-      // Copy times from `data` to `lineData`.
-      d3.map(data).forEach(function(temp, fileInfo) {
-        d3.map(fileInfo).forEach(function(temp, lineInfo) {
-          lineData[lineInfo.lineNum - 1].times = lineInfo.times;
-          lineData[lineInfo.lineNum - 1].sumTime = lineInfo.sumTime;
-        });
-      });
-
       return {
-        filename: file.filename,
+        filename: filename,
         lineData: lineData
       };
     });
 
-    calcProportionalTimes(times);
+    // Get timing data for each line
+    var timeData = d3.nest()
+      .key(function(d) { return d.filename; })
+      .key(function(d) { return d.linenum; })
+      .rollup(function(leaves) {
+        var times = leaves.map(function(d) { return d.time; });
 
-    return times;
+        return {
+          filename: leaves[0].filename,
+          linenum: leaves[0].linenum,
+          times: times,
+          sumTime: times.length
+        };
+      })
+      .entries(prof);
+
+    // Insert the times and sumTimes into line content data
+    timeData.forEach(function(fileInfo) {
+      // Find item in fileTimes that matches the file of this fileInfo object
+      var fileLineData = fileLineTimes.filter(function(d) {
+        return d.filename === fileInfo.key;
+      })[0].lineData;
+
+      fileInfo.values.forEach(function(lineInfo) {
+        lineInfo = lineInfo.values;
+        fileLineData[lineInfo.linenum - 1].times = lineInfo.times;
+        fileLineData[lineInfo.linenum - 1].sumTime = lineInfo.sumTime;
+      });
+    });
+
+    calcProportionalTimes(fileLineTimes);
+
+    return fileLineTimes;
   }
 
 
   // Calculate proportional times, relative to the longest time in the data
   // set. Modifies data in place.
-  function calcProportionalTimes(times) {
-    var fileTimes = times.map(function(fileData) {
+  function calcProportionalTimes(timeData) {
+    var fileTimes = timeData.map(function(fileData) {
       var lineTimes = fileData.lineData.map(function(x) { return x.sumTime; });
       return d3.max(lineTimes);
     });
 
     var maxTime = d3.max(fileTimes);
 
-    times.map(function(fileData) {
+    timeData.map(function(fileData) {
       fileData.lineData.map(function(lineData) {
         lineData.propTime = lineData.sumTime / maxTime;
       });
