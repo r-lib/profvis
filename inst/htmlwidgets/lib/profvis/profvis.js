@@ -103,12 +103,8 @@ profvis = (function() {
 
 
   profvis.generateFlameGraph = function(el, message) {
-    // TODO:
-    // draw a box at each time and each depth
-    // draw text at each one
-    // Then figure out how to merge
-    //  - set a min and max, draw a box for each min and max.
     var prof = colToRows(message.prof);
+    prof = filterProfvisFrames(prof);
     prof = consolidateRuns(prof);
 
     var width = 500;
@@ -235,6 +231,15 @@ profvis = (function() {
       });
     });
 
+  }
+
+
+  // Remove frames from the call stack that are profvis-related overhead
+  function filterProfvisFrames(prof) {
+    var forceFrames = prof.filter(function(d) { return d.fun === "force"; });
+    var minDepth = d3.min(forceFrames, function(d) { return d.depth; });
+
+    return prof.filter(function(d) { return d.depth > minDepth; });
   }
 
 
