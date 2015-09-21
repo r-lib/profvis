@@ -139,6 +139,7 @@ profvis = (function() {
         .attr("height", h);
   };
 
+
   function getLineTimes(prof, files) {
     // Drop entries with null or "" filename
     prof = prof.filter(function(row) {
@@ -220,33 +221,6 @@ profvis = (function() {
       });
     });
 
-  }
-
-  // Simplify an array of profile data objects based on the object's ref's
-  // filename and line number combinations.
-  function simplifyRef(prof, file) {
-    // Find the file and line number in the ref, discarding all other
-    // ref content. If there are multiple matches for the file in a single ref,
-    // return an item for each match.
-    var data = prof.map(function(item) {
-      var matchRows = item.ref
-        .filter(function(row) {
-          return row.path === file;
-        });
-
-      var res = matchRows.map(function(row) {
-        return {
-          file: row.path,
-          lineNum: row.line,
-          time: item.time
-        };
-      });
-
-      return res;
-    });
-
-    // Flatten the array of arrays
-    return d3.merge(data);
   }
 
 
