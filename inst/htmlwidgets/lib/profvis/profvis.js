@@ -109,19 +109,25 @@ profvis = (function() {
     // Then figure out how to merge
     //  - set a min and max, draw a box for each min and max.
     var prof = colToRows(message.prof);
+    prof = consolidateRuns(prof);
 
     var width = 500;
     var height = 500;
 
     var x = d3.scale.linear()
-      .domain([0, d3.max(prof, function(d) { return d.time; })])
+      .domain([
+        d3.min(prof, function(d) { return d.startTime; }),
+        d3.max(prof, function(d) { return d.endTime; })
+      ])
       .range([0, width]);
 
     var y = d3.scale.linear()
-      .domain([0, d3.max(prof, function(d) { return d.depth; })])
+      .domain([
+        d3.min(prof, function(d) { return d.depth; }),
+        d3.max(prof, function(d) { return d.depth; })
+      ])
       .range([height, 0]);
 
-    var w = x(1);
     var h = y(0) - y(1);
 
     var svg = d3.select(el).append('svg')
@@ -133,9 +139,9 @@ profvis = (function() {
         .data(prof)
       .enter().append("svg:rect")
         .attr("class", "cell")
-        .attr("x", function(d) { return x(d.time); })
+        .attr("x", function(d) { return x(d.startTime); })
         .attr("y", function(d) { return y(d.depth); })
-        .attr("width", w)
+        .attr("width", function(d) { return x(d.endTime) - x(d.startTime); })
         .attr("height", h);
   };
 
@@ -223,6 +229,61 @@ profvis = (function() {
 
   }
 
+
+  // Given raw profiling data, consolidate consecutive blocks for a flamegraph
+  function consolidateRuns(prof) {
+    var data = d3.nest()
+      .key(function(d) { return d.depth; })
+      .rollup(function(leaves) {
+        leaves = leaves.sort(function(a, b) { return a.time - b.time; });
+
+        // Collapse consecutive leaves with the same fun
+        var startLeaf = null;  // leaf starting this run
+        var lastLeaf = null;   // The last leaf we've looked at
+        var newLeaves = [];
+        for (var i=0; i<leaves.length; i++) {
+          var leaf = leaves[i];
+
+          if (i === 0) {
+            startLeaf = leaf;
+
+          } else if (leaf.fun !== startLeaf.fun) {
+            newLeaves.push({
+              depth:     startLeaf.depth,
+              filename:  startLeaf.filename,
+              filenum:   startLeaf.filenum,
+              fun:       startLeaf.fun,
+              linenum:   startLeaf.linenum,
+              startTime: startLeaf.time,
+              endTime:   lastLeaf.time
+            });
+
+            startLeaf = leaf;
+          }
+
+          lastLeaf = leaf;
+        }
+
+        // Add the last one
+        newLeaves.push({
+          depth:     startLeaf.depth,
+          filename:  startLeaf.filename,
+          filenum:   startLeaf.filenum,
+          fun:       startLeaf.fun,
+          linenum:   startLeaf.linenum,
+          startTime: startLeaf.time,
+          endTime:   lastLeaf.time
+        });
+
+        return newLeaves;
+      })
+      .map(prof);
+
+    // Un-nest (flatten) the data
+    data = d3.merge(d3.map(data).values());
+
+    return data;
+  }
 
   // Transform column-oriented data (an object with arrays) to row-oriented data
   // (an array of objects).
