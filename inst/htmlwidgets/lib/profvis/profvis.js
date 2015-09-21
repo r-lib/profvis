@@ -53,26 +53,28 @@ profvis = (function() {
 
 
   profvis.generateFlameGraph = function(el, message) {
+    var stackHeight = 18;   // Height of each layer on the stack, in pixels
+
     var prof = colToRows(message.prof);
     prof = filterProfvisFrames(prof);
     prof = consolidateRuns(prof);
 
     var width = 500;
-    var height = 500;
 
     var x = d3.scale.linear()
       .domain([
         d3.min(prof, function(d) { return d.startTime; }),
         d3.max(prof, function(d) { return d.endTime; })
       ])
-      .range([0, width]);
+      .range([0, width - 2]);
+
+    var ymin = d3.min(prof, function(d) { return d.depth; }) - 1;
+    var ymax = d3.max(prof, function(d) { return d.depth; }) + 1;
+    var height = (ymax - ymin) * stackHeight;
 
     var y = d3.scale.linear()
-      .domain([
-        d3.min(prof, function(d) { return d.depth; }) - 1,
-        d3.max(prof, function(d) { return d.depth; }) + 1
-      ])
-      .range([height, 0]);
+      .domain([ymin, ymax])
+      .range([height - 2, 0]);
 
     var svg = d3.select(el).append('svg')
       .attr('width', width)
@@ -87,8 +89,22 @@ profvis = (function() {
         .attr("y", function(d) { return y(d.depth + 1); })
         .attr("width", function(d) { return x(d.endTime+1) - x(d.startTime); })
         .attr("height", y(0) - y(1))
-        .attr("fill", "#eee")
-        .attr("stroke", "black");
+        .attr("fill", function(d) {
+          if (d.filename !== null) return "#ffd";
+          else return "#eee";
+        })
+        .attr("stroke", "black")
+        .on("mouseover", function(d) {
+          console.log(d.filename + "#" + d.linenum);
+          d3.select(this)
+            .style("fill", "#ccc");
+        })
+        .on("mouseout", function() {
+          d3.select(this).style("fill", function(d) {
+            if (d.filename !== null) return "#ffd";
+            else return "#eee";
+          });
+        });
 
     var text = svg.selectAll(".fun")
       .data(prof)
@@ -96,6 +112,8 @@ profvis = (function() {
         .attr("x", function(d) { return x((d.endTime + d.startTime) / 2); })
         .attr("y", function(d) { return y(d.depth) - 3; })
         .style("text-anchor", "middle")
+        .style("font-family", "monospace")
+        .style("font-size", "9pt")
         .text(function(d) { return d.fun; });
   };
 

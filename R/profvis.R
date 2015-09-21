@@ -18,7 +18,10 @@ profvis <- function(message, width = NULL, height = NULL) {
     x,
     width = width,
     height = height,
-    package = 'profvis'
+    package = 'profvis',
+    sizingPolicy = htmlwidgets::sizingPolicy(
+      browser.defaultWidth = "100%"
+    )
   )
 }
 
