@@ -101,6 +101,44 @@ profvis = (function() {
     return content;
   };
 
+
+  profvis.generateFlameGraph = function(el, message) {
+    // TODO:
+    // draw a box at each time and each depth
+    // draw text at each one
+    // Then figure out how to merge
+    //  - set a min and max, draw a box for each min and max.
+    var prof = colToRows(message.prof);
+
+    var width = 500;
+    var height = 500;
+
+    var x = d3.scale.linear()
+      .domain([0, d3.max(prof, function(d) { return d.time; })])
+      .range([0, width]);
+
+    var y = d3.scale.linear()
+      .domain([0, d3.max(prof, function(d) { return d.depth; })])
+      .range([height, 0]);
+
+    var w = x(1);
+    var h = y(0) - y(1);
+
+    var svg = d3.select(el).append('svg')
+      .attr('width', width)
+      .attr('height', height)
+      .append('g');
+
+    var rect = svg.selectAll(".cell")
+        .data(prof)
+      .enter().append("svg:rect")
+        .attr("class", "cell")
+        .attr("x", function(d) { return x(d.time); })
+        .attr("y", function(d) { return y(d.depth); })
+        .attr("width", w)
+        .attr("height", h);
+  };
+
   function getLineTimes(prof, files) {
     // Drop entries with null or "" filename
     prof = prof.filter(function(row) {
