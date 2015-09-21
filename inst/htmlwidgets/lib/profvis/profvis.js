@@ -123,12 +123,10 @@ profvis = (function() {
 
     var y = d3.scale.linear()
       .domain([
-        d3.min(prof, function(d) { return d.depth; }),
-        d3.max(prof, function(d) { return d.depth; })
+        d3.min(prof, function(d) { return d.depth; }) - 1,
+        d3.max(prof, function(d) { return d.depth; }) + 1
       ])
       .range([height, 0]);
-
-    var h = y(0) - y(1);
 
     var svg = d3.select(el).append('svg')
       .attr('width', width)
@@ -140,9 +138,19 @@ profvis = (function() {
       .enter().append("svg:rect")
         .attr("class", "cell")
         .attr("x", function(d) { return x(d.startTime); })
-        .attr("y", function(d) { return y(d.depth); })
-        .attr("width", function(d) { return x(d.endTime) - x(d.startTime); })
-        .attr("height", h);
+        .attr("y", function(d) { return y(d.depth + 1); })
+        .attr("width", function(d) { return x(d.endTime+1) - x(d.startTime); })
+        .attr("height", y(0) - y(1))
+        .attr("fill", "#eee")
+        .attr("stroke", "black");
+
+    var text = svg.selectAll(".fun")
+      .data(prof)
+        .enter().append("text")
+        .attr("x", function(d) { return x((d.endTime + d.startTime) / 2); })
+        .attr("y", function(d) { return y(d.depth) - 3; })
+        .style("text-anchor", "middle")
+        .text(function(d) { return d.fun; });
   };
 
 
