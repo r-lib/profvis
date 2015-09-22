@@ -16,6 +16,7 @@
 table.profvis-table {
   border-collapse: collapse;
   font-size: 10pt;
+  width: 100%;
 }
 
 table.profvis-table tr {

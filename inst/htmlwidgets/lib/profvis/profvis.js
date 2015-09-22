@@ -18,16 +18,17 @@ profvis = (function() {
 
     var allFileTimes = getLineTimes(prof, message.files);
 
-    var content = '<table class="profvis-table">';
+    var content = '<div>';
 
     for (var i=0; i < allFileTimes.length; i++) {
       var fileData = allFileTimes[i];
 
-      content += '<tr><th>' + fileData.filename + '</th><th></th></tr>';
+      content += '<table class="profvis-table" data-filename="' + fileData.filename + '">' +
+        '<tr><th>' + fileData.filename + '</th><th></th></tr>';
 
       for (var j=0; j<fileData.lineData.length; j++) {
         var line = fileData.lineData[j];
-        content += "<tr>" +
+        content += '<tr data-linenum="' + line.linenum + '">' +
           '<td class="code"><pre><code>' + escapeHTML(line.content) + '</code></pre></td>' +
           '<td class="time">' + (Math.round(line.sumTime * 100) / 100) + '</td>' +
           '<td class="timebar">' +
@@ -35,8 +36,11 @@ profvis = (function() {
           '</td>' +
           '</tr>';
       }
+
+      content += '</table>';
     }
-    content += "</table>";
+
+    content += '</div>';
 
     el.innerHTML = content;
 
@@ -134,7 +138,7 @@ profvis = (function() {
       for (var i=0; i<lines.length; i++) {
         lineData[i] = {
           filename: filename,
-          lineNum: i + 1,
+          linenum: i + 1,
           content: lines[i],
           times: [],
           sumTime: 0
