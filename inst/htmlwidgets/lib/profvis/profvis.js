@@ -109,7 +109,13 @@ profvis = (function() {
       .style("text-anchor", "middle")
       .style("font-family", "monospace")
       .style("font-size", "9pt")
-      .text(function(d) { return d.label; });
+      .text(function(d) { return d.label; })
+      .style("opacity", function(d) {
+        if (this.getBBox().width > this.parentNode.querySelector(".rect").getBBox().width)
+          return 0;
+        else
+          return 1;
+      });
 
 
     // Attach mouse event handlers
