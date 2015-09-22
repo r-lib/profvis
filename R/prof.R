@@ -12,24 +12,5 @@ prof <- function(code, interval = 0.01, keep_prof = FALSE) {
   )
   Rprof(NULL)
 
-  prof_data <- parse_rprof(prof_path)
-
-  # Get filenames from profiling data
-  filenames <- unique(prof_data$filename)
-  # Drop NA and ""
-  filenames <- filenames[!is.na(filenames)]
-  filenames <- filenames[filenames != ""]
-
-  # Get file contents
-  files <- lapply(filenames, function(filename) {
-    list(
-      filename = filename,
-      content = readChar(filename, 1e6)
-    )
-  })
-
-  list(
-    prof = prof_data,
-    files = files
-  )
+  parse_rprof(prof_path)
 }

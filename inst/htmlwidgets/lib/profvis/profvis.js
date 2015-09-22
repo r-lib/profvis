@@ -106,7 +106,7 @@ profvis = (function() {
           });
         });
 
-    var text = svg.selectAll(".fun")
+    var text = svg.selectAll(".label")
       .data(prof)
         .enter().append("text")
         .attr("x", function(d) { return x((d.endTime + d.startTime) / 2); })
@@ -114,7 +114,7 @@ profvis = (function() {
         .style("text-anchor", "middle")
         .style("font-family", "monospace")
         .style("font-size", "9pt")
-        .text(function(d) { return d.fun; });
+        .text(function(d) { return d.label; });
   };
 
 
@@ -204,7 +204,7 @@ profvis = (function() {
 
   // Remove frames from the call stack that are profvis-related overhead
   function filterProfvisFrames(prof) {
-    var forceFrames = prof.filter(function(d) { return d.fun === "force"; });
+    var forceFrames = prof.filter(function(d) { return d.label === "force"; });
     var minDepth = d3.min(forceFrames, function(d) { return d.depth; });
 
     return prof.filter(function(d) { return d.depth > minDepth; });
@@ -228,12 +228,12 @@ profvis = (function() {
           if (i === 0) {
             startLeaf = leaf;
 
-          } else if (leaf.time !== lastLeaf.time + 1 || leaf.fun !== startLeaf.fun) {
+          } else if (leaf.time !== lastLeaf.time + 1 || leaf.label !== startLeaf.label) {
             newLeaves.push({
               depth:     startLeaf.depth,
               filename:  startLeaf.filename,
               filenum:   startLeaf.filenum,
-              fun:       startLeaf.fun,
+              label:     startLeaf.label,
               linenum:   startLeaf.linenum,
               startTime: startLeaf.time,
               endTime:   lastLeaf.time
@@ -250,7 +250,7 @@ profvis = (function() {
           depth:     startLeaf.depth,
           filename:  startLeaf.filename,
           filenum:   startLeaf.filenum,
-          fun:       startLeaf.fun,
+          label:     startLeaf.label,
           linenum:   startLeaf.linenum,
           startTime: startLeaf.time,
           endTime:   lastLeaf.time
