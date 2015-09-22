@@ -25,6 +25,10 @@ table.profvis-table tr {
   border-style: solid;
 }
 
+table.profvis-table .highlighted {
+  background-color: #ffd;
+}
+
 
 table.profvis-table .time {
   padding: 0 2em 0 4em;

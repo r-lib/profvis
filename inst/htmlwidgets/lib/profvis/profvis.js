@@ -98,10 +98,10 @@ profvis = (function() {
       .attr("width", function(d) { return x(d.endTime+1) - x(d.startTime); })
       .attr("height", y(0) - y(1))
       .attr("fill", function(d) {
-        if (d.filename !== null) return "#ffd";
-        else return "#eee";
+        return (d.filename !== null) ? "#ffd" : "#eee";
       })
-      .attr("stroke", "black");
+      .attr("stroke", "black")
+      .attr("stroke-width", 0.25);
 
     var text = cells.append("text")
       .attr("x", function(d) { return x((d.endTime + d.startTime) / 2); })
@@ -117,13 +117,15 @@ profvis = (function() {
       .on("mouseover", function(d) {
         var rect = this.querySelector(".rect")
         d3.select(rect).style("fill", "#ccc");
+
+        highlightCodeLine(d.filename, d.linenum);
       })
-      .on("mouseout", function() {
+      .on("mouseout", function(d) {
+        var color = (d.filename !== null) ? "#ffd" : "#eee";
         var rect = this.querySelector(".rect")
-        d3.select(rect).style("fill", function(d) {
-          if (d.filename !== null) return "#ffd";
-          else return "#eee";
-        });
+        d3.select(rect).style("fill", color);
+
+        unHighlightCodeLine(d.filename, d.linenum);
       });
 
   };
@@ -275,6 +277,27 @@ profvis = (function() {
     data = d3.merge(d3.map(data).values());
 
     return data;
+  }
+
+
+  function selectCodeLine(filename, linenum) {
+    return document.querySelector(
+      '[data-filename="' + filename +'"] ' +
+      '[data-linenum="' + linenum + '"]');
+  }
+
+  function highlightCodeLine(filename, linenum) {
+    if (!filename || !linenum)
+      return;
+    var row = selectCodeLine(filename, linenum);
+    d3.select(row).classed({ highlighted: true });
+  }
+
+  function unHighlightCodeLine(filename, linenum) {
+    if (!filename || !linenum)
+      return;
+    var row = selectCodeLine(filename, linenum);
+    d3.select(row).classed({ highlighted: false });
   }
 
   // Transform column-oriented data (an object with arrays) to row-oriented data
