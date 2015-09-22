@@ -85,40 +85,47 @@ profvis = (function() {
       .attr('height', height)
       .append('g');
 
-    var rect = svg.selectAll(".cell")
-        .data(prof)
-      .enter().append("svg:rect")
-        .attr("class", "cell")
-        .attr("x", function(d) { return x(d.startTime); })
-        .attr("y", function(d) { return y(d.depth + 1); })
-        .attr("width", function(d) { return x(d.endTime+1) - x(d.startTime); })
-        .attr("height", y(0) - y(1))
-        .attr("fill", function(d) {
+    var cells = svg.selectAll(".cell")
+      .data(prof)
+      .enter()
+      .append("g")
+        .attr("class", "cell");
+
+    var rects = cells.append("rect")
+      .attr("class", "rect")
+      .attr("x", function(d) { return x(d.startTime); })
+      .attr("y", function(d) { return y(d.depth + 1); })
+      .attr("width", function(d) { return x(d.endTime+1) - x(d.startTime); })
+      .attr("height", y(0) - y(1))
+      .attr("fill", function(d) {
+        if (d.filename !== null) return "#ffd";
+        else return "#eee";
+      })
+      .attr("stroke", "black");
+
+    var text = cells.append("text")
+      .attr("x", function(d) { return x((d.endTime + d.startTime) / 2); })
+      .attr("y", function(d) { return y(d.depth) - 3; })
+      .style("text-anchor", "middle")
+      .style("font-family", "monospace")
+      .style("font-size", "9pt")
+      .text(function(d) { return d.label; });
+
+
+    // Attach mouse event handlers
+    cells
+      .on("mouseover", function(d) {
+        var rect = this.querySelector(".rect")
+        d3.select(rect).style("fill", "#ccc");
+      })
+      .on("mouseout", function() {
+        var rect = this.querySelector(".rect")
+        d3.select(rect).style("fill", function(d) {
           if (d.filename !== null) return "#ffd";
           else return "#eee";
-        })
-        .attr("stroke", "black")
-        .on("mouseover", function(d) {
-          console.log(d.filename + "#" + d.linenum);
-          d3.select(this)
-            .style("fill", "#ccc");
-        })
-        .on("mouseout", function() {
-          d3.select(this).style("fill", function(d) {
-            if (d.filename !== null) return "#ffd";
-            else return "#eee";
-          });
         });
+      });
 
-    var text = svg.selectAll(".label")
-      .data(prof)
-        .enter().append("text")
-        .attr("x", function(d) { return x((d.endTime + d.startTime) / 2); })
-        .attr("y", function(d) { return y(d.depth) - 3; })
-        .style("text-anchor", "middle")
-        .style("font-family", "monospace")
-        .style("font-size", "9pt")
-        .text(function(d) { return d.label; });
   };
 
 
