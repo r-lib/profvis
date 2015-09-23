@@ -56,20 +56,21 @@ profvis = (function() {
       var linenum = +tr.dataset.linenum;
 
       // Highlight corresponding flame blocks, and un-highlight other blocks
-      d3.select('.profvis-flamegraph-inner').selectAll('.cell')
+      d3.selectAll('.profvis-flamegraph-inner .cell .rect')
         .each(function(d) {
-          var rect = this.querySelector(".rect");
-          rect = d3.select(rect);
           if (d.filename === filename && d.linenum === linenum) {
-            rect.style("stroke-width", 1);
+            d3.select(this).style('stroke-width', 1);
           } else {
-            rect.style("stroke-width", 0.25);
+            d3.select(this).style('stroke-width', 0.25);
           }
         });
     }
 
     content.addEventListener('mousemove', mouseOverCodeHandler);
-
+    content.addEventListener('mouseout', function(e) {
+      d3.selectAll('.profvis-flamegraph-inner .cell .rect')
+        .style('stroke-width', 0.25);
+    });
 
     // Calculate longest time sample
     var maxTime = d3.max(allFileTimes, function(fileData) {
