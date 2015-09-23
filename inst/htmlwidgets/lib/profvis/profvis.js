@@ -18,7 +18,7 @@ profvis = (function() {
 
     var allFileTimes = getLineTimes(prof, message.files);
 
-    var content = '<div>';
+    var content = '<div class="profvis-table-inner">';
 
     for (var i=0; i < allFileTimes.length; i++) {
       var fileData = allFileTimes[i];
@@ -43,6 +43,32 @@ profvis = (function() {
     content += '</div>';
 
     el.innerHTML = content;
+
+    // Handle mousing over code
+    // Get the DOM element with the table
+    content = el.querySelector('.profvis-table-inner');
+
+    function mouseOverCodeHandler(e) {
+      var tr = selectAncestor('tr', e.target, content);
+      if (!tr) return;
+      var table = selectAncestor('table', tr, content);
+      var filename = table.dataset.filename;
+      var linenum = +tr.dataset.linenum;
+
+      // Highlight corresponding flame blocks, and un-highlight other blocks
+      d3.select('.profvis-flamegraph-inner').selectAll('.cell')
+        .each(function(d) {
+          var rect = this.querySelector(".rect");
+          rect = d3.select(rect);
+          if (d.filename === filename && d.linenum === linenum) {
+            rect.style("stroke-width", 1);
+          } else {
+            rect.style("stroke-width", 0.25);
+          }
+        });
+    }
+
+    content.addEventListener('mousemove', mouseOverCodeHandler);
 
 
     // Calculate longest time sample
@@ -128,7 +154,7 @@ profvis = (function() {
       .on("mouseover", function(d) {
         var rect = this.querySelector(".rect");
         d3.select(rect).style("fill", "#ccc")
-          .style("stroke-width", 0.75);
+          .style("stroke-width", 1);
 
         highlightCodeLine(d.filename, d.linenum);
       })
@@ -311,6 +337,18 @@ profvis = (function() {
       return;
     var row = selectCodeLine(filename, linenum);
     d3.select(row).classed({ highlighted: false });
+  }
+
+  // Given a selector string, a start node, and (optionally) an end node which
+  // is an ancestor of `start`, search for an ancestor node between the start
+  // and end which matches the selector.
+  function selectAncestor(selector, start, end) {
+    if (start.matches(selector))
+      return start;
+    if (start === end || start === document)
+      return null;
+
+    return selectAncestor(selector, start.parentNode, end);
   }
 
   // Transform column-oriented data (an object with arrays) to row-oriented data
