@@ -145,6 +145,7 @@ profvis = (function() {
       .style("stroke-width", 0.25);
 
     var text = cells.append("text")
+      .attr("class", "label")
       .attr("x", function(d) { return x((d.endTime + d.startTime) / 2); })
       .attr("y", function(d) { return y(d.depth) - 3; })
       .style("text-anchor", "middle")
@@ -165,10 +166,23 @@ profvis = (function() {
     cells
       .on("mouseover", function(d) {
         var rect = this.querySelector(".rect");
-        d3.select(rect).style("fill", "#ccc")
+        rect = d3.select(rect);
+        rect
+          .style("fill", "#ccc")
           .style("stroke-width", 1);
 
         highlightCodeLine(d.filename, d.linenum);
+
+        // If no text currently shown, display a tooltip
+        if (!this.querySelector(".label")) {
+          var rectBox = rect.node().getBBox();
+          showTooltip(
+            d.label,
+            rectBox.x + rectBox.width / 2,
+            rectBox.y + rectBox.height - 27
+          );
+        }
+
       })
       .on("mouseout", function(d) {
         var color = (d.filename !== null) ? "#ffd" : "#eee";
@@ -177,7 +191,54 @@ profvis = (function() {
           .style("stroke-width", 0.25);
 
         unHighlightCodeLine(d.filename, d.linenum);
+
+        hideTooltip();
       });
+
+
+    function showTooltip(text, x, y) {
+      var tooltip = svg.select(".tooltip");
+      var tooltipText;
+      var tooltipRect;
+
+      // Create tooltip object if necessary
+      if (tooltip.size() === 0) {
+        tooltip = svg.append("g").attr("class", "tooltip");
+        tooltipRect = tooltip.append("rect")
+          .style("fill", "#ddd")
+          .style("opacity", 0.75)
+          .style("stroke", "#000")
+          .style("stroke-opacity", 0.75)
+          .style("stroke-width", 0.5)
+          .style("rx", 4)
+          .style("ry", 4);
+        tooltipText = tooltip.append("text")
+          .style("text-anchor", "middle")
+          .style("font-family", "monospace")
+          .style("font-size", "11px");
+
+      } else {
+        tooltip.attr("visibility", "visible");
+        tooltipRect = tooltip.select("rect");
+        tooltipText = tooltip.select("text");
+      }
+
+      // Add text and position box
+      tooltipText.text(text);
+      var textBox = tooltipText.node().getBBox();
+      tooltipRect
+        .attr("width", textBox.width + 10)
+        .attr("height", textBox.height + 4)
+        .attr("x", -textBox.width/2 - 5)
+        .attr("y", -textBox.height/2 - 4);
+
+      // Move tooltip to correct position
+      tooltip.attr("transform", "translate(" + x + "," + y + ")");
+    }
+
+    function hideTooltip() {
+      svg.select(".tooltip").attr("visibility", "hidden");
+    }
 
   };
 
