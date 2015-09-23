@@ -109,13 +109,15 @@ profvis = (function() {
       .style("text-anchor", "middle")
       .style("font-family", "monospace")
       .style("font-size", "9pt")
-      .text(function(d) { return d.label; })
-      .style("opacity", function(d) {
-        if (this.getBBox().width > this.parentNode.querySelector(".rect").getBBox().width)
-          return 0;
-        else
-          return 1;
-      });
+      .text(function(d) { return d.label; });
+
+    // Remove labels that are wider than the corresponding rectangle
+    text.filter(function(d) {
+        var textWidth = this.getBBox().width;
+        var boxWidth = this.parentNode.querySelector(".rect").getBBox().width;
+        return textWidth > boxWidth;
+      })
+      .remove();
 
 
     // Attach mouse event handlers
