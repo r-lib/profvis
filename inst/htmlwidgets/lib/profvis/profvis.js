@@ -57,7 +57,7 @@ profvis = (function() {
 
 
   profvis.generateFlameGraph = function(el, message) {
-    var stackHeight = 18;   // Height of each layer on the stack, in pixels
+    var stackHeight = 16;   // Height of each layer on the stack, in pixels
 
     var prof = colToRows(message.prof);
     prof = filterProfvisFrames(prof);
@@ -108,7 +108,7 @@ profvis = (function() {
       .attr("y", function(d) { return y(d.depth) - 3; })
       .style("text-anchor", "middle")
       .style("font-family", "monospace")
-      .style("font-size", "9pt")
+      .style("font-size", "11px")
       .text(function(d) { return d.label; });
 
     // Remove labels that are wider than the corresponding rectangle
