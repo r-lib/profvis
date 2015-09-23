@@ -331,6 +331,8 @@ profvis = (function() {
       return;
     var row = selectCodeLine(filename, linenum);
     d3.select(row).classed({ highlighted: true });
+
+    row.scrollIntoView(true);
   }
 
   function unHighlightCodeLine(filename, linenum) {
