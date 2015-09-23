@@ -147,7 +147,7 @@ profvis = (function() {
 
     var text = cells.append("text")
       .attr("class", "label")
-      .attr("x", function(d) { return x((d.endTime - d.startTime) / 2); })
+      .attr("x", function(d) { return (x(d.endTime+1) - x(d.startTime)) / 2; })
       .attr("y", 12)
       .style("text-anchor", "middle")
       .style("font-family", "monospace")
