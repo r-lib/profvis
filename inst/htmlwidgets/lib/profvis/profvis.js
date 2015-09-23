@@ -130,12 +130,13 @@ profvis = (function() {
       .data(prof)
       .enter()
       .append("g")
-        .attr("class", "cell");
+        .attr("class", "cell")
+        .attr("transform", function(d) {
+          return "translate(" + x(d.startTime) + "," + y(d.depth + 1) + ")";
+        });
 
     var rects = cells.append("rect")
       .attr("class", "rect")
-      .attr("x", function(d) { return x(d.startTime); })
-      .attr("y", function(d) { return y(d.depth + 1); })
       .attr("width", function(d) { return x(d.endTime+1) - x(d.startTime); })
       .attr("height", y(0) - y(1))
       .attr("fill", function(d) {
@@ -146,8 +147,8 @@ profvis = (function() {
 
     var text = cells.append("text")
       .attr("class", "label")
-      .attr("x", function(d) { return x((d.endTime + d.startTime) / 2); })
-      .attr("y", function(d) { return y(d.depth) - 3; })
+      .attr("x", function(d) { return x((d.endTime - d.startTime) / 2); })
+      .attr("y", 12)
       .style("text-anchor", "middle")
       .style("font-family", "monospace")
       .style("font-size", "11px")
@@ -175,11 +176,13 @@ profvis = (function() {
 
         // If no text currently shown, display a tooltip
         if (!this.querySelector(".label")) {
-          var rectBox = rect.node().getBBox();
+          // Get x and y translation coords
+          var translation = d3.transform(d3.select(this).attr("transform")).translate;
+          var tooltipBox = this.getBBox();
           showTooltip(
             d.label,
-            rectBox.x + rectBox.width / 2,
-            rectBox.y + rectBox.height - 27
+            translation[0] + tooltipBox.width / 2,
+            translation[1] + tooltipBox.height - 27
           );
         }
 
