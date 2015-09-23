@@ -55,6 +55,13 @@ profvis = (function() {
       var filename = table.dataset.filename;
       var linenum = +tr.dataset.linenum;
 
+      // Un-highlight all code
+      d3.select(content).selectAll('.highlighted')
+        .classed({ highlighted: false });
+
+      // Highlight line of code
+      d3.select(tr).classed({ highlighted: true });
+
       // Highlight corresponding flame blocks, and un-highlight other blocks
       d3.selectAll('.profvis-flamegraph-inner .cell .rect')
         .each(function(d) {
@@ -68,6 +75,10 @@ profvis = (function() {
 
     content.addEventListener('mousemove', mouseOverCodeHandler);
     content.addEventListener('mouseout', function(e) {
+      // Un-highlight all code
+      d3.select(content).selectAll('.highlighted')
+        .classed({ highlighted: false });
+
       d3.selectAll('.profvis-flamegraph-inner .cell .rect')
         .style('stroke-width', 0.25);
     });
