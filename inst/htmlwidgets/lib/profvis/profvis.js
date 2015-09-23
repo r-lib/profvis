@@ -80,7 +80,10 @@ profvis = (function() {
       .domain([ymin, ymax])
       .range([height - 2, 0]);
 
-    var svg = d3.select(el).append('svg')
+    var wrapper = d3.select(el).append('div')
+      .attr('class', 'profvis-flamegraph-inner');
+
+    var svg = wrapper.append('svg')
       .attr('width', width)
       .attr('height', height)
       .append('g');

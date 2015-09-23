@@ -4,8 +4,19 @@
 
 .profvis-code {
   float: left;
+  position: absolute;
+  top: 10px;
+  bottom: 10px;
+  overflow-y: scroll;
 }
 
+.profvis-flamegraph {
+  position: absolute;
+  right: 20px;
+  top: 10px;
+  bottom: 10px;
+  overflow-y: scroll;
+}
 
 .profvis-table pre {
   margin: 0;
