@@ -100,8 +100,8 @@ profvis = (function() {
       .attr("fill", function(d) {
         return (d.filename !== null) ? "#ffd" : "#eee";
       })
-      .attr("stroke", "black")
-      .attr("stroke-width", 0.25);
+      .style("stroke", "black")
+      .style("stroke-width", 0.25);
 
     var text = cells.append("text")
       .attr("x", function(d) { return x((d.endTime + d.startTime) / 2); })
@@ -123,15 +123,17 @@ profvis = (function() {
     // Attach mouse event handlers
     cells
       .on("mouseover", function(d) {
-        var rect = this.querySelector(".rect")
-        d3.select(rect).style("fill", "#ccc");
+        var rect = this.querySelector(".rect");
+        d3.select(rect).style("fill", "#ccc")
+          .style("stroke-width", 0.75);
 
         highlightCodeLine(d.filename, d.linenum);
       })
       .on("mouseout", function(d) {
         var color = (d.filename !== null) ? "#ffd" : "#eee";
-        var rect = this.querySelector(".rect")
-        d3.select(rect).style("fill", color);
+        var rect = this.querySelector(".rect");
+        d3.select(rect).style("fill", color)
+          .style("stroke-width", 0.25);
 
         unHighlightCodeLine(d.filename, d.linenum);
       });
