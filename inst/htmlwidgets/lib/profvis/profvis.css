@@ -8,6 +8,7 @@
   top: 10px;
   bottom: 10px;
   overflow-y: scroll;
+  width: 850px;
 }
 
 .profvis-flamegraph {
@@ -18,15 +19,9 @@
   overflow-y: scroll;
 }
 
-.profvis-table pre {
-  margin: 0;
-  min-height: 1.25em;
-  line-height: 1.25;
-}
-
 table.profvis-table {
   border-collapse: collapse;
-  font-size: 10pt;
+  font-size: 12px;
   width: 100%;
 }
 
@@ -36,10 +31,27 @@ table.profvis-table tr {
   border-style: solid;
 }
 
+table.profvis-table .linenum {
+  color: #aaa;
+  border-width: 1px;
+  border-color: #eee;
+  border-style: solid;
+  padding: 0 5px;
+}
+
+table.profvis-table .code {
+  white-space: pre-wrap;
+  margin: 0;
+  min-height: 1.25em;
+  line-height: 1.25;
+  width: 640px;
+  max-width: 640px;
+}
+
+
 table.profvis-table .highlighted {
   background-color: #ffd;
 }
-
 
 table.profvis-table .time {
   padding: 0 2em 0 4em;

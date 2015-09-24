@@ -24,12 +24,13 @@ profvis = (function() {
       var fileData = allFileTimes[i];
 
       content += '<table class="profvis-table" data-filename="' + fileData.filename + '">' +
-        '<tr><th>' + fileData.filename + '</th><th></th></tr>';
+        '<tr><th colspan="4">' + fileData.filename + '</th><th></th></tr>';
 
       for (var j=0; j<fileData.lineData.length; j++) {
         var line = fileData.lineData[j];
         content += '<tr data-linenum="' + line.linenum + '">' +
-          '<td class="code"><pre><code>' + escapeHTML(line.content) + '</code></pre></td>' +
+          '<td class="linenum"><code>' + line.linenum + '</code></td>' +
+          '<td class="code"><code>' + escapeHTML(line.content) + '</code></td>' +
           '<td class="time">' + (Math.round(line.sumTime * 100) / 100) + '</td>' +
           '<td class="timebar">' +
             '<div style="width: ' + Math.round(line.propTime * 100) + '%; background-color: black;">&nbsp;</div>' +
