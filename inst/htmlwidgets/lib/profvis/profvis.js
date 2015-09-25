@@ -102,18 +102,19 @@ profvis = (function() {
     prof = filterProfvisFrames(prof);
     prof = consolidateRuns(prof);
 
-    var width = 500;
+    var margin = { top: 5, right: 10, bottom: 5, left: 5 };
+    var width = 500 - margin.left - margin.right;
 
     var x = d3.scale.linear()
       .domain([
         d3.min(prof, function(d) { return d.startTime; }),
         d3.max(prof, function(d) { return d.endTime; })
       ])
-      .range([0, width - 2]);
+      .range([0, width]);
 
     var ymin = d3.min(prof, function(d) { return d.depth; }) - 1;
     var ymax = d3.max(prof, function(d) { return d.depth; }) + 1;
-    var height = (ymax - ymin) * stackHeight;
+    var height = (ymax - ymin) * stackHeight - margin.top - margin.bottom;
 
     var y = d3.scale.linear()
       .domain([ymin, ymax])
@@ -123,9 +124,10 @@ profvis = (function() {
       .attr('class', 'profvis-flamegraph-inner');
 
     var svg = wrapper.append('svg')
-      .attr('width', width)
-      .attr('height', height)
-      .append('g');
+        .attr('width', width + margin.left + margin.right)
+        .attr('height', height + margin.top + margin.bottom)
+      .append('g')
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
     var cells = svg.selectAll(".cell")
       .data(prof)
