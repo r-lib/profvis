@@ -105,6 +105,13 @@ profvis = (function() {
     var margin = { top: 5, right: 10, bottom: 5, left: 5 };
     var width = 500 - margin.left - margin.right;
 
+    var zoom = d3.behavior.zoom()
+      .scaleExtent([1, 10])
+      .on("zoom", function() {
+        container.attr("transform", "translate(" + d3.event.translate[0] +
+          ", 0)scale(" + d3.event.scale + ", 1)");
+      });
+
     var x = d3.scale.linear()
       .domain([
         d3.min(prof, function(d) { return d.startTime; }),
@@ -127,9 +134,12 @@ profvis = (function() {
         .attr('width', width + margin.left + margin.right)
         .attr('height', height + margin.top + margin.bottom)
       .append('g')
-        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+        .call(zoom);
 
-    var cells = svg.selectAll(".cell")
+    var container = svg.append('g');
+
+    var cells = container.selectAll(".cell")
       .data(prof)
       .enter()
       .append("g")
@@ -203,13 +213,13 @@ profvis = (function() {
 
 
     function showTooltip(text, x, y) {
-      var tooltip = svg.select(".tooltip");
+      var tooltip = container.select(".tooltip");
       var tooltipText;
       var tooltipRect;
 
       // Create tooltip object if necessary
       if (tooltip.size() === 0) {
-        tooltip = svg.append("g").attr("class", "tooltip");
+        tooltip = container.append("g").attr("class", "tooltip");
         tooltipRect = tooltip.append("rect")
           .style("fill", "#ddd")
           .style("opacity", 0.75)
@@ -243,7 +253,7 @@ profvis = (function() {
     }
 
     function hideTooltip() {
-      svg.select(".tooltip").attr("visibility", "hidden");
+      container.select(".tooltip").attr("visibility", "hidden");
     }
 
   };
