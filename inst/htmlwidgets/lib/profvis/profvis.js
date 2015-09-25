@@ -246,7 +246,7 @@ profvis = (function() {
     }
 
     var zoom = d3.behavior.zoom()
-      .scaleExtent([1, 10])
+      .scaleExtent([1, 200])
       .on("zoom", function() {
         container.attr("transform", "translate(" + d3.event.translate[0] +
           ", 0)scale(" + d3.event.scale + ", 1)");
