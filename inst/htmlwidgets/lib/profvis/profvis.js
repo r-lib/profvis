@@ -182,7 +182,8 @@ profvis = (function() {
         highlightCodeLine(d.filename, d.linenum);
 
         // If no text currently shown, display a tooltip
-        if (!this.querySelector(".label")) {
+        var label = d3.select(this.querySelector(".label"));
+        if (label.attr("visibility") !== "visible") {
           // Get x and y translation coords
           var translation = d3.transform(d3.select(this).attr("transform")).translate;
           var tooltipBox = this.getBBox();
@@ -207,7 +208,7 @@ profvis = (function() {
 
 
     var tooltip = container.append("g").attr("class", "tooltip");
-      tooltipRect = tooltip.append("rect")
+    var tooltipRect = tooltip.append("rect")
         .style("fill", "#ddd")
         .style("opacity", 0.75)
         .style("stroke", "#000")
@@ -215,13 +216,10 @@ profvis = (function() {
         .style("stroke-width", 0.5)
         .style("rx", 4)
         .style("ry", 4);
-      tooltipText = tooltip.append("text")
+    var tooltipText = tooltip.append("text")
         .style("text-anchor", "middle")
         .style("font-family", "monospace")
         .style("font-size", "11px");
-
-    var tooltipRect = tooltip.select("rect");
-    var tooltipText = tooltip.select("text");
 
     function showTooltip(text, x, y) {
       tooltip.attr("visibility", "visible");
@@ -242,7 +240,7 @@ profvis = (function() {
     }
 
     function hideTooltip() {
-      container.select(".tooltip").attr("visibility", "hidden");
+      tooltip.attr("visibility", "hidden");
     }
 
     var zoom = d3.behavior.zoom()
