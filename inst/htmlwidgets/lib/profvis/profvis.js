@@ -105,13 +105,6 @@ profvis = (function() {
     var margin = { top: 5, right: 10, bottom: 5, left: 5 };
     var width = 500 - margin.left - margin.right;
 
-    var zoom = d3.behavior.zoom()
-      .scaleExtent([1, 10])
-      .on("zoom", function() {
-        container.attr("transform", "translate(" + d3.event.translate[0] +
-          ", 0)scale(" + d3.event.scale + ", 1)");
-      });
-
     var x = d3.scale.linear()
       .domain([
         d3.min(prof, function(d) { return d.startTime; }),
@@ -134,8 +127,7 @@ profvis = (function() {
         .attr('width', width + margin.left + margin.right)
         .attr('height', height + margin.top + margin.bottom)
       .append('g')
-        .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
-        .call(zoom);
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
     var container = svg.append('g');
 
@@ -150,7 +142,7 @@ profvis = (function() {
 
     var rects = cells.append("rect")
       .attr("class", "rect")
-      .attr("width", function(d) { return x(d.endTime+1) - x(d.startTime); })
+      .attr("width", function(d) { return x(d.endTime + 1) - x(d.startTime); })
       .attr("height", y(0) - y(1))
       .attr("fill", function(d) {
         return (d.filename !== null) ? "#ffd" : "#eee";
@@ -160,20 +152,22 @@ profvis = (function() {
 
     var text = cells.append("text")
       .attr("class", "label")
-      .attr("x", function(d) { return (x(d.endTime+1) - x(d.startTime)) / 2; })
-      .attr("y", 12)
+      .attr("transform", function(d) {
+        return "translate(" + ((x(d.endTime + 1) - x(d.startTime)) / 2) + "," +
+          12 + ")";
+      })
       .style("text-anchor", "middle")
       .style("font-family", "monospace")
       .style("font-size", "11px")
-      .text(function(d) { return d.label; });
+      .text(function(d) { return d.label; })
+      .attr("visibility", checkTextVisibility);
 
-    // Remove labels that are wider than the corresponding rectangle
-    text.filter(function(d) {
-        var textWidth = this.getBBox().width;
-        var boxWidth = this.parentNode.querySelector(".rect").getBBox().width;
-        return textWidth > boxWidth;
-      })
-      .remove();
+    function checkTextVisibility(d) {
+      // Hide labels that are wider than the corresponding rectangle0
+      var textWidth = this.getBoundingClientRect().width;
+      var boxWidth = this.parentNode.querySelector(".rect").getBoundingClientRect().width;
+      return (textWidth <= boxWidth) ? "visible" : "hidden";
+    }
 
 
     // Attach mouse event handlers
@@ -212,32 +206,25 @@ profvis = (function() {
       });
 
 
+    var tooltip = container.append("g").attr("class", "tooltip");
+      tooltipRect = tooltip.append("rect")
+        .style("fill", "#ddd")
+        .style("opacity", 0.75)
+        .style("stroke", "#000")
+        .style("stroke-opacity", 0.75)
+        .style("stroke-width", 0.5)
+        .style("rx", 4)
+        .style("ry", 4);
+      tooltipText = tooltip.append("text")
+        .style("text-anchor", "middle")
+        .style("font-family", "monospace")
+        .style("font-size", "11px");
+
+    var tooltipRect = tooltip.select("rect");
+    var tooltipText = tooltip.select("text");
+
     function showTooltip(text, x, y) {
-      var tooltip = container.select(".tooltip");
-      var tooltipText;
-      var tooltipRect;
-
-      // Create tooltip object if necessary
-      if (tooltip.size() === 0) {
-        tooltip = container.append("g").attr("class", "tooltip");
-        tooltipRect = tooltip.append("rect")
-          .style("fill", "#ddd")
-          .style("opacity", 0.75)
-          .style("stroke", "#000")
-          .style("stroke-opacity", 0.75)
-          .style("stroke-width", 0.5)
-          .style("rx", 4)
-          .style("ry", 4);
-        tooltipText = tooltip.append("text")
-          .style("text-anchor", "middle")
-          .style("font-family", "monospace")
-          .style("font-size", "11px");
-
-      } else {
-        tooltip.attr("visibility", "visible");
-        tooltipRect = tooltip.select("rect");
-        tooltipText = tooltip.select("text");
-      }
+      tooltip.attr("visibility", "visible");
 
       // Add text and position box
       tooltipText.text(text);
@@ -248,14 +235,39 @@ profvis = (function() {
         .attr("x", -textBox.width/2 - 5)
         .attr("y", -textBox.height/2 - 4);
 
-      // Move tooltip to correct position
-      tooltip.attr("transform", "translate(" + x + "," + y + ")");
+      // Move tooltip to correct position, making sure to preserve existing scaling
+      var scale = d3.transform(tooltip.attr("transform")).scale;
+      tooltip.attr("transform", "translate(" + x + "," + y +
+        ")scale(" + scale[0] + ", " + scale[1] + ")");
     }
 
     function hideTooltip() {
       container.select(".tooltip").attr("visibility", "hidden");
     }
 
+    var zoom = d3.behavior.zoom()
+      .scaleExtent([1, 10])
+      .on("zoom", function() {
+        container.attr("transform", "translate(" + d3.event.translate[0] +
+          ", 0)scale(" + d3.event.scale + ", 1)");
+
+        // Apply inverse scaling on text, preserving translation
+        text.attr("transform", function(d) {
+          var t = d3.transform(d3.select(this).attr("transform")).translate;
+          return "translate(" + t[0] + ", " + t[1] +
+                  ")scale(" + 1/d3.event.scale + ", 1)";
+        });
+        text.attr("visibility", checkTextVisibility);
+
+
+        // Same for tooltip
+        var t = d3.transform(tooltip.attr("transform")).translate;
+        tooltip.attr("transform",
+          "translate(" + t[0] + ", " + t[1] +
+          ")scale(" + 1/d3.event.scale + ", 1)");
+      });
+
+    svg.call(zoom);
   };
 
 
