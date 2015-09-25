@@ -160,14 +160,18 @@ profvis = (function() {
       .style("font-family", "monospace")
       .style("font-size", "11px")
       .text(function(d) { return d.label; })
-      .attr("visibility", checkTextVisibility);
 
-    function checkTextVisibility(d) {
-      // Hide labels that are wider than the corresponding rectangle0
-      var textWidth = this.getBoundingClientRect().width;
-      var boxWidth = this.parentNode.querySelector(".rect").getBoundingClientRect().width;
-      return (textWidth <= boxWidth) ? "visible" : "hidden";
+    // Show labels that fit in the corresponding rectangle, and hide others.
+    // This is very slow because of the getBoundingClientRect() calls.
+    function updateTextVisibility() {
+      text.attr("visibility", function(d) {
+        var textWidth = this.getBoundingClientRect().width;
+        var boxWidth = this.parentNode.querySelector(".rect").getBoundingClientRect().width;
+        return (textWidth <= boxWidth) ? "visible" : "hidden";
+      });
     }
+
+    updateTextVisibility();
 
 
     // Attach mouse event handlers
@@ -243,6 +247,8 @@ profvis = (function() {
       tooltip.attr("visibility", "hidden");
     }
 
+    var updateTextVisibilityDebounced = debounce(updateTextVisibility, 100);
+
     var zoom = d3.behavior.zoom()
       .scaleExtent([1, 200])
       .on("zoom", function() {
@@ -255,8 +261,8 @@ profvis = (function() {
           return "translate(" + t[0] + ", " + t[1] +
                   ")scale(" + 1/d3.event.scale + ", 1)";
         });
-        text.attr("visibility", checkTextVisibility);
 
+        updateTextVisibilityDebounced()
 
         // Same for tooltip
         var t = d3.transform(tooltip.attr("transform")).translate;
@@ -483,6 +489,17 @@ profvis = (function() {
       .replace(/'/g, "&#039;");
    }
 
+  function debounce(f, delay) {
+    var timer = null;
+    return function() {
+      var context = this;
+      var args = arguments;
+      clearTimeout(timer);
+      timer = setTimeout(function () {
+        f.apply(context, args);
+      }, delay);
+    };
+  }
 
   return profvis;
 })();
