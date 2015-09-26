@@ -135,15 +135,10 @@ profvis = (function() {
       .data(prof)
       .enter()
       .append("g")
-        .attr("class", "cell")
-        .attr("transform", function(d) {
-          return "translate(" + x(d.startTime) + "," + y(d.depth + 1) + ")";
-        });
+        .attr("class", "cell");
 
     var rects = cells.append("rect")
       .attr("class", "rect")
-      .attr("width", function(d) { return x(d.endTime + 1) - x(d.startTime); })
-      .attr("height", y(0) - y(1))
       .attr("fill", function(d) {
         return (d.filename !== null) ? "#ffd" : "#eee";
       })
@@ -152,14 +147,11 @@ profvis = (function() {
 
     var text = cells.append("text")
       .attr("class", "label")
-      .attr("transform", function(d) {
-        return "translate(" + ((x(d.endTime + 1) - x(d.startTime)) / 2) + "," +
-          12 + ")";
-      })
       .style("text-anchor", "middle")
+      .style("alignment-baseline", "central")
       .style("font-family", "monospace")
       .style("font-size", "11px")
-      .text(function(d) { return d.label; })
+      .text(function(d) { return d.label; });
 
     // Show labels that fit in the corresponding rectangle, and hide others.
     // This is very slow because of the getBoundingClientRect() calls.
@@ -170,9 +162,24 @@ profvis = (function() {
         return (textWidth <= boxWidth) ? "visible" : "hidden";
       });
     }
+    var updateTextVisibilityDebounced = debounce(updateTextVisibility, 150);
 
-    updateTextVisibility();
+    function resize() {
+      rects
+        .attr("width", function(d) { return x(d.endTime + 1) - x(d.startTime); })
+        .attr("height", y(0) - y(1))
+        .attr("x", function(d) { return x(d.startTime); })
+        .attr("y", function(d) { return y(d.depth + 1); });
 
+      text
+        .attr("x", function(d) { return (x(d.endTime + 1) + x(d.startTime)) / 2; })
+        .attr("y", function(d) { return y(d.depth + 0.5); });
+
+      updateTextVisibilityDebounced();
+    }
+
+    resize();
+    updateTextVisibility(); // Call immediately the first time
 
     // Attach mouse event handlers
     cells
@@ -186,15 +193,13 @@ profvis = (function() {
         highlightCodeLine(d.filename, d.linenum);
 
         // If no text currently shown, display a tooltip
-        var label = d3.select(this.querySelector(".label"));
-        if (label.attr("visibility") !== "visible") {
-          // Get x and y translation coords
-          var translation = d3.transform(d3.select(this).attr("transform")).translate;
-          var tooltipBox = this.getBBox();
-          showTooltip(
+        var label = this.querySelector(".label");
+        if (label.getAttribute("visibility") !== "visible") {
+          var labelBox = label.getBBox();
+            showTooltip(
             d.label,
-            translation[0] + tooltipBox.width / 2,
-            translation[1] + tooltipBox.height - 27
+            labelBox.x + labelBox.width / 2,
+            labelBox.y - labelBox.height - 5
           );
         }
 
@@ -222,54 +227,37 @@ profvis = (function() {
         .style("ry", 4);
     var tooltipText = tooltip.append("text")
         .style("text-anchor", "middle")
+        .style("alignment-baseline", "central")
         .style("font-family", "monospace")
         .style("font-size", "11px");
 
     function showTooltip(text, x, y) {
       tooltip.attr("visibility", "visible");
 
-      // Add text and position box
-      tooltipText.text(text);
-      var textBox = tooltipText.node().getBBox();
-      tooltipRect
-        .attr("width", textBox.width + 10)
-        .attr("height", textBox.height + 4)
-        .attr("x", -textBox.width/2 - 5)
-        .attr("y", -textBox.height/2 - 4);
+      // Add text
+      tooltipText.text(text)
+        .attr("x", x)
+        .attr("y", y);
 
-      // Move tooltip to correct position, making sure to preserve existing scaling
-      var scale = d3.transform(tooltip.attr("transform")).scale;
-      tooltip.attr("transform", "translate(" + x + "," + y +
-        ")scale(" + scale[0] + ", " + scale[1] + ")");
+      // Add box around text
+      var textBox = tooltipText.node().getBBox();
+      var rectWidth = textBox.width + 10;
+      var rectHeight = textBox.height + 4;
+      tooltipRect
+        .attr("width", rectWidth)
+        .attr("height", rectHeight)
+        .attr("x", x - rectWidth / 2)
+        .attr("y", y - rectHeight / 2);
     }
 
     function hideTooltip() {
       tooltip.attr("visibility", "hidden");
     }
 
-    var updateTextVisibilityDebounced = debounce(updateTextVisibility, 100);
-
     var zoom = d3.behavior.zoom()
+      .x(x)
       .scaleExtent([1, 200])
-      .on("zoom", function() {
-        container.attr("transform", "translate(" + d3.event.translate[0] +
-          ", 0)scale(" + d3.event.scale + ", 1)");
-
-        // Apply inverse scaling on text, preserving translation
-        text.attr("transform", function(d) {
-          var t = d3.transform(d3.select(this).attr("transform")).translate;
-          return "translate(" + t[0] + ", " + t[1] +
-                  ")scale(" + 1/d3.event.scale + ", 1)";
-        });
-
-        updateTextVisibilityDebounced();
-
-        // Same for tooltip
-        var t = d3.transform(tooltip.attr("transform")).translate;
-        tooltip.attr("transform",
-          "translate(" + t[0] + ", " + t[1] +
-          ")scale(" + 1/d3.event.scale + ", 1)");
-      });
+      .on("zoom", resize);
 
     svg.call(zoom);
   };
