@@ -262,7 +262,7 @@ profvis = (function() {
                   ")scale(" + 1/d3.event.scale + ", 1)";
         });
 
-        updateTextVisibilityDebounced()
+        updateTextVisibilityDebounced();
 
         // Same for tooltip
         var t = d3.transform(tooltip.attr("transform")).translate;
