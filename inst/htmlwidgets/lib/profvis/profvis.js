@@ -153,16 +153,42 @@ profvis = (function() {
       .style("font-size", "11px")
       .text(function(d) { return d.label; });
 
+    // Cache the width of text. This is a lookup table which, given the number
+    // of characters, gives the number of pixels.
+    var textWidthTable = [];
+    function getTextWidth(el, nchar) {
+      // Add entry if it doesn't already exist
+      if (textWidthTable[nchar] === undefined) {
+        textWidthTable[nchar] = el.getBoundingClientRect().width;
+      }
+      return textWidthTable[nchar];
+    }
+
+    // Cache the width of rects. This is a lookup table which, given the number
+    // of frames, gives the number of pixels.
+    var rectWidthTable = [];
+    function getRectWidth(el, nframe) {
+      // Add entry if it doesn't already exist
+      if (rectWidthTable[nframe] === undefined) {
+        rectWidthTable[nframe] = el.getBoundingClientRect().width;
+      }
+      return rectWidthTable[nframe];
+    }
+
     // Show labels that fit in the corresponding rectangle, and hide others.
     // This is very slow because of the getBoundingClientRect() calls.
     function updateTextVisibility() {
       text.attr("visibility", function(d) {
-        var textWidth = this.getBoundingClientRect().width;
-        var boxWidth = this.parentNode.querySelector(".rect").getBoundingClientRect().width;
+        var scale = zoom ? zoom.scale() : 1;
+
+        var textWidth = getTextWidth(this, d.label.length);
+        var boxWidth = scale * getRectWidth(this.parentNode.querySelector(".rect"),
+                                            d.endTime - d.startTime + 1);
+
         return (textWidth <= boxWidth) ? "visible" : "hidden";
       });
     }
-    var updateTextVisibilityDebounced = debounce(updateTextVisibility, 150);
+    var updateTextVisibilityDebounced = debounce(updateTextVisibility, 100);
 
     function resize() {
       rects
@@ -180,6 +206,7 @@ profvis = (function() {
 
     resize();
     updateTextVisibility(); // Call immediately the first time
+
 
     // Attach mouse event handlers
     cells
