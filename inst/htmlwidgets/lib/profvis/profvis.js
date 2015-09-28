@@ -102,6 +102,11 @@ profvis = (function() {
     prof = filterProfvisFrames(prof);
     prof = consolidateRuns(prof);
 
+    var bgcolor = "#f8f8f8";
+    var cellColor = "#fff";
+    var cellHighlightColor = "#ffb";
+    var cellHoverColor = "#ddd";
+
     var margin = { top: 5, right: 10, bottom: 5, left: 5 };
     var width = 500 - margin.left - margin.right;
 
@@ -131,6 +136,12 @@ profvis = (function() {
 
     var container = svg.append('g');
 
+    // Add a background rect so we have something to grab for zooming/panning
+    container.append("rect")
+      .attr("width", width + margin.left + margin.right)
+      .attr("height", height + margin.top + margin.bottom)
+      .style("fill", bgcolor);
+
     var cells = container.selectAll(".cell")
       .data(prof)
       .enter()
@@ -140,7 +151,7 @@ profvis = (function() {
     var rects = cells.append("rect")
       .attr("class", "rect")
       .attr("fill", function(d) {
-        return (d.filename !== null) ? "#ffd" : "#eee";
+        return (d.filename !== null) ? cellHighlightColor : cellColor;
       })
       .style("stroke", "black")
       .style("stroke-width", 0.25);
@@ -190,7 +201,7 @@ profvis = (function() {
     }
     var updateTextVisibilityDebounced = debounce(updateTextVisibility, 100);
 
-    function resize() {
+    function redraw() {
       rects
         .attr("width", function(d) { return x(d.endTime + 1) - x(d.startTime); })
         .attr("height", y(0) - y(1))
@@ -204,7 +215,7 @@ profvis = (function() {
       updateTextVisibilityDebounced();
     }
 
-    resize();
+    redraw();
     updateTextVisibility(); // Call immediately the first time
 
 
@@ -214,7 +225,7 @@ profvis = (function() {
         var rect = this.querySelector(".rect");
         rect = d3.select(rect);
         rect
-          .style("fill", "#ccc")
+          .style("fill", cellHoverColor)
           .style("stroke-width", 1);
 
         highlightCodeLine(d.filename, d.linenum);
@@ -232,7 +243,7 @@ profvis = (function() {
 
       })
       .on("mouseout", function(d) {
-        var color = (d.filename !== null) ? "#ffd" : "#eee";
+        var color = (d.filename !== null) ? cellHighlightColor : cellColor;
         var rect = this.querySelector(".rect");
         d3.select(rect).style("fill", color)
           .style("stroke-width", 0.25);
@@ -245,7 +256,7 @@ profvis = (function() {
 
     var tooltip = container.append("g").attr("class", "tooltip");
     var tooltipRect = tooltip.append("rect")
-        .style("fill", "#ddd")
+        .style("fill", cellHoverColor)
         .style("opacity", 0.75)
         .style("stroke", "#000")
         .style("stroke-opacity", 0.75)
@@ -281,12 +292,27 @@ profvis = (function() {
       tooltip.attr("visibility", "hidden");
     }
 
+
+    // Panning and zooming: For panning and zooming x, d3.behavior.zoom does
+    // most of what we want automatically. For panning y, we can't use
+    // d3.behavior.zoom becuase it will also automatically add zooming, which
+    // we don't want. Instead, we need to use d3.behavior.drag and set the y
+    // domain appropriately.
+    var drag = d3.behavior.drag()
+      .on("drag", function() {
+        var ydom = y.domain();
+        var ydiff = y.invert(d3.event.dy) - y.invert(0);
+        y.domain([ydom[0] - ydiff, ydom[1] - ydiff]);
+      });
+
     var zoom = d3.behavior.zoom()
       .x(x)
       .scaleExtent([1, 200])
-      .on("zoom", resize);
+      .on("zoom", redraw);
 
-    svg.call(zoom);
+    // Register drag before zooming, because we need the drag to set the y
+    // scale before the zoom triggers a redraw.
+    svg.call(drag).call(zoom);
   };
 
 
