@@ -29,6 +29,7 @@ table.profvis-table tr {
   border-width: 1px 0;
   border-color: #eee;
   border-style: solid;
+  vertical-align: top;
 }
 
 table.profvis-table .linenum {
