@@ -24,7 +24,7 @@ profvis = (function() {
       var fileData = allFileTimes[i];
 
       content += '<table class="profvis-table" data-filename="' + fileData.filename + '">' +
-        '<tr><th colspan="4">' + fileData.filename + '</th><th></th></tr>';
+        '<tr><th colspan="4">' + fileData.filename + '</th></tr>';
 
       for (var j=0; j<fileData.lineData.length; j++) {
         var line = fileData.lineData[j];
