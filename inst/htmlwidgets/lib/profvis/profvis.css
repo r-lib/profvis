@@ -50,18 +50,69 @@ table.profvis-table .code {
 }
 
 
-table.profvis-table .highlighted {
-  background-color: #ffb;
+table.profvis-table .selected {
+  background-color: #fc8;
 }
 
 table.profvis-table .time {
   padding: 0 2em 0 4em;
 }
 
-
 table.profvis-table .timebar {
   padding-left: 0;
   border-left: 1px solid black;
   min-width: 5em;
   width: 5em;
+}
+
+
+.profvis-flamegraph .background {
+  fill: #f4f4f4;
+}
+
+.profvis-flamegraph .cell .rect {
+  stroke: #000;
+  stroke-width: 0.25px;
+  fill: #fff;
+}
+
+.profvis-flamegraph .cell:hover .rect {
+  fill: #ddd;
+}
+
+.profvis-flamegraph .cell .rect.selected {
+  fill: #ddd;
+}
+
+.profvis-flamegraph .cell .rect.highlighted {
+  fill: #ffb;
+}
+
+.profvis-flamegraph .cell .rect.highlighted.selected {
+  fill: #fc8;
+}
+
+.profvis-flamegraph .cell .label {
+  text-anchor: middle;
+  alignment-baseline: central;
+  font-family: monospace;
+  font-size: 11px;
+}
+
+
+.profvis-flamegraph .tooltip rect {
+  fill: #eee;
+  stroke: #000;
+  opacity: 0.75;
+  stroke-opacity: 0.75;
+  stroke-width: 0.5;
+  rx: 4;
+  ry: 4;
+}
+
+.profvis-flamegraph .tooltip text {
+  text-anchor: middle;
+  alignment-baseline: central;
+  font-family: monospace;
+  font-size: 11px;
 }

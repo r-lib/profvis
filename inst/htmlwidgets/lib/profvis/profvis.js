@@ -49,39 +49,20 @@ profvis = (function() {
     // Get the DOM element with the table
     content = el.querySelector('.profvis-table-inner');
 
-    function mouseOverCodeHandler(e) {
+    content.addEventListener('mousemove', function(e) {
       var tr = selectAncestor('tr', e.target, content);
       if (!tr) return;
       var table = selectAncestor('table', tr, content);
       var filename = table.dataset.filename;
       var linenum = +tr.dataset.linenum;
 
-      // Un-highlight all code
-      d3.select(content).selectAll('.highlighted')
-        .classed({ highlighted: false });
+      highlightSelectedCode(filename, linenum);
+    });
 
-      // Highlight line of code
-      d3.select(tr).classed({ highlighted: true });
-
-      // Highlight corresponding flame blocks, and un-highlight other blocks
-      d3.selectAll('.profvis-flamegraph-inner .cell .rect')
-        .each(function(d) {
-          if (d.filename === filename && d.linenum === linenum) {
-            d3.select(this).style('stroke-width', 1);
-          } else {
-            d3.select(this).style('stroke-width', 0.25);
-          }
-        });
-    }
-
-    content.addEventListener('mousemove', mouseOverCodeHandler);
     content.addEventListener('mouseout', function(e) {
       // Un-highlight all code
-      d3.select(content).selectAll('.highlighted')
-        .classed({ highlighted: false });
-
-      d3.selectAll('.profvis-flamegraph-inner .cell .rect')
-        .style('stroke-width', 0.25);
+      d3.select(content).selectAll('.selected')
+        .classed({ selected: false });
     });
 
     // Calculate longest time sample
@@ -101,11 +82,6 @@ profvis = (function() {
     var prof = colToRows(message.prof);
     prof = filterProfvisFrames(prof);
     prof = consolidateRuns(prof);
-
-    var bgcolor = "#f8f8f8";
-    var cellColor = "#fff";
-    var cellHighlightColor = "#ffb";
-    var cellHoverColor = "#ddd";
 
     var margin = { top: 5, right: 10, bottom: 5, left: 5 };
     var width = 500 - margin.left - margin.right;
@@ -138,9 +114,9 @@ profvis = (function() {
 
     // Add a background rect so we have something to grab for zooming/panning
     container.append("rect")
+      .attr("class", "background")
       .attr("width", width + margin.left + margin.right)
-      .attr("height", height + margin.top + margin.bottom)
-      .style("fill", bgcolor);
+      .attr("height", height + margin.top + margin.bottom);
 
     var cells = container.selectAll(".cell")
       .data(prof)
@@ -150,18 +126,10 @@ profvis = (function() {
 
     var rects = cells.append("rect")
       .attr("class", "rect")
-      .attr("fill", function(d) {
-        return (d.filename !== null) ? cellHighlightColor : cellColor;
-      })
-      .style("stroke", "black")
-      .style("stroke-width", 0.25);
+      .classed("highlighted", function(d) { return d.filename !== null; });
 
     var text = cells.append("text")
       .attr("class", "label")
-      .style("text-anchor", "middle")
-      .style("alignment-baseline", "central")
-      .style("font-family", "monospace")
-      .style("font-size", "11px")
       .text(function(d) { return d.label; });
 
     // Cache the width of text. This is a lookup table which, given the number
@@ -222,52 +190,29 @@ profvis = (function() {
     // Attach mouse event handlers
     cells
       .on("mouseover", function(d) {
-        var rect = this.querySelector(".rect");
-        rect = d3.select(rect);
-        rect
-          .style("fill", cellHoverColor)
-          .style("stroke-width", 1);
-
-        highlightCodeLine(d.filename, d.linenum);
+        highlightSelectedCode(d.filename, d.linenum);
 
         // If no text currently shown, display a tooltip
         var label = this.querySelector(".label");
         if (label.getAttribute("visibility") !== "visible") {
           var labelBox = label.getBBox();
-            showTooltip(
+          showTooltip(
             d.label,
             labelBox.x + labelBox.width / 2,
             labelBox.y - labelBox.height - 5
           );
         }
-
       })
       .on("mouseout", function(d) {
-        var color = (d.filename !== null) ? cellHighlightColor : cellColor;
-        var rect = this.querySelector(".rect");
-        d3.select(rect).style("fill", color)
-          .style("stroke-width", 0.25);
-
-        unHighlightCodeLine(d.filename, d.linenum);
+        highlightSelectedCode(null, null);
 
         hideTooltip();
       });
 
 
     var tooltip = container.append("g").attr("class", "tooltip");
-    var tooltipRect = tooltip.append("rect")
-        .style("fill", cellHoverColor)
-        .style("opacity", 0.75)
-        .style("stroke", "#000")
-        .style("stroke-opacity", 0.75)
-        .style("stroke-width", 0.5)
-        .style("rx", 4)
-        .style("ry", 4);
-    var tooltipText = tooltip.append("text")
-        .style("text-anchor", "middle")
-        .style("alignment-baseline", "central")
-        .style("font-family", "monospace")
-        .style("font-size", "11px");
+    var tooltipRect = tooltip.append("rect");
+    var tooltipText = tooltip.append("text");
 
     function showTooltip(text, x, y) {
       tooltip.attr("visibility", "visible");
@@ -465,26 +410,34 @@ profvis = (function() {
   }
 
 
-  function selectCodeLine(filename, linenum) {
-    return document.querySelector(
-      '[data-filename="' + filename +'"] ' +
-      '[data-linenum="' + linenum + '"]');
-  }
+  // Highlights line of code and flamegraph blocks corresponding to a
+  // filenum-linenum combination
+  function highlightSelectedCode(filename, linenum) {
+    // Un-highlight lines of code
+    var content = document.querySelector('.profvis-code');
+    d3.select(content).selectAll('.selected')
+      .classed({ selected: false });
 
-  function highlightCodeLine(filename, linenum) {
+    // Un-highlight flamegraph blocks
+    d3.selectAll('.profvis-flamegraph-inner .cell .rect.selected')
+      .classed({ selected: false });
+
     if (!filename || !linenum)
       return;
-    var row = selectCodeLine(filename, linenum);
-    d3.select(row).classed({ highlighted: true });
 
-    row.scrollIntoViewIfNeeded();
-  }
 
-  function unHighlightCodeLine(filename, linenum) {
-    if (!filename || !linenum)
-      return;
-    var row = selectCodeLine(filename, linenum);
-    d3.select(row).classed({ highlighted: false });
+    // Highlight line of code
+    var tr = document.querySelector('[data-filename="' + filename +'"] ' +
+                                    '[data-linenum="' + linenum + '"]');
+    d3.select(tr).classed({ selected: true });
+    tr.scrollIntoViewIfNeeded();
+
+    // Highlight corresponding flamegraph blocks
+    d3.selectAll('.profvis-flamegraph-inner .cell .rect')
+      .filter(function(d) {
+        return (d.filename === filename && d.linenum === linenum);
+      })
+      .classed({ selected: true });
   }
 
   // Given a selector string, a start node, and (optionally) an end node which
