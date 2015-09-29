@@ -77,17 +77,12 @@ profvis = (function() {
 
 
   profvis.generateFlameGraph = function(el, message) {
-    var stackHeight = 16;   // Height of each layer on the stack, in pixels
+    var stackHeight = 15;   // Height of each layer on the stack, in pixels
 
     // Process data ---------------------------------------------------
     var prof = colToRows(message.prof);
     prof = filterProfvisFrames(prof);
     prof = consolidateRuns(prof);
-
-    // Size of visible graphing region in window ----------------------
-    var margin = { top: 5, right: 5, bottom: 5, left: 5 };
-    var svgWidth = el.clientWidth - margin.left - margin.right;
-    var svgHeight = el.clientHeight - margin.top - margin.bottom;
 
     // Size of virtual graphing area ----------------------------------
     // (Can differ from visible area)
@@ -97,7 +92,7 @@ profvis = (function() {
     ];
     var yRange = d3.extent(prof, function(d) { return d.depth; });
 
-    var graphWidth = svgWidth;
+    var graphWidth = el.clientWidth;
     var graphHeight = (yRange[1] - yRange[0]) * stackHeight;
 
     var x = d3.scale.linear()
@@ -113,17 +108,16 @@ profvis = (function() {
       .attr('class', 'profvis-flamegraph-inner');
 
     var svg = wrapper.append('svg')
-        .attr('width', svgWidth + margin.left + margin.right)
-        .attr('height', svgHeight + margin.top + margin.bottom)
-      .append('g');
+      .attr('width', el.clientWidth)
+      .attr('height', el.clientHeight);
 
     var container = svg.append('g');
 
     // Add a background rect so we have something to grab for zooming/panning
-    container.append("rect")
+    var backgroundRect = container.append("rect")
       .attr("class", "background")
-      .attr("width", svgWidth + margin.left + margin.right)
-      .attr("height", svgHeight + margin.top + margin.bottom);
+      .attr("width", el.clientWidth)
+      .attr("height", el.clientHeight);
 
     var cells = container.selectAll(".cell")
       .data(prof)
@@ -195,6 +189,17 @@ profvis = (function() {
     redraw();
     updateTextVisibility(); // Call immediately the first time
 
+    // Recalculate dimensions on resize
+    function onResize() {
+      svg
+        .attr('width', el.clientWidth)
+        .attr('height', el.clientHeight);
+
+      backgroundRect
+        .attr("width", el.clientWidth)
+        .attr("height", el.clientHeight);
+    }
+    d3.select(window).on("resize", onResize);
 
     // Attach mouse event handlers ------------------------------------
     cells
@@ -262,7 +267,7 @@ profvis = (function() {
 
     var zoom = d3.behavior.zoom()
       .x(x)
-      .scaleExtent([0.1, 200])
+      .scaleExtent([0.01, 1000])
       .on("zoom", redraw);
 
     // Register drag before zooming, because we need the drag to set the y
