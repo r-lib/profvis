@@ -13,11 +13,11 @@
 
 .profvis-flamegraph {
   position: absolute;
-  right: 20px;
+  right: 10px;
   top: 10px;
   bottom: 10px;
   left: 900px;
-  overflow-y: scroll;
+  overflow: hidden;
 }
 
 table.profvis-table {

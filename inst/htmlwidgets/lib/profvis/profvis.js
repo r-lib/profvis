@@ -79,34 +79,42 @@ profvis = (function() {
   profvis.generateFlameGraph = function(el, message) {
     var stackHeight = 16;   // Height of each layer on the stack, in pixels
 
+    // Process data ---------------------------------------------------
     var prof = colToRows(message.prof);
     prof = filterProfvisFrames(prof);
     prof = consolidateRuns(prof);
 
-    var margin = { top: 5, right: 10, bottom: 5, left: 5 };
-    var width = el.clientWidth - margin.left - margin.right;
+    // Size of visible graphing region in window ----------------------
+    var margin = { top: 5, right: 5, bottom: 5, left: 5 };
+    var svgWidth = el.clientWidth - margin.left - margin.right;
+    var svgHeight = el.clientHeight - margin.top - margin.bottom;
+
+    // Size of virtual graphing area ----------------------------------
+    // (Can differ from visible area)
+    var xRange = [
+      d3.min(prof, function(d) { return d.startTime; }),
+      d3.max(prof, function(d) { return d.endTime; })
+    ];
+    var yRange = d3.extent(prof, function(d) { return d.depth; });
+
+    var graphWidth = svgWidth;
+    var graphHeight = (yRange[1] - yRange[0]) * stackHeight;
 
     var x = d3.scale.linear()
-      .domain([
-        d3.min(prof, function(d) { return d.startTime; }),
-        d3.max(prof, function(d) { return d.endTime; })
-      ])
-      .range([0, width]);
-
-    var ymin = d3.min(prof, function(d) { return d.depth; }) - 1;
-    var ymax = d3.max(prof, function(d) { return d.depth; }) + 1;
-    var height = (ymax - ymin) * stackHeight - margin.top - margin.bottom;
+      .domain(xRange)
+      .range([0, graphWidth]);
 
     var y = d3.scale.linear()
-      .domain([ymin, ymax])
-      .range([height - 2, 0]);
+      .domain(yRange)
+      .range([graphHeight, 0]);
 
+    // Creat SVG objects ----------------------------------------------
     var wrapper = d3.select(el).append('div')
       .attr('class', 'profvis-flamegraph-inner');
 
     var svg = wrapper.append('svg')
-        .attr('width', width + margin.left + margin.right)
-        .attr('height', height + margin.top + margin.bottom)
+        .attr('width', svgWidth + margin.left + margin.right)
+        .attr('height', svgHeight + margin.top + margin.bottom)
       .append('g');
 
     var container = svg.append('g');
@@ -114,8 +122,8 @@ profvis = (function() {
     // Add a background rect so we have something to grab for zooming/panning
     container.append("rect")
       .attr("class", "background")
-      .attr("width", width + margin.left + margin.right)
-      .attr("height", height + margin.top + margin.bottom);
+      .attr("width", svgWidth + margin.left + margin.right)
+      .attr("height", svgHeight + margin.top + margin.bottom);
 
     var cells = container.selectAll(".cell")
       .data(prof)
@@ -131,6 +139,7 @@ profvis = (function() {
       .attr("class", "label")
       .text(function(d) { return d.label; });
 
+    // Calculate whether to display text in each cell -----------------
     // Cache the width of text. This is a lookup table which, given the number
     // of characters, gives the number of pixels.
     var textWidthTable = [];
@@ -168,6 +177,7 @@ profvis = (function() {
     }
     var updateTextVisibilityDebounced = debounce(updateTextVisibility, 100);
 
+    // Update positions when scales change ----------------------------
     function redraw() {
       rects
         .attr("width", function(d) { return x(d.endTime + 1) - x(d.startTime); })
@@ -186,7 +196,7 @@ profvis = (function() {
     updateTextVisibility(); // Call immediately the first time
 
 
-    // Attach mouse event handlers
+    // Attach mouse event handlers ------------------------------------
     cells
       .on("mouseover", function(d) {
         highlightSelectedCode(d.filename, d.linenum, d.label);
@@ -209,6 +219,7 @@ profvis = (function() {
       });
 
 
+    // Tooltip --------------------------------------------------------
     var tooltip = container.append("g").attr("class", "tooltip");
     var tooltipRect = tooltip.append("rect");
     var tooltipText = tooltip.append("text");
@@ -237,11 +248,11 @@ profvis = (function() {
     }
 
 
-    // Panning and zooming: For panning and zooming x, d3.behavior.zoom does
-    // most of what we want automatically. For panning y, we can't use
-    // d3.behavior.zoom becuase it will also automatically add zooming, which
-    // we don't want. Instead, we need to use d3.behavior.drag and set the y
-    // domain appropriately.
+    // Panning and zooming --------------------------------------------
+    // For panning and zooming x, d3.behavior.zoom does most of what we want
+    // automatically. For panning y, we can't use d3.behavior.zoom becuase it
+    // will also automatically add zooming, which we don't want. Instead, we
+    // need to use d3.behavior.drag and set the y domain appropriately.
     var drag = d3.behavior.drag()
       .on("drag", function() {
         var ydom = y.domain();
