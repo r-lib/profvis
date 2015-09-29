@@ -454,12 +454,17 @@ profvis = (function() {
       .classed({ selected: true });
 
     } else if (label) {
+      // Don't highlight blocks for these labels
+      var exclusions = ["<Anonymous>", "FUN"];
+      if (exclusions.some(function(x) { return label === x; })) {
+        return;
+      }
+
       // If we only have the label, search for cells that match.
       // Highlight corresponding flamegraph blocks
       d3.selectAll('.profvis-flamegraph-inner .cell .rect')
         .filter(function(d) { return (d.label === label); })
         .classed({ selected: true });
-
     }
  }
 
