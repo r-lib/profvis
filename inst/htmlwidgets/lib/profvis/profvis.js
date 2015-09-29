@@ -190,7 +190,7 @@ profvis = (function() {
     // Attach mouse event handlers
     cells
       .on("mouseover", function(d) {
-        highlightSelectedCode(d.filename, d.linenum);
+        highlightSelectedCode(d.filename, d.linenum, d.label);
 
         // If no text currently shown, display a tooltip
         var label = this.querySelector(".label");
@@ -204,7 +204,7 @@ profvis = (function() {
         }
       })
       .on("mouseout", function(d) {
-        highlightSelectedCode(null, null);
+        highlightSelectedCode(null, null, null);
 
         hideTooltip();
       });
@@ -411,8 +411,9 @@ profvis = (function() {
 
 
   // Highlights line of code and flamegraph blocks corresponding to a
-  // filenum-linenum combination
-  function highlightSelectedCode(filename, linenum) {
+  // filenum-linenum combination. If there's no filename and linenum, search
+  // for cells (only in the flamegraph) that have the same label.
+  function highlightSelectedCode(filename, linenum, label) {
     // Un-highlight lines of code
     var content = document.querySelector('.profvis-code');
     d3.select(content).selectAll('.selected')
@@ -422,15 +423,13 @@ profvis = (function() {
     d3.selectAll('.profvis-flamegraph-inner .cell .rect.selected')
       .classed({ selected: false });
 
-    if (!filename || !linenum)
-      return;
-
-
-    // Highlight line of code
-    var tr = document.querySelector('[data-filename="' + filename +'"] ' +
-                                    '[data-linenum="' + linenum + '"]');
-    d3.select(tr).classed({ selected: true });
-    tr.scrollIntoViewIfNeeded();
+    if (filename && linenum) {
+      // If we have filename and linenum, search for cells that match.
+      var tr = document.querySelector('[data-filename="' + filename +'"] ' +
+                                      '[data-linenum="' + linenum + '"]');
+      // Highlight line of code
+      d3.select(tr).classed({ selected: true });
+      tr.scrollIntoViewIfNeeded();
 
     // Highlight corresponding flamegraph blocks
     d3.selectAll('.profvis-flamegraph-inner .cell .rect')
@@ -438,7 +437,16 @@ profvis = (function() {
         return (d.filename === filename && d.linenum === linenum);
       })
       .classed({ selected: true });
-  }
+
+    } else if (label) {
+      // If we only have the label, search for cells that match.
+      // Highlight corresponding flamegraph blocks
+      d3.selectAll('.profvis-flamegraph-inner .cell .rect')
+        .filter(function(d) { return (d.label === label); })
+        .classed({ selected: true });
+
+    }
+ }
 
   // Given a selector string, a start node, and (optionally) an end node which
   // is an ancestor of `start`, search for an ancestor node between the start
