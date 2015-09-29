@@ -84,7 +84,7 @@ profvis = (function() {
     prof = consolidateRuns(prof);
 
     var margin = { top: 5, right: 10, bottom: 5, left: 5 };
-    var width = 500 - margin.left - margin.right;
+    var width = el.clientWidth - margin.left - margin.right;
 
     var x = d3.scale.linear()
       .domain([
@@ -107,8 +107,7 @@ profvis = (function() {
     var svg = wrapper.append('svg')
         .attr('width', width + margin.left + margin.right)
         .attr('height', height + margin.top + margin.bottom)
-      .append('g')
-        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+      .append('g');
 
     var container = svg.append('g');
 
@@ -252,7 +251,7 @@ profvis = (function() {
 
     var zoom = d3.behavior.zoom()
       .x(x)
-      .scaleExtent([1, 200])
+      .scaleExtent([0.1, 200])
       .on("zoom", redraw);
 
     // Register drag before zooming, because we need the drag to set the y
