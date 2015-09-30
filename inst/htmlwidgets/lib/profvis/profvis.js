@@ -86,22 +86,20 @@ profvis = (function() {
 
     // Size of virtual graphing area ----------------------------------
     // (Can differ from visible area)
-    var xRange = [
+    var xDomain = [
       d3.min(prof, function(d) { return d.startTime; }),
       d3.max(prof, function(d) { return d.endTime; })
     ];
-    var yRange = d3.extent(prof, function(d) { return d.depth; });
+    var yDomain = d3.extent(prof, function(d) { return d.depth; });
 
-    var graphWidth = el.clientWidth;
-    var graphHeight = (yRange[1] - yRange[0]) * stackHeight;
-
+    // Scales
     var x = d3.scale.linear()
-      .domain(xRange)
-      .range([0, graphWidth]);
+      .domain(xDomain)
+      .range([0, el.clientWidth]);
 
     var y = d3.scale.linear()
-      .domain(yRange)
-      .range([graphHeight, 0]);
+      .domain(yDomain)
+      .range([(yDomain[1] - yDomain[0]) * stackHeight, 0]);
 
     // Creat SVG objects ----------------------------------------------
     var wrapper = d3.select(el).append('div')
@@ -172,14 +170,27 @@ profvis = (function() {
     var updateTextVisibilityDebounced = debounce(updateTextVisibility, 100);
 
     // Update positions when scales change ----------------------------
-    function redraw() {
-      rects
+    function redraw(duration) {
+      if (duration === undefined) duration = 0;
+
+      // Make local copies because we may be adding transitions
+      var rects2 = rects;
+      var text2 = text;
+
+      // Only add the transition if needed (duration!=0) because there's a
+      // performance penalty
+      if (duration !== 0) {
+        rects2 = rects2.transition().duration(duration);
+        text2 = text2.transition().duration(duration);
+      }
+
+      rects2
         .attr("width", function(d) { return x(d.endTime + 1) - x(d.startTime); })
         .attr("height", y(0) - y(1))
         .attr("x", function(d) { return x(d.startTime); })
         .attr("y", function(d) { return y(d.depth + 1); });
 
-      text
+      text2
         .attr("x", function(d) { return (x(d.endTime + 1) + x(d.startTime)) / 2; })
         .attr("y", function(d) { return y(d.depth + 0.5); });
 
@@ -198,6 +209,11 @@ profvis = (function() {
       backgroundRect
         .attr("width", el.clientWidth)
         .attr("height", el.clientHeight);
+
+      // Update the x range so that we're able to double-click on a block to
+      // zoom, and have it fill the whole x width.
+      x.range([0, el.clientWidth]);
+      redraw()
     }
     d3.select(window).on("resize", onResize);
 
@@ -272,7 +288,26 @@ profvis = (function() {
 
     // Register drag before zooming, because we need the drag to set the y
     // scale before the zoom triggers a redraw.
-    svg.call(drag).call(zoom);
+    svg
+      .call(drag)
+      .call(zoom)
+      .on("dblclick.zoom", null); // Disable zoom's built-in double-click behavior
+
+
+    // When a cell is double-clicked, zoom x to that cell's width.
+    var initialXdomain = x.domain();
+    cells.on("dblclick.zoomcell", function(d) {
+      // Get desired scaling factor. The original x domain corresponds to
+      // zoom.scale()===1, so we divide that by our desired x domain.
+      var scaleFactor = (initialXdomain[1] - initialXdomain[0]) / (d.endTime - d.startTime);
+
+      // Rescale and translate so the block fills the x range
+      zoom
+        .scale(scaleFactor)
+        .translate([x(0) - x(d.startTime), zoom.translate()[1]]);
+
+      redraw(250);
+    });
   };
 
 
