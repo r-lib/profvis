@@ -474,7 +474,7 @@ profvis = (function() {
     // Highlight corresponding flamegraph blocks
     d3.selectAll('.profvis-flamegraph-inner .cell .rect')
       .filter(function(d) {
-        return (d.filename === filename && d.linenum === linenum);
+        return (d.filename === filename && d.linenum === linenum && d.label === label);
       })
       .classed({ selected: true });
 

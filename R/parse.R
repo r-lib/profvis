@@ -25,6 +25,11 @@ parse_rprof <- function(path = "Rprof.out") {
   # Parse profiling data -----------------
   prof_lines <- lines[!is_label]
   prof_data <- sub(' +$', '', prof_lines)
+  # Convert frames with srcrefs from:
+  #  "foo" 2#8
+  # to
+  #  "foo",2#8
+  prof_data <- gsub('" (\\d+#\\d+)', '",\\1', prof_data)
 
   # Remove frames related to profvis itself
   prof_data <- sub('"force".*?"prof"$', '', prof_data)
@@ -32,16 +37,28 @@ parse_rprof <- function(path = "Rprof.out") {
 
   # Parse each line into a separate data frame
   prof_data <- mapply(prof_data, seq_along(prof_data), FUN = function(sample, time) {
+    # If the first thing is a srcref, it doesn't actually refer to a function
+    # call on the call stack -- instead, it seems that it refers to the code
+    # that's currently being eval'ed.
+    # Note how the first lineprof() call differs from the ones in the loop:
+    # https://github.com/wch/r-source/blob/be7197f/src/main/eval.c#L228-L244
+    # In this case, we'll temporarily use "??" as the label, until we have a
+    # better solution.
+    if (grepl("^\\d+#\\d+$", sample[1])) {
+      sample[1] <- paste0('"??",', sample[1])
+    }
+
     # These entries are references into files
     ref_idx <- grepl("^\\d+#\\d+$", sample)
 
     labels <- sample
-    labels[ref_idx] <- NA
+    labels <- sub('",\\d+#\\d+$', '"', labels)
     labels <- sub('^"', '', labels)
     labels <- sub('"$', '', labels)
 
     refs <- sample
-    refs[!ref_idx] <- NA
+    refs <- sub('^".*"[,]?', '', refs)
+    refs[!nzchar(refs)] <- NA
     filenum <- as.integer(sub('#.*', '', refs))
     linenum <- as.integer(sub('.*#', '', refs))
 
@@ -70,26 +87,6 @@ parse_rprof <- function(path = "Rprof.out") {
   file_contents <- lapply(filenames, function(filename) {
     readChar(filename, 1e6)
   })
-
-  # Insert file content labels into profiling data --------------
-  file_label_contents <- lapply(file_contents, function(content) {
-    content <- str_split(content, "\n")[[1]]
-    sub("^ +", "", content)
-  })
-  # Indices where a filename is present
-  filename_idx <- !is.na(prof_data$filename)
-  # Get the labels
-  labels <- mapply(
-    prof_data$filename[filename_idx],
-    prof_data$linenum[filename_idx],
-    FUN = function(filename, linenum) {
-      if (filename == "")
-        return("")
-      file_label_contents[[filename]][linenum]
-    }, SIMPLIFY = FALSE)
-  labels <- unlist(labels, use.names = FALSE)
-  # Insert the labels at appropriate indices
-  prof_data$label[filename_idx] <- labels
 
   # Convert file_contents to a format suitable for client
   file_contents <- mapply(names(file_contents), file_contents,
