@@ -81,7 +81,6 @@ profvis = (function() {
 
     // Process data ---------------------------------------------------
     var prof = colToRows(message.prof);
-    prof = filterProfvisFrames(prof);
     prof = consolidateRuns(prof);
 
     // Size of virtual graphing area ----------------------------------
@@ -392,15 +391,6 @@ profvis = (function() {
       });
     });
 
-  }
-
-
-  // Remove frames from the call stack that are profvis-related overhead
-  function filterProfvisFrames(prof) {
-    var forceFrames = prof.filter(function(d) { return d.label === "force"; });
-    var minDepth = d3.min(forceFrames, function(d) { return d.depth; });
-
-    return prof.filter(function(d) { return d.depth > minDepth; });
   }
 
 

@@ -25,6 +25,9 @@ parse_rprof <- function(path = "Rprof.out") {
   # Parse profiling data -----------------
   prof_lines <- lines[!is_label]
   prof_data <- sub(' +$', '', prof_lines)
+
+  # Remove frames related to profvis itself
+  prof_data <- sub('"force".*?"prof"$', '', prof_data)
   prof_data <- str_split(prof_data, fixed(" "))
 
   # Parse each line into a separate data frame
@@ -99,7 +102,5 @@ parse_rprof <- function(path = "Rprof.out") {
     files = file_contents
   )
 }
-
-
 
 
