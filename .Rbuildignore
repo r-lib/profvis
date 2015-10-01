@@ -2,3 +2,4 @@
 ^\.Rproj\.user$
 \.sublime-project$
 \.sublime-workspace$
+^.*\.o$
