@@ -126,20 +126,20 @@ profvis = (function() {
       .attr("class", "rect")
       .classed("highlighted", function(d) { return d.filename !== null; });
 
-    var text = cells.append("text")
+    var labels = cells.append("text")
       .attr("class", "label")
       .text(function(d) { return d.label; });
 
-    // Calculate whether to display text in each cell -----------------
-    // Cache the width of text. This is a lookup table which, given the number
+    // Calculate whether to display label in each cell -----------------
+    // Cache the width of label. This is a lookup table which, given the number
     // of characters, gives the number of pixels.
-    var textWidthTable = [];
-    function getTextWidth(el, nchar) {
+    var labelWidthTable = [];
+    function getLabelWidth(el, nchar) {
       // Add entry if it doesn't already exist
-      if (textWidthTable[nchar] === undefined) {
-        textWidthTable[nchar] = el.getBoundingClientRect().width;
+      if (labelWidthTable[nchar] === undefined) {
+        labelWidthTable[nchar] = el.getBoundingClientRect().width;
       }
-      return textWidthTable[nchar];
+      return labelWidthTable[nchar];
     }
 
     // Cache the width of rects. This is a lookup table which, given the number
@@ -155,18 +155,18 @@ profvis = (function() {
 
     // Show labels that fit in the corresponding rectangle, and hide others.
     // This is very slow because of the getBoundingClientRect() calls.
-    function updateTextVisibility() {
-      text.attr("visibility", function(d) {
+    function updateLabelVisibility() {
+      labels.attr("visibility", function(d) {
         var scale = zoom ? zoom.scale() : 1;
 
-        var textWidth = getTextWidth(this, d.label.length);
+        var labelWidth = getLabelWidth(this, d.label.length);
         var boxWidth = scale * getRectWidth(this.parentNode.querySelector(".rect"),
                                             d.endTime - d.startTime + 1);
 
-        return (textWidth <= boxWidth) ? "visible" : "hidden";
+        return (labelWidth <= boxWidth) ? "visible" : "hidden";
       });
     }
-    var updateTextVisibilityDebounced = debounce(updateTextVisibility, 100);
+    var updateLabelVisibilityDebounced = debounce(updateLabelVisibility, 100);
 
     // Update positions when scales change ----------------------------
     function redraw(duration) {
@@ -174,13 +174,13 @@ profvis = (function() {
 
       // Make local copies because we may be adding transitions
       var rects2 = rects;
-      var text2 = text;
+      var labels2 = labels;
 
       // Only add the transition if needed (duration!=0) because there's a
       // performance penalty
       if (duration !== 0) {
         rects2 = rects2.transition().duration(duration);
-        text2 = text2.transition().duration(duration);
+        labels2 = labels2.transition().duration(duration);
       }
 
       rects2
@@ -189,15 +189,15 @@ profvis = (function() {
         .attr("x", function(d) { return x(d.startTime); })
         .attr("y", function(d) { return y(d.depth + 1); });
 
-      text2
+      labels2
         .attr("x", function(d) { return (x(d.endTime + 1) + x(d.startTime)) / 2; })
         .attr("y", function(d) { return y(d.depth + 0.5); });
 
-      updateTextVisibilityDebounced();
+      updateLabelVisibilityDebounced();
     }
 
     redraw();
-    updateTextVisibility(); // Call immediately the first time
+    updateLabelVisibility(); // Call immediately the first time
 
     // Recalculate dimensions on resize
     function onResize() {
@@ -221,7 +221,7 @@ profvis = (function() {
       .on("mouseover", function(d) {
         highlightSelectedCode(d.filename, d.linenum, d.label);
 
-        // If no text currently shown, display a tooltip
+        // If no label currently shown, display a tooltip
         var label = this.querySelector(".label");
         if (label.getAttribute("visibility") !== "visible") {
           var labelBox = label.getBBox();
@@ -242,20 +242,20 @@ profvis = (function() {
     // Tooltip --------------------------------------------------------
     var tooltip = container.append("g").attr("class", "tooltip");
     var tooltipRect = tooltip.append("rect");
-    var tooltipText = tooltip.append("text");
+    var tooltipLabel = tooltip.append("text");
 
-    function showTooltip(text, x, y) {
+    function showTooltip(label, x, y) {
       tooltip.attr("visibility", "visible");
 
-      // Add text
-      tooltipText.text(text)
+      // Add label
+      tooltipLabel.text(label)
         .attr("x", x)
         .attr("y", y);
 
-      // Add box around text
-      var textBox = tooltipText.node().getBBox();
-      var rectWidth = textBox.width + 10;
-      var rectHeight = textBox.height + 4;
+      // Add box around label
+      var labelBox = tooltipLabel.node().getBBox();
+      var rectWidth = labelBox.width + 10;
+      var rectHeight = labelBox.height + 4;
       tooltipRect
         .attr("width", rectWidth)
         .attr("height", rectHeight)
