@@ -56,7 +56,7 @@ profvis = (function() {
       var filename = table.dataset.filename;
       var linenum = +tr.dataset.linenum;
 
-      highlightSelectedCode(filename, linenum);
+      highlightSelectedCode(filename, linenum, null);
     });
 
     content.addEventListener('mouseout', function(e) {
@@ -451,8 +451,10 @@ profvis = (function() {
 
 
   // Highlights line of code and flamegraph blocks corresponding to a
-  // filenum-linenum combination. If there's no filename and linenum, search
-  // for cells (only in the flamegraph) that have the same label.
+  // filenum. linenum and, if provided, label combination. (When this is called
+  // from hovering over code, no label is provided.)
+  // If only a label is provided, search for cells (only in the flamegraph) that
+  // have the same label.
   function highlightSelectedCode(filename, linenum, label) {
     // Un-highlight lines of code
     var content = document.querySelector('.profvis-code');
@@ -474,7 +476,12 @@ profvis = (function() {
     // Highlight corresponding flamegraph blocks
     d3.selectAll('.profvis-flamegraph-inner .cell .rect')
       .filter(function(d) {
-        return (d.filename === filename && d.linenum === linenum && d.label === label);
+        // Check for filename and linenum match, and if provided, a label match.
+        var match = d.filename === filename && d.linenum === linenum;
+        if (!!label) {
+          match = match && (d.label === label);
+        }
+        return match;
       })
       .classed({ selected: true });
 
