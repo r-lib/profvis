@@ -32,7 +32,7 @@ parse_rprof <- function(path = "Rprof.out") {
   prof_data <- gsub('" (\\d+#\\d+)', '",\\1', prof_data)
 
   # Remove frames related to profvis itself
-  prof_data <- sub('"force".*?"prof"$', '', prof_data)
+  prof_data <- sub('"force"[^("force")]*"prof"$', '', prof_data)
   prof_data <- str_split(prof_data, fixed(" "))
 
   # Parse each line into a separate data frame
