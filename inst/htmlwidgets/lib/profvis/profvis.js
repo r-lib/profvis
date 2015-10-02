@@ -131,37 +131,37 @@ profvis = (function() {
       .text(function(d) { return d.label; });
 
     // Calculate whether to display label in each cell -----------------
-    // Cache the width of label. This is a lookup table which, given the number
-    // of characters, gives the number of pixels.
-    var labelWidthTable = [];
-    function getLabelWidth(el, nchar) {
-      // Add entry if it doesn't already exist
-      if (labelWidthTable[nchar] === undefined) {
-        labelWidthTable[nchar] = el.getBoundingClientRect().width;
-      }
-      return labelWidthTable[nchar];
-    }
-
-    // Cache the width of rects. This is a lookup table which, given the number
-    // of frames, gives the number of pixels.
-    var rectWidthTable = [];
-    function getRectWidth(el, nframe) {
-      // Add entry if it doesn't already exist
-      if (rectWidthTable[nframe] === undefined) {
-        rectWidthTable[nframe] = el.getBoundingClientRect().width;
-      }
-      return rectWidthTable[nframe];
-    }
 
     // Show labels that fit in the corresponding rectangle, and hide others.
     // This is very slow because of the getBoundingClientRect() calls.
     function updateLabelVisibility() {
-      labels.attr("visibility", function(d) {
-        var scale = zoom ? zoom.scale() : 1;
+      // Cache the width of label. This is a lookup table which, given the number
+      // of characters, gives the number of pixels.
+      var labelWidthTable = [];
+      function getLabelWidth(el, nchar) {
+        // Add entry if it doesn't already exist
+        if (labelWidthTable[nchar] === undefined) {
+          labelWidthTable[nchar] = el.getBoundingClientRect().width;
+        }
+        return labelWidthTable[nchar];
+      }
 
+      // Cache the width of rects. This is a lookup table which, given the number
+      // of frames, gives the number of pixels.
+      var rectWidthTable = [];
+      function getRectWidth(el, nframe) {
+        // Add entry if it doesn't already exist
+        if (rectWidthTable[nframe] === undefined) {
+          rectWidthTable[nframe] = el.getBoundingClientRect().width;
+        }
+        return rectWidthTable[nframe];
+      }
+
+      // Now calculate text and rect width for each cell.
+      labels.attr("visibility", function(d) {
         var labelWidth = getLabelWidth(this, d.label.length);
-        var boxWidth = scale * getRectWidth(this.parentNode.querySelector(".rect"),
-                                            d.endTime - d.startTime + 1);
+        var boxWidth = getRectWidth(this.parentNode.querySelector(".rect"),
+                                    d.endTime - d.startTime + 1);
 
         return (labelWidth <= boxWidth) ? "visible" : "hidden";
       });
@@ -212,7 +212,8 @@ profvis = (function() {
       // Update the x range so that we're able to double-click on a block to
       // zoom, and have it fill the whole x width.
       x.range([0, el.clientWidth]);
-      redraw()
+      zoom.x(x);
+      redraw();
     }
     d3.select(window).on("resize", onResize);
 
@@ -294,16 +295,9 @@ profvis = (function() {
 
 
     // When a cell is double-clicked, zoom x to that cell's width.
-    var initialXdomain = x.domain();
     cells.on("dblclick.zoomcell", function(d) {
-      // Get desired scaling factor. The original x domain corresponds to
-      // zoom.scale()===1, so we divide that by our desired x domain.
-      var scaleFactor = (initialXdomain[1] - initialXdomain[0]) / (d.endTime - d.startTime);
-
-      // Rescale and translate so the block fills the x range
-      zoom
-        .scale(scaleFactor)
-        .translate([x(0) - x(d.startTime), zoom.translate()[1]]);
+      x.domain([d.startTime, d.endTime + 1]);
+      zoom.x(x);
 
       redraw(250);
     });
