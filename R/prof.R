@@ -17,7 +17,8 @@ prof <- function(expr, interval = 0.01, prof_file = NULL) {
   }
 
   # Keep original expression source code
-  expr_source <- attr(attr(substitute(expr), "wholeSrcref"), "srcfile")$lines
+  expr_source <- attr(substitute(expr), "wholeSrcref", exact = TRUE)
+  expr_source <- attr(expr_source, "srcfile", exact = TRUE)$lines
 
   gc()
   Rprof(prof_file, interval = interval, line.profiling = TRUE)
