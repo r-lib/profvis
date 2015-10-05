@@ -1,3 +1,5 @@
+#' Run an R expression and record profiling information
+#'
 #' @param expr Code to profile.
 #' @param interval Interval for profiling samples, in seconds.
 #' @param prof_file Name of an Rprof output file in which to save profiling

@@ -2,6 +2,7 @@
 % Please edit documentation in R/prof.R
 \name{prof}
 \alias{prof}
+\title{Run an R expression and record profiling information}
 \usage{
 prof(expr, interval = 0.01, prof_file = NULL)
 }
@@ -13,6 +14,9 @@ prof(expr, interval = 0.01, prof_file = NULL)
 \item{prof_file}{Name of an Rprof output file in which to save profiling
   data. If \code{NULL} (the default), a temporary file will be used and
   automatically removed when the function exits.}
+}
+\description{
+Run an R expression and record profiling information
 }
 \seealso{
 \code{\link{Rprof}} for more information about how the profiling
