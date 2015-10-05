@@ -1,5 +1,10 @@
+#' @param path Path to the \code{\link{Rprof}} output file.
+#' @param expr_source If any source refs in the profiling output have an empty
+#'   filename, that means they refer to code executed at the R console. This
+#'   code can be captured and passed (as a string) as the \code{expr_source}
+#'   argument.
 #' @import stringr
-parse_rprof <- function(path = "Rprof.out") {
+parse_rprof <- function(path = "Rprof.out", expr_source = NULL) {
   lines <- readLines(path)
 
   if (length(lines) < 2) {
@@ -75,16 +80,21 @@ parse_rprof <- function(path = "Rprof.out") {
 
   # Add filenames
   prof_data$filename <- labels$path[prof_data$filenum]
+  # Rename "" files to "<expr>"
+  prof_data$filename[prof_data$filename == ""] <- "<expr>"
 
   # Get code file contents ---------------------------
   filenames <- unique(prof_data$filename)
-  # Drop NA and ""
-  filenames <- filenames[!(is.na(filenames) | filenames == "")]
+  # Drop NA
+  filenames <- filenames[!is.na(filenames)]
 
   # Get file contents
   names(filenames) <- filenames
   file_contents <- lapply(filenames, function(filename) {
-    readChar(filename, 1e6)
+    if (filename == "<expr>")
+      expr_source
+    else
+      readChar(filename, 1e6)
   })
 
   # Add labels for where there's a srcref but no function on the call stack.

@@ -1,4 +1,4 @@
-#' @param code Code to profile.
+#' @param expr Code to profile.
 #' @param interval Interval for profiling samples, in seconds.
 #' @param prof_file Name of an Rprof output file in which to save profiling
 #'   data. If \code{NULL} (the default), a temporary file will be used and
@@ -7,12 +7,15 @@
 #' @seealso \code{\link{Rprof}} for more information about how the profiling
 #'   data is collected.
 #' @export
-prof <- function(code, interval = 0.01, prof_file = NULL) {
+prof <- function(expr, interval = 0.01, prof_file = NULL) {
   remove_on_exit <- FALSE
   if (is.null(prof_file)) {
     prof_file <- tempfile(fileext = ".prof")
     remove_on_exit <- TRUE
   }
+
+  # Keep original expression source code
+  expr_source <- attr(attr(substitute(expr), "wholeSrcref"), "srcfile")$lines
 
   gc()
   Rprof(prof_file, interval = interval, line.profiling = TRUE)
@@ -21,11 +24,11 @@ prof <- function(code, interval = 0.01, prof_file = NULL) {
     on.exit(unlink(prof_file), add = TRUE)
 
   tryCatch(
-    force(code),
+    force(expr),
     error = function(e) NULL,
     interrupt = function(e) NULL
   )
   Rprof(NULL)
 
-  parse_rprof(prof_file)
+  parse_rprof(prof_file, expr_source)
 }

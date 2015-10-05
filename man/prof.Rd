@@ -3,10 +3,10 @@
 \name{prof}
 \alias{prof}
 \usage{
-prof(code, interval = 0.01, prof_file = NULL)
+prof(expr, interval = 0.01, prof_file = NULL)
 }
 \arguments{
-\item{code}{Code to profile.}
+\item{expr}{Code to profile.}
 
 \item{interval}{Interval for profiling samples, in seconds.}
 
