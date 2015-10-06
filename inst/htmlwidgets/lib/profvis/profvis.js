@@ -89,7 +89,10 @@ profvis = (function() {
       d3.min(prof, function(d) { return d.startTime; }),
       d3.max(prof, function(d) { return d.endTime; })
     ];
-    var yDomain = d3.extent(prof, function(d) { return d.depth; });
+    var yDomain = [
+      d3.min(prof, function(d) { return d.depth; }),
+      d3.max(prof, function(d) { return d.depth; }) + 1
+    ];
 
     // Scales
     var x = d3.scale.linear()
