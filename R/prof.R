@@ -28,8 +28,12 @@ prof <- function(expr, interval = 0.01, prof_file = NULL) {
 
   tryCatch(
     force(expr),
-    error = function(e) NULL,
-    interrupt = function(e) NULL
+    error = function(e) {
+      message("prof: code exited with error:\n", e$message, "\n")
+    },
+    interrupt = function(e) {
+      message("prof: interrupt received.")
+    }
   )
   Rprof(NULL)
 
