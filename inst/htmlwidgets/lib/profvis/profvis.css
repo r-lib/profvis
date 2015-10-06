@@ -1,14 +1,11 @@
-.profvis {
-  width: 800px;
-}
-
 .profvis-code {
   float: left;
   position: absolute;
+  left: 10px;
   top: 10px;
   bottom: 10px;
   overflow-y: scroll;
-  width: 850px;
+  width: 750px;
 }
 
 .profvis-flamegraph {
@@ -16,7 +13,7 @@
   right: 10px;
   top: 10px;
   bottom: 10px;
-  left: 900px;
+  left: 770px;
   overflow: hidden;
 }
 
