@@ -21,7 +21,8 @@ prof <- function(expr, interval = 0.01, prof_file = NULL) {
   expr_source <- attr(expr_source, "srcfile", exact = TRUE)$lines
 
   gc()
-  Rprof(prof_file, interval = interval, line.profiling = TRUE)
+  Rprof(prof_file, interval = interval, line.profiling = TRUE,
+        gc.profiling = TRUE)
   on.exit(Rprof(NULL), add = TRUE)
   if (remove_on_exit)
     on.exit(unlink(prof_file), add = TRUE)
