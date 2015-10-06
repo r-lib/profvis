@@ -193,7 +193,15 @@ profvis = (function() {
         .attr("x", function(d) { return (x(d.endTime + 1) + x(d.startTime)) / 2; })
         .attr("y", function(d) { return y(d.depth + 0.5); });
 
-      updateLabelVisibilityDebounced();
+      if (duration === 0) {
+        updateLabelVisibilityDebounced();
+
+      } else {
+        // If there's a transition, select a single rect element, and add the
+        // function to be called at the end of the transition.
+        rects2.filter(function(d, i) { return i === 0; })
+          .each("end", updateLabelVisibilityDebounced);
+      }
     }
 
     redraw();
