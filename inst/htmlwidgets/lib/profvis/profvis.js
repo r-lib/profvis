@@ -405,7 +405,11 @@ profvis = (function() {
           if (i === 0) {
             startLeaf = leaf;
 
-          } else if (leaf.time !== lastLeaf.time + 1 || leaf.label !== startLeaf.label) {
+          } else if (leaf.time !== lastLeaf.time + 1 ||
+                     leaf.label !== startLeaf.label ||
+                     leaf.filename !== startLeaf.filename ||
+                     leaf.linenum !== startLeaf.linenum)
+          {
             newLeaves.push({
               depth:     startLeaf.depth,
               filename:  startLeaf.filename,
