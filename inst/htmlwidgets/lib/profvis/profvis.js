@@ -81,6 +81,7 @@ profvis = (function() {
 
     // Process data ---------------------------------------------------
     var prof = colToRows(message.prof);
+    prof = collapseStacks(prof, message.collapse);
     prof = consolidateRuns(prof);
 
     // Size of virtual graphing area ----------------------------------
@@ -399,6 +400,76 @@ profvis = (function() {
   }
 
 
+  // Given raw profiling data and a list of vertical sequences to collapse,
+  // collapse those sequences and replace them with one element named
+  // "<<Collapsed>>".
+  function collapseStacks(prof, collapseList) {
+
+    function arraysEqual(a, b) {
+      return (a.length === b.length) && a.every(function(element, i) {
+        return element === b[i];
+      });
+    }
+
+    // Match one array sequence in another array. If found, return start and
+    // end indices; if not found, return null.
+    function matchSequence(pattern, data) {
+      var noffsets = data.length - pattern.length + 1;
+
+      for (var offset=0; offset<noffsets; offset++) {
+        var dataSlice = data.slice(offset, offset + pattern.length);
+        if (arraysEqual(pattern, dataSlice)) {
+          return [offset, offset + pattern.length - 1];
+        }
+      }
+      return null;
+    }
+
+    var data = d3.nest()
+      .key(function(d) { return d.time; })
+      .rollup(function(leaves) {
+        leaves = leaves.sort(function(a, b) { return a.depth - b.depth; });
+        collapseList.forEach(function(collapseSeq) {
+          var matchIdx;
+
+          // Search for the collapse sequence and repeat until no more matches
+          // are found.
+          do {
+            var labels = leaves.map(function(d) { return d.label; });
+            matchIdx = matchSequence(collapseSeq, labels);
+            // If we matched a sequence, remove that sequence and insert the
+            // <<Collapsed>> entry.
+            if (!!matchIdx) {
+              var newLeaf = {
+                time: leaves[matchIdx[0]].time,
+                depth: leaves[matchIdx[0]].depth,
+                label: "<<Collapsed>>",
+                filenum: null,
+                filename: null,
+                linenum: null
+              };
+              leaves.splice(matchIdx[0], matchIdx[1] - matchIdx[0] + 1,
+                            newLeaf);
+            }
+          } while (!!matchIdx);
+        });
+
+        // Recalculate depths so that collapsed stacks are contiguous.
+        var startDepth = leaves[0].depth;
+        leaves.map(function(d, i) {
+          d.depth = startDepth + i;
+        });
+
+        return leaves;
+      })
+      .map(prof);
+
+    // Un-nest (flatten) the data
+    data = d3.merge(d3.map(data).values());
+    return data;
+  }
+
+
   // Given raw profiling data, consolidate consecutive blocks for a flamegraph
   function consolidateRuns(prof) {
     var data = d3.nest()
@@ -496,7 +567,7 @@ profvis = (function() {
 
     } else if (label) {
       // Don't highlight blocks for these labels
-      var exclusions = ["<Anonymous>", "FUN"];
+      var exclusions = ["<Anonymous>", "FUN", "<<Collapsed>>"];
       if (exclusions.some(function(x) { return label === x; })) {
         return;
       }

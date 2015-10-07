@@ -6,6 +6,8 @@
 #'
 #' @export
 profvis <- function(message, width = NULL, height = NULL) {
+  # Add list of sequences to collapse
+  message$collapse <- collapseList()
 
   # forward options using x
   x = list(
