@@ -1,5 +1,5 @@
 # Returns a list of call stack sequences that can be collapsed
-collapseList <- function() {
+collapseSequences <- function() {
   list(
     Reactive = c("<Anonymous>", "<Anonymous>", "withReactiveDomain", "tryCatch",
       "tryCatchList", "<Anonymous>", "shinyCallingHandlers",
