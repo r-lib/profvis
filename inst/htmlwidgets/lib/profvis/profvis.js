@@ -425,25 +425,30 @@ profvis = (function() {
       return null;
     }
 
+    // Convert object with arrays to array of objects with key and value.
+    collapseList = d3.entries(collapseList);
+
     var data = d3.nest()
       .key(function(d) { return d.time; })
       .rollup(function(leaves) {
         leaves = leaves.sort(function(a, b) { return a.depth - b.depth; });
         collapseList.forEach(function(collapseSeq) {
+          var name = collapseSeq.key;
+          var sequence = collapseSeq.value;
           var matchIdx;
 
           // Search for the collapse sequence and repeat until no more matches
           // are found.
           do {
             var labels = leaves.map(function(d) { return d.label; });
-            matchIdx = matchSequence(collapseSeq, labels);
+            matchIdx = matchSequence(sequence, labels);
             // If we matched a sequence, remove that sequence and insert the
             // <<Collapsed>> entry.
             if (!!matchIdx) {
               var newLeaf = {
                 time: leaves[matchIdx[0]].time,
                 depth: leaves[matchIdx[0]].depth,
-                label: "<<Collapsed>>",
+                label: "<<Collapsed " + name + ">>",
                 filenum: null,
                 filename: null,
                 linenum: null
@@ -567,7 +572,7 @@ profvis = (function() {
 
     } else if (label) {
       // Don't highlight blocks for these labels
-      var exclusions = ["<Anonymous>", "FUN", "<<Collapsed>>"];
+      var exclusions = ["<Anonymous>", "FUN"];
       if (exclusions.some(function(x) { return label === x; })) {
         return;
       }
