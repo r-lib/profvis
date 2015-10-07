@@ -8,6 +8,8 @@
 profvis <- function(message, width = NULL, height = NULL) {
   # Add sequences to collapse
   message$collapse <- collapseSequences()
+  # Patterns to highlight on flamegraph
+  message$highlight <- highlightPatterns()
 
   # forward options using x
   x = list(

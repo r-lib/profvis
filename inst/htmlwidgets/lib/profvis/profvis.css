@@ -78,6 +78,10 @@ table.profvis-table .timebar {
   fill: #ddd;
 }
 
+.profvis-flamegraph .cell .rect.shaded {
+  fill: #eef;
+}
+
 .profvis-flamegraph .cell .rect.selected {
   fill: #ddd;
 }

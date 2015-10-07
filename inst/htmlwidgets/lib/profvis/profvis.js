@@ -130,6 +130,17 @@ profvis = (function() {
       .attr("class", "rect")
       .classed("highlighted", function(d) { return d.filename !== null; });
 
+    // Decide to
+    var highlightPatterns = d3.entries(message.highlight);
+    highlightPatterns.map(function(item) {
+      var cssClass = item.key;
+      var regexp = new RegExp(item.value);
+
+      rects.classed(cssClass, function(d) {
+        return d.label.search(regexp) !== -1;
+      });
+    });
+
     var labels = cells.append("text")
       .attr("class", "label")
       .text(function(d) { return d.label; });
