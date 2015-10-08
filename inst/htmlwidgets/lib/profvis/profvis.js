@@ -130,7 +130,8 @@ profvis = (function() {
       .attr("class", "rect")
       .classed("highlighted", function(d) { return d.filename !== null; });
 
-    // Decide to
+    // Add CSS classes for highlighting cells with labels that match particular
+    // regex patterns.
     var highlightPatterns = d3.entries(message.highlight);
     highlightPatterns.map(function(item) {
       var cssClass = item.key;
