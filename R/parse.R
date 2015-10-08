@@ -95,6 +95,8 @@ parse_rprof <- function(path = "Rprof.out", expr_source = NULL) {
   file_contents <- lapply(filenames, function(filename) {
     if (filename == "<expr>")
       expr_source
+    else if (filename == "<text>")
+      ""
     else
       readChar(filename, 1e6)
   })
