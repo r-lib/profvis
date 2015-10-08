@@ -102,6 +102,18 @@ table.profvis-table .timebar {
 }
 
 
+.profvis-flamegraph .axis text {
+  font: 10px sans-serif;
+}
+
+.profvis-flamegraph .axis path,
+.profvis-flamegraph .axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+
 .profvis-flamegraph .tooltip rect {
   fill: #eee;
   stroke: #000;

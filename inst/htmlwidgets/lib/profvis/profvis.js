@@ -86,6 +86,12 @@ profvis = (function() {
 
     // Size of virtual graphing area ----------------------------------
     // (Can differ from visible area)
+
+    // Margin inside the svg where the plotting occurs
+    var margin = { top: 0, right: 0, left: 0, bottom: 20 };
+    var width = el.clientWidth - margin.left - margin.right;
+    var height = el.clientHeight - margin.top - margin.bottom;
+
     var xDomain = [
       d3.min(prof, function(d) { return d.startTime; }),
       d3.max(prof, function(d) { return d.endTime; })
@@ -98,7 +104,7 @@ profvis = (function() {
     // Scales
     var x = d3.scale.linear()
       .domain(xDomain)
-      .range([0, el.clientWidth]);
+      .range([0, width]);
 
     var y = d3.scale.linear()
       .domain(yDomain)
@@ -109,16 +115,17 @@ profvis = (function() {
       .attr('class', 'profvis-flamegraph-inner');
 
     var svg = wrapper.append('svg')
-      .attr('width', el.clientWidth)
-      .attr('height', el.clientHeight);
+      .attr('width', width + margin.left + margin.right)
+      .attr('height', height + margin.top + margin.bottom);
 
-    var container = svg.append('g');
+    var container = svg.append('g')
+      .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
     // Add a background rect so we have something to grab for zooming/panning
     var backgroundRect = container.append("rect")
       .attr("class", "background")
-      .attr("width", el.clientWidth)
-      .attr("height", el.clientHeight);
+      .attr("width", width)
+      .attr("height", height);
 
     var cells = container.selectAll(".cell")
       .data(prof)
@@ -184,6 +191,16 @@ profvis = (function() {
     }
     var updateLabelVisibilityDebounced = debounce(updateLabelVisibility, 100);
 
+    // Axes ------------------------------------------------------------
+    var xAxis = d3.svg.axis()
+      .scale(x)
+      .orient("bottom");
+
+    svg.append("g")
+      .attr("class", "x axis")
+      .attr("transform", "translate(" + margin.left + "," + height + ")")
+      .call(xAxis);
+
     // Update positions when scales change ----------------------------
     function redraw(duration) {
       if (duration === undefined) duration = 0;
@@ -191,12 +208,14 @@ profvis = (function() {
       // Make local copies because we may be adding transitions
       var rects2 = rects;
       var labels2 = labels;
+      var x_axis = svg.select(".x.axis");
 
       // Only add the transition if needed (duration!=0) because there's a
       // performance penalty
       if (duration !== 0) {
         rects2 = rects2.transition().duration(duration);
         labels2 = labels2.transition().duration(duration);
+        x_axis = x_axis.transition().duration(duration);
       }
 
       rects2
@@ -208,6 +227,8 @@ profvis = (function() {
       labels2
         .attr("x", function(d) { return (x(d.endTime + 1) + x(d.startTime)) / 2; })
         .attr("y", function(d) { return y(d.depth + 0.5); });
+
+      x_axis.call(xAxis);
 
       if (duration === 0) {
         updateLabelVisibilityDebounced();
