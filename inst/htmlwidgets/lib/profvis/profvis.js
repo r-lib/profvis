@@ -418,7 +418,7 @@ profvis = (function() {
           .classed({ selected: true });
 
         // Highlight corresponding flamegraph blocks
-        vis.flameGraphCells.select('.rect')
+        vis.flameGraphCells
           .filter(function(d) {
             // Check for filename and linenum match, and if provided, a label match.
             var match = d.filename === filename && d.linenum === linenum;
@@ -427,6 +427,7 @@ profvis = (function() {
             }
             return match;
           })
+          .select('.rect')
           .classed({ selected: true });
 
         tr.node().scrollIntoViewIfNeeded();
@@ -438,10 +439,13 @@ profvis = (function() {
           return;
         }
 
-        // If we only have the label, search for cells that match.
-        // Highlight corresponding flamegraph blocks
-        d3.selectAll('.profvis-flamegraph-inner .cell .rect')
-          .filter(function(d) { return (d.label === label); })
+        // If we only have the label, search for cells that match, but make sure
+        // to not select ones that have a filename and linenum.
+        vis.flameGraphCells
+          .filter(function(d) {
+            return d.label === label && d.filename === null && d.linenum === null;
+          })
+          .select('.rect')
           .classed({ selected: true });
       }
    }
