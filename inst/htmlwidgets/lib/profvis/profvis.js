@@ -286,17 +286,23 @@ profvis = (function() {
 
       // Recalculate dimensions on resize
       function onResize() {
+        var width = el.clientWidth - margin.left - margin.right;
+        var height = el.clientHeight - margin.top - margin.bottom;
+
         svg
-          .attr('width', el.clientWidth)
-          .attr('height', el.clientHeight);
+          .attr('width', width + margin.left + margin.right)
+          .attr('height', height + margin.top + margin.bottom);
 
         backgroundRect
-          .attr("width", el.clientWidth)
-          .attr("height", el.clientHeight);
+          .attr("width", width)
+          .attr("height", height);
+
+        svg.select(".x.axis")
+          .attr("transform", "translate(" + margin.left + "," + height + ")");
 
         // Update the x range so that we're able to double-click on a block to
         // zoom, and have it fill the whole x width.
-        x.range([0, el.clientWidth]);
+        x.range([0, width]);
         zoom.x(x);
         redraw();
       }
