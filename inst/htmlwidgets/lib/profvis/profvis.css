@@ -21,6 +21,7 @@ table.profvis-table {
   border-collapse: collapse;
   font-size: 12px;
   width: 100%;
+  text-align: left;
 }
 
 table.profvis-table tr {
@@ -56,11 +57,15 @@ table.profvis-table .time {
   padding: 0 2em 0 4em;
 }
 
-table.profvis-table .timebar {
+table.profvis-table .timebar-cell {
   padding-left: 0;
   border-left: 1px solid black;
   min-width: 5em;
   width: 5em;
+}
+
+table.profvis-table .timebar-cell > .timebar {
+  background-color: #333;
 }
 
 

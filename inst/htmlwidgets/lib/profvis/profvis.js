@@ -18,32 +18,52 @@ profvis = (function() {
 
     var allFileTimes = getLineTimes(prof, message.files);
 
-    var content = '<div class="profvis-table-inner">';
+    el.innerHTML = '<div class="profvis-table-inner"></div>';
 
-    for (var i=0; i < allFileTimes.length; i++) {
-      var fileData = allFileTimes[i];
+    var content = d3.select(el).select("div.profvis-table-inner");
 
-      content += '<table class="profvis-table" data-filename="' + fileData.filename + '">' +
-        '<tr><th colspan="4">' + escapeHTML(fileData.filename) + '</th></tr>';
+    console.log("making table")
+    var tables = content.selectAll("table")
+        .data(allFileTimes)
+      .enter()
+        .append("table")
+        .attr("class", "profvis-table");
 
-      for (var j=0; j<fileData.lineData.length; j++) {
-        var line = fileData.lineData[j];
-        content += '<tr data-linenum="' + line.linenum + '">' +
-          '<td class="linenum"><code>' + line.linenum + '</code></td>' +
-          '<td class="code"><code>' + escapeHTML(line.content) + '</code></td>' +
-          '<td class="time">' + (Math.round(line.sumTime * 100) / 100) + '</td>' +
-          '<td class="timebar">' +
-            '<div style="width: ' + Math.round(line.propTime * 100) + '%; background-color: black;">&nbsp;</div>' +
-          '</td>' +
-          '</tr>';
-      }
+    // Table headers
+    tables
+      .append("tr").append("th")
+      .attr("colspan", "4")
+      .text(function(d) { return d.filename; });
 
-      content += '</table>';
-    }
+    // Insert each line of code
+    var rows = tables.selectAll("tr")
+        .data(function(d) { return d.lineData; })
+      .enter()
+        .append("tr");
 
-    content += '</div>';
+    rows.append("td")
+      .attr("class", "linenum")
+      .append("code")
+      .text(function(d) { return d.linenum; });
 
-    el.innerHTML = content;
+    rows.append("td")
+      .attr("class", "code")
+      .append("code")
+      .text(function(d) { return d.content; });
+
+    rows.append("td")
+      .attr("class", "time")
+      .text(function(d) { return (Math.round(d.sumTime * 100) / 100); });
+
+    rows.append("td")
+      .attr("class", "timebar-cell")
+      .append("div")
+        .attr("class", "timebar")
+        .style("width", function(d) {
+          return Math.round(d.propTime * 100) + "%";
+        })
+        .html("&nbsp;");
+
 
     // Handle mousing over code
     // Get the DOM element with the table
