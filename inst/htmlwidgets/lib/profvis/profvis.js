@@ -93,7 +93,7 @@ profvis = (function() {
     var height = el.clientHeight - margin.top - margin.bottom;
 
     var xDomain = [
-      d3.min(prof, function(d) { return d.startTime; }),
+      d3.min(prof, function(d) { return d.startTime; }) - 1,
       d3.max(prof, function(d) { return d.endTime; })
     ];
     var yDomain = [
@@ -219,13 +219,13 @@ profvis = (function() {
       }
 
       rects2
-        .attr("width", function(d) { return x(d.endTime + 1) - x(d.startTime); })
+        .attr("width", function(d) { return x(d.endTime) - x(d.startTime - 1); })
         .attr("height", y(0) - y(1))
-        .attr("x", function(d) { return x(d.startTime); })
+        .attr("x", function(d) { return x(d.startTime - 1); })
         .attr("y", function(d) { return y(d.depth + 1); });
 
       labels2
-        .attr("x", function(d) { return (x(d.endTime + 1) + x(d.startTime)) / 2; })
+        .attr("x", function(d) { return (x(d.endTime) + x(d.startTime - 1)) / 2; })
         .attr("y", function(d) { return y(d.depth + 0.5); });
 
       x_axis.call(xAxis);
