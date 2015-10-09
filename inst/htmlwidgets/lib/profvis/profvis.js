@@ -67,10 +67,17 @@ profvis = (function() {
           .attr("class", "profvis-table");
 
       // Table headers
-      tables
-        .append("tr").append("th")
-        .attr("colspan", "4")
+      var headerRows = tables.append("tr");
+      headerRows.append("th")
+        .attr("colspan", "2")
         .text(function(d) { return d.filename; });
+
+      headerRows.append("th")
+        .attr("class", "time")
+        .text("Total (ms)");
+
+      headerRows.append("th")
+        .text("Proportion");
 
       // Insert each line of code
       var rows = tables.selectAll("tr.code-row")

@@ -21,7 +21,6 @@ table.profvis-table {
   border-collapse: collapse;
   font-size: 12px;
   width: 100%;
-  font-family: monospace;
   text-align: left;
 }
 
@@ -42,6 +41,7 @@ table.profvis-table .linenum {
   border-color: #eee;
   border-style: solid;
   padding: 0 5px;
+  font-family: monospace;
 }
 
 table.profvis-table .code {
@@ -51,6 +51,7 @@ table.profvis-table .code {
   line-height: 1.25;
   width: 640px;
   max-width: 640px;
+  font-family: monospace;
 }
 
 
@@ -59,7 +60,8 @@ table.profvis-table .selected {
 }
 
 table.profvis-table .time {
-  padding: 0 2em 0 4em;
+  padding: 0 2em 0 1em;
+  text-align: right;
 }
 
 table.profvis-table .timebar-cell {
