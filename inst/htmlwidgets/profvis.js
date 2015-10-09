@@ -13,15 +13,7 @@ HTMLWidgets.widget({
   },
 
   renderValue: function(el, x, instance) {
-    var table = document.createElement("div");
-    table.className = "profvis-code";
-    el.appendChild(table);
-    profvis.generateTable(table, x.message);
-
-    var flameGraph = document.createElement("div");
-    flameGraph.className = "profvis-flamegraph";
-    el.appendChild(flameGraph);
-    profvis.generateFlameGraph(flameGraph, x.message);
+    profvis.render(el, x.message);
   },
 
   resize: function(el, width, height, instance) {
