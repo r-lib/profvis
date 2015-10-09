@@ -13,10 +13,13 @@ profvis = (function() {
   var profvis = {};
 
   profvis.render = function(el, message) {
+    var prof = colToRows(message.prof);
+    applyInterval(prof, message.interval);
+
     var vis = {
       el: el,
       // Convert object-with-arrays format prof data to array-of-objects format
-      prof: colToRows(message.prof),
+      prof: prof,
       files: message.files,
       collapse: message.collapse,
 
@@ -70,7 +73,7 @@ profvis = (function() {
         .text(function(d) { return d.filename; });
 
       // Insert each line of code
-      var rows = tables.selectAll("tr")
+      var rows = tables.selectAll("tr.code-row")
           .data(function(d) { return d.lineData; })
         .enter()
           .append("tr")
@@ -103,13 +106,6 @@ profvis = (function() {
         .on("mouseover", function(d) {
           highlightSelectedCode(d.filename, d.linenum, d.label);
         });
-
-      // Calculate longest time sample
-      var maxTime = d3.max(allFileTimes, function(fileData) {
-        return d3.max(fileData.lineData, function(line) {
-          return d3.max(line.times);
-        });
-      });
 
       return content;
     }
@@ -260,13 +256,13 @@ profvis = (function() {
         }
 
         rects2
-          .attr("width", function(d) { return x(d.endTime) - x(d.startTime - 1); })
+          .attr("width", function(d) { return x(d.endTime) - x(d.startTime); })
           .attr("height", y(0) - y(1))
-          .attr("x", function(d) { return x(d.startTime - 1); })
+          .attr("x", function(d) { return x(d.startTime); })
           .attr("y", function(d) { return y(d.depth + 1); });
 
         labels2
-          .attr("x", function(d) { return (x(d.endTime) + x(d.startTime - 1)) / 2; })
+          .attr("x", function(d) { return (x(d.endTime) + x(d.startTime)) / 2; })
           .attr("y", function(d) { return y(d.depth + 0.5); });
 
         x_axis.call(xAxis);
@@ -459,8 +455,7 @@ profvis = (function() {
   function getLineTimes(prof, files) {
     // Drop entries with null or "" filename
     prof = prof.filter(function(row) {
-      return row.filename !== null &&
-             row.filename !== "";
+      return row.filename !== null && row.filename !== "";
     });
 
     // Gather line-by-line file contents
@@ -474,7 +469,6 @@ profvis = (function() {
           filename: filename,
           linenum: i + 1,
           content: lines[i],
-          times: [],
           sumTime: 0
         };
       }
@@ -490,18 +484,19 @@ profvis = (function() {
       .key(function(d) { return d.filename; })
       .key(function(d) { return d.linenum; })
       .rollup(function(leaves) {
-        var times = leaves.map(function(d) { return d.time; });
+        var sumTime = leaves.reduce(function(sum, d) {
+            return sum + d.endTime - d.startTime
+          }, 0);
 
         return {
           filename: leaves[0].filename,
           linenum: leaves[0].linenum,
-          times: times,
-          sumTime: times.length
+          sumTime: sumTime
         };
       })
       .entries(prof);
 
-    // Insert the times and sumTimes into line content data
+    // Insert the sumTimes into line content data
     timeData.forEach(function(fileInfo) {
       // Find item in fileTimes that matches the file of this fileInfo object
       var fileLineData = fileLineTimes.filter(function(d) {
@@ -510,7 +505,6 @@ profvis = (function() {
 
       fileInfo.values.forEach(function(lineInfo) {
         lineInfo = lineInfo.values;
-        fileLineData[lineInfo.linenum - 1].times = lineInfo.times;
         fileLineData[lineInfo.linenum - 1].sumTime = lineInfo.sumTime;
       });
     });
@@ -539,7 +533,21 @@ profvis = (function() {
   }
 
 
-  // Given raw profiling data and a list of vertical sequences to collapse,
+  // Given the raw profiling data, convert `time` field to `startTime` and
+  // `endTime`, and use the supplied interval.
+  // Modifies data in place.
+  function applyInterval(prof, interval) {
+    prof.map(function(d) {
+      d.startTime = interval * (d.time - 1);
+      d.endTime = interval * (d.time);
+      delete d.time;
+    });
+
+    return prof;
+  }
+
+
+  // Given profiling data and a list of vertical sequences to collapse,
   // collapse those sequences and replace them with one element named
   // "<<Collapsed>>".
   function collapseStacks(prof, collapseList) {
@@ -568,7 +576,7 @@ profvis = (function() {
     collapseList = d3.entries(collapseList);
 
     var data = d3.nest()
-      .key(function(d) { return d.time; })
+      .key(function(d) { return d.startTime; })
       .rollup(function(leaves) {
         leaves = leaves.sort(function(a, b) { return a.depth - b.depth; });
         collapseList.forEach(function(collapseSeq) {
@@ -585,7 +593,8 @@ profvis = (function() {
             // <<Collapsed>> entry.
             if (!!matchIdx) {
               var newLeaf = {
-                time: leaves[matchIdx[0]].time,
+                startTime: leaves[matchIdx[0]].startTime,
+                endTime: leaves[matchIdx[0]].endTime,
                 depth: leaves[matchIdx[0]].depth,
                 label: "<<Collapsed " + name + ">>",
                 filenum: null,
@@ -614,12 +623,12 @@ profvis = (function() {
   }
 
 
-  // Given raw profiling data, consolidate consecutive blocks for a flamegraph
+  // Given profiling data, consolidate consecutive blocks for a flamegraph.
   function consolidateRuns(prof) {
     var data = d3.nest()
       .key(function(d) { return d.depth; })
       .rollup(function(leaves) {
-        leaves = leaves.sort(function(a, b) { return a.time - b.time; });
+        leaves = leaves.sort(function(a, b) { return a.startTime - b.startTime; });
 
         // Collapse consecutive leaves with the same fun
         var startLeaf = null;  // leaf starting this run
@@ -631,7 +640,7 @@ profvis = (function() {
           if (i === 0) {
             startLeaf = leaf;
 
-          } else if (leaf.time !== lastLeaf.time + 1 ||
+          } else if (leaf.startTime !== lastLeaf.endTime ||
                      leaf.label !== startLeaf.label ||
                      leaf.filename !== startLeaf.filename ||
                      leaf.linenum !== startLeaf.linenum)
@@ -642,8 +651,8 @@ profvis = (function() {
               filenum:   startLeaf.filenum,
               label:     startLeaf.label,
               linenum:   startLeaf.linenum,
-              startTime: startLeaf.time,
-              endTime:   lastLeaf.time
+              startTime: startLeaf.startTime,
+              endTime:   lastLeaf.endTime
             });
 
             startLeaf = leaf;
@@ -659,8 +668,8 @@ profvis = (function() {
           filenum:   startLeaf.filenum,
           label:     startLeaf.label,
           linenum:   startLeaf.linenum,
-          startTime: startLeaf.time,
-          endTime:   lastLeaf.time
+          startTime: startLeaf.startTime,
+          endTime:   lastLeaf.endTime
         });
 
         return newLeaves;

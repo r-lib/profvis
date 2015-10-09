@@ -13,9 +13,9 @@ parse_rprof <- function(path = "Rprof.out", expr_source = NULL) {
     stop("No parsing data available. Maybe your function was too fast?")
   }
 
-  # Parse header, including interval
+  # Parse header, including interval (in ms)
   opts <- str_split(lines[[1]], ": ")[[1]]
-  interval <- as.numeric(str_split(opts[length(opts)], "=")[[1]][2]) / 1e6
+  interval <- as.numeric(str_split(opts[length(opts)], "=")[[1]][2]) / 1e3
   lines <- lines[-1]
 
   # Separate file labels and profiling data
@@ -113,6 +113,7 @@ parse_rprof <- function(path = "Rprof.out", expr_source = NULL) {
 
   list(
     prof = prof_data,
+    interval = interval,
     files = file_contents
   )
 }
