@@ -42,7 +42,7 @@ profvis = (function() {
     generateFlameGraph();
 
     // Cache some components
-    vis.codeTableRows = d3.select(vis.codeTable).selectAll("tr");
+    vis.codeTableRows = d3.select(vis.codeTable).selectAll("tr.code-row");
     vis.flameGraphCells = d3.select(vis.flameGraph).selectAll(".cell");
 
 
@@ -73,7 +73,8 @@ profvis = (function() {
       var rows = tables.selectAll("tr")
           .data(function(d) { return d.lineData; })
         .enter()
-          .append("tr");
+          .append("tr")
+          .attr("class", "code-row");
 
       rows.append("td")
         .attr("class", "linenum")

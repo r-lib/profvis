@@ -21,7 +21,12 @@ table.profvis-table {
   border-collapse: collapse;
   font-size: 12px;
   width: 100%;
+  font-family: monospace;
   text-align: left;
+}
+
+table.profvis-table th {
+  background-color: #ddd;
 }
 
 table.profvis-table tr {
