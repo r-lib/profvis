@@ -394,71 +394,6 @@ profvis = (function() {
     }
 
 
-    function getLineTimes(prof, files) {
-      // Drop entries with null or "" filename
-      prof = prof.filter(function(row) {
-        return row.filename !== null &&
-               row.filename !== "";
-      });
-
-      // Gather line-by-line file contents
-      var fileLineTimes = files.map(function(file) {
-        // Create array of objects with info for each line of code.
-        var lines = file.content.split("\n");
-        var lineData = [];
-        var filename = file.filename;
-        for (var i=0; i<lines.length; i++) {
-          lineData[i] = {
-            filename: filename,
-            linenum: i + 1,
-            content: lines[i],
-            times: [],
-            sumTime: 0
-          };
-        }
-
-        return {
-          filename: filename,
-          lineData: lineData
-        };
-      });
-
-      // Get timing data for each line
-      var timeData = d3.nest()
-        .key(function(d) { return d.filename; })
-        .key(function(d) { return d.linenum; })
-        .rollup(function(leaves) {
-          var times = leaves.map(function(d) { return d.time; });
-
-          return {
-            filename: leaves[0].filename,
-            linenum: leaves[0].linenum,
-            times: times,
-            sumTime: times.length
-          };
-        })
-        .entries(prof);
-
-      // Insert the times and sumTimes into line content data
-      timeData.forEach(function(fileInfo) {
-        // Find item in fileTimes that matches the file of this fileInfo object
-        var fileLineData = fileLineTimes.filter(function(d) {
-          return d.filename === fileInfo.key;
-        })[0].lineData;
-
-        fileInfo.values.forEach(function(lineInfo) {
-          lineInfo = lineInfo.values;
-          fileLineData[lineInfo.linenum - 1].times = lineInfo.times;
-          fileLineData[lineInfo.linenum - 1].sumTime = lineInfo.sumTime;
-        });
-      });
-
-      calcProportionalTimes(fileLineTimes);
-
-      return fileLineTimes;
-    }
-
-
     // Highlights line of code and flamegraph blocks corresponding to a
     // filenum. linenum and, if provided, label combination. (When this is called
     // from hovering over code, no label is provided.)
@@ -514,6 +449,71 @@ profvis = (function() {
   };  // profvis.render()
 
 
+
+  // Caculate amount of time spent on each line of code
+  function getLineTimes(prof, files) {
+    // Drop entries with null or "" filename
+    prof = prof.filter(function(row) {
+      return row.filename !== null &&
+             row.filename !== "";
+    });
+
+    // Gather line-by-line file contents
+    var fileLineTimes = files.map(function(file) {
+      // Create array of objects with info for each line of code.
+      var lines = file.content.split("\n");
+      var lineData = [];
+      var filename = file.filename;
+      for (var i=0; i<lines.length; i++) {
+        lineData[i] = {
+          filename: filename,
+          linenum: i + 1,
+          content: lines[i],
+          times: [],
+          sumTime: 0
+        };
+      }
+
+      return {
+        filename: filename,
+        lineData: lineData
+      };
+    });
+
+    // Get timing data for each line
+    var timeData = d3.nest()
+      .key(function(d) { return d.filename; })
+      .key(function(d) { return d.linenum; })
+      .rollup(function(leaves) {
+        var times = leaves.map(function(d) { return d.time; });
+
+        return {
+          filename: leaves[0].filename,
+          linenum: leaves[0].linenum,
+          times: times,
+          sumTime: times.length
+        };
+      })
+      .entries(prof);
+
+    // Insert the times and sumTimes into line content data
+    timeData.forEach(function(fileInfo) {
+      // Find item in fileTimes that matches the file of this fileInfo object
+      var fileLineData = fileLineTimes.filter(function(d) {
+        return d.filename === fileInfo.key;
+      })[0].lineData;
+
+      fileInfo.values.forEach(function(lineInfo) {
+        lineInfo = lineInfo.values;
+        fileLineData[lineInfo.linenum - 1].times = lineInfo.times;
+        fileLineData[lineInfo.linenum - 1].sumTime = lineInfo.sumTime;
+      });
+    });
+
+    calcProportionalTimes(fileLineTimes);
+
+    return fileLineTimes;
+  }
 
   // Calculate proportional times, relative to the longest time in the data
   // set. Modifies data in place.
