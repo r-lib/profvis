@@ -93,13 +93,44 @@ parse_rprof <- function(path = "Rprof.out", expr_source = NULL) {
   # Get file contents
   names(filenames) <- filenames
   file_contents <- lapply(filenames, function(filename) {
-    if (filename == "<expr>")
-      expr_source
-    else if (filename == "<text>")
-      ""
-    else
-      readChar(filename, 1e6)
+    if (filename == "<expr>") {
+      return(expr_source)
+
+    } else if (filename == "<text>") {
+      return(NULL)
+
+    } else {
+      filehandle <- tryCatch(
+        file(filename, 'rb'),
+        error = function(e) NULL,
+        warning = function(e) NULL
+      )
+      # If we can't read file, return NULL
+      if (is.null(filehandle)) {
+        return(NULL)
+      }
+      on.exit( close(filehandle) )
+
+      return(readChar(filename, 1e6))
+    }
   })
+
+  # Drop NULLs. Yes, this actually works.
+  file_contents[vapply(file_contents, is.null, logical(1))] <- NULL
+
+  # Remove srcref info from the prof_data in casens where no file is present.
+  no_file_idx <- !(prof_data$filename %in% names(file_contents))
+  prof_data$filename[no_file_idx] <- NA
+  prof_data$filenum[no_file_idx] <- NA
+  prof_data$linenum[no_file_idx] <- NA
+
+  # Because we removed srcrefs when no file is present, there can be cases where
+  # the label is NA and we couldn't read the file. This is when the profiler
+  # output is like '1#2 "foo" "bar"' -- when the first item is a ref that
+  # points to a file we couldn't read. We need to remove these NAs because we
+  # don't have any useful information about them.
+  prof_data <- prof_data[!(is.na(prof_data$label) & no_file_idx), ]
+
 
   # Add labels for where there's a srcref but no function on the call stack.
   # This can happen for frames at the top level.
