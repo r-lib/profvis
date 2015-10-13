@@ -387,6 +387,12 @@ profvis = (function() {
         .call(zoom)
         .on("dblclick.zoom", null); // Disable zoom's built-in double-click behavior
 
+      // Zoom out when background is double-clicked
+      backgroundRect.on("dblclick.zoombackground", function() {
+        x.domain(xDomain);
+        zoom.x(x);
+        redraw(250);
+      });
 
       // When a cell is double-clicked, zoom x to that cell's width.
       cells.on("dblclick.zoomcell", function(d) {
