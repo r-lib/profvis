@@ -22,6 +22,7 @@ profvis = (function() {
       prof: prof,
       files: message.files,
       collapse: message.collapse,
+      fileLineTimes: getFileLineTimes(prof, message.files),
 
       // DOM elements
       codeTable: null,
@@ -53,15 +54,13 @@ profvis = (function() {
     function generateCodeTable() {
       var el = vis.codeTable;
 
-      var allFileTimes = getLineTimes(vis.prof, vis.files);
-
       el.innerHTML = '<div class="profvis-table-inner"></div>';
 
       var content = d3.select(el).select("div.profvis-table-inner");
 
       // One table for each file
       var tables = content.selectAll("table")
-          .data(allFileTimes)
+          .data(vis.fileLineTimes)
         .enter()
           .append("table")
           .attr("class", "profvis-table");
@@ -463,9 +462,9 @@ profvis = (function() {
   };  // profvis.render()
 
 
-
-  // Caculate amount of time spent on each line of code
-  function getLineTimes(prof, files) {
+  // Calculate amount of time spent on each line of code. Returns nested objects
+  // grouped by file, and then by line number.
+  function getFileLineTimes(prof, files) {
     // Drop entries with null or "" filename
     prof = prof.filter(function(row) {
       return row.filename !== null && row.filename !== "";
@@ -522,29 +521,24 @@ profvis = (function() {
       });
     });
 
-    calcProportionalTimes(fileLineTimes);
 
-    return fileLineTimes;
-  }
-
-  // Calculate proportional times, relative to the longest time in the data
-  // set. Modifies data in place.
-  function calcProportionalTimes(timeData) {
-    var fileTimes = timeData.map(function(fileData) {
-      var lineTimes = fileData.lineData.map(function(x) { return x.sumTime; });
+    // Calculate proportional times, relative to the longest time in the data
+    // set. Modifies data in place.
+    var fileMaxTimes = fileLineTimes.map(function(lines) {
+      var lineTimes = lines.lineData.map(function(x) { return x.sumTime; });
       return d3.max(lineTimes);
     });
 
-    var maxTime = d3.max(fileTimes);
+    var maxTime = d3.max(fileMaxTimes);
 
-    timeData.map(function(fileData) {
-      fileData.lineData.map(function(lineData) {
-        lineData.propTime = lineData.sumTime / maxTime;
+    fileLineTimes.map(function(lines) {
+      lines.lineData.map(function(line) {
+        line.propTime = line.sumTime / maxTime;
       });
     });
 
+    return fileLineTimes;
   }
-
 
   // Given the raw profiling data, convert `time` field to `startTime` and
   // `endTime`, and use the supplied interval.
