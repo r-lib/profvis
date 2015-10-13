@@ -30,7 +30,10 @@ profvis = (function() {
 
       // Cache D3 selections for faster interactions
       codeTableRows: null,
-      flameGraphCells: null
+      flameGraphCells: null,
+
+      // Indicates whether any filename/linenum/label is selected and locked
+      lockedSelection: null
     };
 
 
@@ -109,9 +112,9 @@ profvis = (function() {
           .html("&nbsp;");
 
       rows
-        .on("mouseover", function(d) {
-          highlightSelectedCode(d.filename, d.linenum, d.label);
-        });
+        .on("click", clickItem)
+        .on("mouseover", mouseOverItem)
+        .on("mouseout", mouseOutItem);
 
       return content;
     }
@@ -174,11 +177,11 @@ profvis = (function() {
         .data(prof)
         .enter()
         .append("g")
-          .attr("class", "cell");
+          .attr("class", "cell")
+          .classed("highlighted", function(d) { return d.filename !== null; });
 
       var rects = cells.append("rect")
-        .attr("class", "rect")
-        .classed("highlighted", function(d) { return d.filename !== null; });
+        .attr("class", "rect");
 
       // Add CSS classes for highlighting cells with labels that match particular
       // regex patterns.
@@ -313,6 +316,7 @@ profvis = (function() {
 
       // Attach mouse event handlers ------------------------------------
       cells
+        .on("click", clickItem)
         .on("mouseover", function(d) {
           // If no label currently shown, display a tooltip
           var label = this.querySelector(".label");
@@ -325,13 +329,12 @@ profvis = (function() {
             );
           }
 
-          highlightSelectedCode(d.filename, d.linenum, d.label);
+          mouseOverItem(d);
         })
         .on("mouseout", function(d) {
           hideTooltip();
-          highlightSelectedCode(null, null, null);
+          mouseOutItem(d);
         });
-
 
       // Tooltip --------------------------------------------------------
       var tooltip = container.append("g").attr("class", "tooltip");
@@ -408,14 +411,10 @@ profvis = (function() {
     // from hovering over code, no label is provided.)
     // If only a label is provided, search for cells (only in the flamegraph) that
     // have the same label.
-    function highlightSelectedCode(filename, linenum, label) {
-      // Un-highlight lines of code
-      vis.codeTableRows.classed({ selected: false });
-
-      // Un-highlight flamegraph blocks
-      vis.flameGraphCells
-        .select('.rect.selected')
-        .classed({ selected: false });
+    function highlightSelectedCode(filename, linenum, label, locked) {
+      // Un-highlight lines of code and flamegraph blocks
+      vis.codeTableRows.classed({ selected: false, locked: false });
+      vis.flameGraphCells.classed({ selected: false, locked: false });
 
       if (filename && linenum) {
         // If we have filename and linenum, search for cells that match, and
@@ -423,7 +422,7 @@ profvis = (function() {
         var tr = vis.codeTableRows.filter(function(d) {
             return d.linenum === linenum && d.filename === filename;
           })
-          .classed({ selected: true });
+          .classed({ selected: true, locked: locked });
 
         // Highlight corresponding flamegraph blocks
         vis.flameGraphCells
@@ -435,8 +434,7 @@ profvis = (function() {
             }
             return match;
           })
-          .select('.rect')
-          .classed({ selected: true });
+          .classed({ selected: true, locked: locked });
 
         tr.node().scrollIntoViewIfNeeded();
 
@@ -453,14 +451,49 @@ profvis = (function() {
           .filter(function(d) {
             return d.label === label && d.filename === null && d.linenum === null;
           })
-          .select('.rect')
-          .classed({ selected: true });
+          .classed({ selected: true, locked: locked });
       }
-   }
+    }
+
+
+    // This is called when a flamegraph cell or a line of code is clicked on.
+    function clickItem(d) {
+      // If locked, and this click is on the currently locked selection,
+      // unlock.
+      if (vis.lockedSelection &&
+          vis.lockedSelection.filename === d.filename &&
+          vis.lockedSelection.linenum === d.linenum)
+      {
+        vis.lockedSelection = null;
+        highlightSelectedCode(d.filename, d.linenum, d.label, false);
+        return;
+      }
+
+      // If nothing currently locked, or if locked and this click is on
+      // something other than the currently locked selection, then lock the
+      // current selection.
+      vis.lockedSelection = {
+        filename: d.filename,
+        linenum: d.linenum
+      };
+      highlightSelectedCode(d.filename, d.linenum, d.label, true);
+    }
+
+    // This is called when a flamegraph cell or a line of code is moused over.
+    function mouseOverItem(d) {
+      if (vis.lockedSelection === null)
+        highlightSelectedCode(d.filename, d.linenum, d.label, false);
+    }
+
+    // This is called when a flamegraph cell or a line of code is moused out.
+    function mouseOutItem(d) {
+      if (vis.lockedSelection === null)
+        highlightSelectedCode(null, null, null, false);
+    }
+
 
     return vis;
   };  // profvis.render()
-
 
   // Calculate amount of time spent on each line of code. Returns nested objects
   // grouped by file, and then by line number.

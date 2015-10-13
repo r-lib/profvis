@@ -30,16 +30,21 @@ table.profvis-table th {
 
 table.profvis-table tr {
   border-width: 1px 0;
-  border-color: #eee;
-  border-style: solid;
   vertical-align: top;
+}
+
+table.profvis-table tr.locked {
+  border-width: 1px 0;
+  border-style: solid;
+  border-color: black;
+}
+
+table.profvis-table tr.selected {
+  background-color: #fc8;
 }
 
 table.profvis-table .linenum {
   color: #aaa;
-  border-width: 1px;
-  border-color: #eee;
-  border-style: solid;
   padding: 0 5px;
   font-family: monospace;
 }
@@ -54,10 +59,6 @@ table.profvis-table .code {
   font-family: monospace;
 }
 
-
-table.profvis-table .selected {
-  background-color: #fc8;
-}
 
 table.profvis-table .time {
   padding: 0 2em 0 1em;
@@ -86,21 +87,29 @@ table.profvis-table .timebar-cell > .timebar {
   fill: #fff;
 }
 
-.profvis-flamegraph .cell .rect.shaded {
+.profvis-flamegraph .cell.shaded .rect {
   fill: #eef;
 }
 
-.profvis-flamegraph .cell .rect.selected {
-  stroke-width: 1px;
+.profvis-flamegraph .cell.selected .rect {
+  stroke-width: 0.75px;
   fill: #ddd;
 }
 
-.profvis-flamegraph .cell .rect.highlighted {
+.profvis-flamegraph .cell.highlighted .rect {
   fill: #ffb;
 }
 
-.profvis-flamegraph .cell .rect.highlighted.selected {
+.profvis-flamegraph .cell.highlighted.selected .rect {
   fill: #fc8;
+}
+
+.profvis-flamegraph .cell.locked {
+  font-weight: bold;
+}
+
+.profvis-flamegraph .cell.locked .rect {
+  stroke-width: 2px;
 }
 
 .profvis-flamegraph .cell .label {
