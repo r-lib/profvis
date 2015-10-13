@@ -498,7 +498,7 @@ profvis = (function() {
       .key(function(d) { return d.linenum; })
       .rollup(function(leaves) {
         var sumTime = leaves.reduce(function(sum, d) {
-            return sum + d.endTime - d.startTime
+            return sum + d.endTime - d.startTime;
           }, 0);
 
         return {
