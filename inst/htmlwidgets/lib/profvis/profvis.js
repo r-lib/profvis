@@ -314,7 +314,7 @@ profvis = (function() {
           // display state.
           var oldDisplay = el.getAttribute("display");
           el.setAttribute("display", "inline");
-          labelWidthTable[nchar] = el.clientWidth;
+          labelWidthTable[nchar] = el.getBoundingClientRect().width;
           el.setAttribute("display", oldDisplay);
         }
         return labelWidthTable[nchar];
