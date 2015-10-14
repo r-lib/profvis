@@ -384,11 +384,11 @@ profvis = (function() {
           // If no label currently shown, display a tooltip
           var label = this.querySelector(".label");
           if (label.getAttribute("display") === "none") {
-            var labelBox = label.getBBox();
+            var box = this.getBBox();
             showTooltip(
               d.label,
-              labelBox.x + labelBox.width / 2,
-              labelBox.y - labelBox.height - 5
+              box.x + box.width / 2,
+              box.y - box.height - 5
             );
           }
 
