@@ -87,10 +87,6 @@ table.profvis-table .timebar-cell > .timebar {
   fill: #fff;
 }
 
-.profvis-flamegraph .cell.shaded .rect {
-  fill: #eef;
-}
-
 .profvis-flamegraph .cell.selected .rect {
   stroke-width: 0.75px;
   fill: #ddd;
@@ -102,6 +98,10 @@ table.profvis-table .timebar-cell > .timebar {
 
 .profvis-flamegraph .cell.highlighted.selected .rect {
   fill: #fc8;
+}
+
+.profvis-flamegraph .cell.shaded .rect {
+  fill: #eef;
 }
 
 .profvis-flamegraph .cell.locked {

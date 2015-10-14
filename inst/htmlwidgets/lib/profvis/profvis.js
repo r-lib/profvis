@@ -190,7 +190,7 @@ profvis = (function() {
         var cssClass = item.key;
         var regexp = new RegExp(item.value);
 
-        rects.classed(cssClass, function(d) {
+        cells.classed(cssClass, function(d) {
           return d.label.search(regexp) !== -1;
         });
       });
