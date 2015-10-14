@@ -201,41 +201,43 @@ profvis = (function() {
 
       // Calculate whether to display label in each cell -----------------
 
+      // Cache the width of labels. This is a lookup table which, given the
+      // number of characters, gives the number of pixels. The label width
+      // never changes, so we can keep it outside of updateLabelVisibility().
+      var labelWidthTable = {};
+      function getLabelWidth(el, nchar) {
+        // Add entry if it doesn't already exist
+        if (labelWidthTable[nchar] === undefined) {
+          labelWidthTable[nchar] = el.getBoundingClientRect().width;
+        }
+        return labelWidthTable[nchar];
+      }
+
       // Show labels that fit in the corresponding rectangle, and hide others.
       // This is very slow because of the getBoundingClientRect() calls.
       function updateLabelVisibility() {
-        // Cache the width of label. This is a lookup table which, given the number
-        // of characters, gives the number of pixels.
-        var labelWidthTable = [];
-        function getLabelWidth(el, nchar) {
+        // Cache the width of rects. This is a lookup table which, given the
+        // timespan (width in data), gives the number of pixels. The width of
+        // rects changes with the x scale, so we have to rebuild the table each
+        // time we have an update.
+        var rectWidthTable = {};
+        function getRectWidth(time) {
           // Add entry if it doesn't already exist
-          if (labelWidthTable[nchar] === undefined) {
-            labelWidthTable[nchar] = el.getBoundingClientRect().width;
+          if (rectWidthTable[time] === undefined) {
+            rectWidthTable[time] = x(time) - x(0);
           }
-          return labelWidthTable[nchar];
-        }
-
-        // Cache the width of rects. This is a lookup table which, given the number
-        // of frames, gives the number of pixels.
-        var rectWidthTable = [];
-        function getRectWidth(el, nframe) {
-          // Add entry if it doesn't already exist
-          if (rectWidthTable[nframe] === undefined) {
-            rectWidthTable[nframe] = el.getBoundingClientRect().width;
-          }
-          return rectWidthTable[nframe];
+          return rectWidthTable[time];
         }
 
         // Now calculate text and rect width for each cell.
         labels.attr("visibility", function(d) {
           var labelWidth = getLabelWidth(this, d.label.length);
-          var boxWidth = getRectWidth(this.parentNode.querySelector(".rect"),
-                                      d.endTime - d.startTime + 1);
+          var boxWidth = getRectWidth(d.endTime - d.startTime + 1);
 
           return (labelWidth <= boxWidth) ? "visible" : "hidden";
         });
       }
-      var updateLabelVisibilityDebounced = debounce(updateLabelVisibility, 100);
+      var updateLabelVisibilityDebounced = debounce(updateLabelVisibility, 150);
 
       // Axes ------------------------------------------------------------
       var xAxis = d3.svg.axis()
