@@ -231,7 +231,7 @@ profvis = (function() {
       // display:none improves performance a lot.
 
       var activeRects;
-      var activeCells;
+      var activeLabels;
       // This sets the activeRects and activeCells, based on whether they're in
       // the visible area.
       function filterActiveElements() {
