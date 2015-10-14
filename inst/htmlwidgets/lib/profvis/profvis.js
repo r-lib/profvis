@@ -199,45 +199,6 @@ profvis = (function() {
         .attr("class", "label")
         .text(function(d) { return d.label; });
 
-      // Calculate whether to display label in each cell -----------------
-
-      // Cache the width of labels. This is a lookup table which, given the
-      // number of characters, gives the number of pixels. The label width
-      // never changes, so we can keep it outside of updateLabelVisibility().
-      var labelWidthTable = {};
-      function getLabelWidth(el, nchar) {
-        // Add entry if it doesn't already exist
-        if (labelWidthTable[nchar] === undefined) {
-          labelWidthTable[nchar] = el.getBoundingClientRect().width;
-        }
-        return labelWidthTable[nchar];
-      }
-
-      // Show labels that fit in the corresponding rectangle, and hide others.
-      // This is very slow because of the getBoundingClientRect() calls.
-      function updateLabelVisibility() {
-        // Cache the width of rects. This is a lookup table which, given the
-        // timespan (width in data), gives the number of pixels. The width of
-        // rects changes with the x scale, so we have to rebuild the table each
-        // time we have an update.
-        var rectWidthTable = {};
-        function getRectWidth(time) {
-          // Add entry if it doesn't already exist
-          if (rectWidthTable[time] === undefined) {
-            rectWidthTable[time] = x(time) - x(0);
-          }
-          return rectWidthTable[time];
-        }
-
-        // Now calculate text and rect width for each cell.
-        labels.attr("visibility", function(d) {
-          var labelWidth = getLabelWidth(this, d.label.length);
-          var boxWidth = getRectWidth(d.endTime - d.startTime + 1);
-
-          return (labelWidth <= boxWidth) ? "visible" : "hidden";
-        });
-      }
-      var updateLabelVisibilityDebounced = debounce(updateLabelVisibility, 150);
 
       // Axes ------------------------------------------------------------
       var xAxis = d3.svg.axis()
@@ -249,30 +210,80 @@ profvis = (function() {
         .attr("transform", "translate(" + margin.left + "," + height + ")")
         .call(xAxis);
 
-      // Update positions when scales change ----------------------------
+
+      // Redrawing ------------------------------------------------------------
+
+      // Updating the attributes of lots of SVG elements is expensive. The
+      // basic strategy here is to first filter out all the elements that
+      // don't fit in the plotting area, and then only operate on what's left.
+      //
+      // d3.select() and setAttribute are expensive. To minimize calls to them,
+      // this is what we'll do:
+      // * Do one pass finding which cells will be in the visible area. Set
+      //   display to "none" if it's not in the visible area. (Note that
+      //   display:none results in much better performance than
+      //   visibility:hidden)
+      // * Set the external vars activeRects and activeLabels from these cells.
+      // * Then during redraws, set x, y, etc. attributes on those active
+      //   elements only.
+      //
+      // Rendering text elements is slow, so setting hidden labels to
+      // display:none improves performance a lot.
+
+      var activeRects;
+      var activeCells;
+      // This sets the activeRects and activeCells, based on whether they're in
+      // the visible area.
+      function filterActiveElements() {
+        // Filter based on whether the rect is in the plotting area
+        var activeCells = cells.filter(function(d) {
+          if (x(d.endTime)   < 0     ||
+              x(d.startTime) > width ||
+              y(d.depth)     < 0     ||
+              y(d.depth + 1) > height)
+          {
+            // Set 'display' attribute instead of 'visible', because it's faster.
+            if (this.getAttribute("display") !== "none")
+              this.setAttribute("display", "none");
+            return false;
+          }
+
+          if (this.getAttribute("display") !== "inherit")
+            this.setAttribute("display", "inherit");
+          return true;
+        });
+
+        activeRects = activeCells.select("rect");
+        activeLabels = activeCells.select("text");
+      }
+
+
       function redraw(duration) {
         if (duration === undefined) duration = 0;
 
-        // Make local copies because we may be adding transitions
-        var rects2 = rects;
-        var labels2 = labels;
+        filterActiveElements();
+
+        // Create local copies because we might add a transition and we don't
+        // want to modify the original.
+        var activeRects2 = activeRects;
+        var activeLabels2 = activeLabels;
         var x_axis = svg.select(".x.axis");
 
         // Only add the transition if needed (duration!=0) because there's a
         // performance penalty
         if (duration !== 0) {
-          rects2 = rects2.transition().duration(duration);
-          labels2 = labels2.transition().duration(duration);
+          activeRects2 = activeRects2.transition().duration(duration);
+          activeLabels2 = activeLabels2.transition().duration(duration);
           x_axis = x_axis.transition().duration(duration);
         }
 
-        rects2
+        activeRects2
           .attr("width", function(d) { return x(d.endTime) - x(d.startTime); })
           .attr("height", y(0) - y(1))
           .attr("x", function(d) { return x(d.startTime); })
           .attr("y", function(d) { return y(d.depth + 1); });
 
-        labels2
+        activeLabels2
           .attr("x", function(d) { return (x(d.endTime) + x(d.startTime)) / 2; })
           .attr("y", function(d) { return y(d.depth + 0.5); });
 
@@ -284,18 +295,68 @@ profvis = (function() {
         } else {
           // If there's a transition, select a single rect element, and add the
           // function to be called at the end of the transition.
-          rects2.filter(function(d, i) { return i === 0; })
+          activeRects2.filter(function(d, i) { return i === 0; })
             .each("end", updateLabelVisibilityDebounced);
         }
       }
 
+      // Calculate whether to display label in each cell -----------------
+
+      // Cache the width of labels. This is a lookup table which, given the
+      // number of characters, gives the number of pixels. The label width
+      // never changes, so we can keep it outside of updateLabelVisibility().
+      var labelWidthTable = {};
+      function getLabelWidth(el, nchar) {
+        // Add entry if it doesn't already exist
+        if (labelWidthTable[nchar] === undefined) {
+          // If the text isn't displayed, then we can't get its width. Make
+          // sure it's visible, get the width, and then restore original
+          // display state.
+          var oldDisplay = el.getAttribute("display");
+          el.setAttribute("display", "inline");
+          labelWidthTable[nchar] = el.clientWidth;
+          el.setAttribute("display", oldDisplay);
+        }
+        return labelWidthTable[nchar];
+      }
+
+      // Show labels that fit in the corresponding rectangle, and hide others.
+      function updateLabelVisibility() {
+        // Cache the width of rects. This is a lookup table which, given the
+        // timespan (width in data), gives the number of pixels. The width of
+        // rects changes with the x scale, so we have to rebuild the table each
+        // time we have an update.
+        var rectWidthTable = {};
+        var x0 = x(0);
+        function getRectWidth(time) {
+          // Add entry if it doesn't already exist
+          if (rectWidthTable[time] === undefined) {
+            rectWidthTable[time] = x(time) - x0;
+          }
+          return rectWidthTable[time];
+        }
+
+        // Now calculate text and rect width for each cell.
+        activeLabels.attr("display", function(d) {
+          var labelWidth = getLabelWidth(this, d.label.length);
+          var boxWidth = getRectWidth(d.endTime - d.startTime);
+
+          return (labelWidth <= boxWidth) ? "inherit" : "none";
+        });
+      }
+      var updateLabelVisibilityDebounced = debounce(updateLabelVisibility, 150);
+
+
+      // Make all labels start invisible, so that if they start offscreen, they
+      // won't be visible when we drag them onscreen.
+      labels.attr("display", "none");
       redraw();
       updateLabelVisibility(); // Call immediately the first time
 
       // Recalculate dimensions on resize
       function onResize() {
-        var width = el.clientWidth - margin.left - margin.right;
-        var height = el.clientHeight - margin.top - margin.bottom;
+        width = el.clientWidth - margin.left - margin.right;
+        height = el.clientHeight - margin.top - margin.bottom;
 
         svg
           .attr('width', width + margin.left + margin.right)
@@ -322,7 +383,7 @@ profvis = (function() {
         .on("mouseover", function(d) {
           // If no label currently shown, display a tooltip
           var label = this.querySelector(".label");
-          if (label.getAttribute("visibility") !== "visible") {
+          if (label.getAttribute("display") === "none") {
             var labelBox = label.getBBox();
             showTooltip(
               d.label,
