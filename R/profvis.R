@@ -7,7 +7,7 @@
 #' @export
 profvis <- function(message, width = NULL, height = NULL) {
   # Add sequences to collapse
-  message$collapse <- collapseSequences()
+  message$collapseItems <- collapseItems()
   # Patterns to highlight on flamegraph
   message$highlight <- highlightPatterns()
 

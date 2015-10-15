@@ -21,7 +21,7 @@ profvis = (function() {
       // Convert object-with-arrays format prof data to array-of-objects format
       prof: prof,
       files: message.files,
-      collapse: message.collapse,
+      collapseItems: message.collapseItems,
       fileLineTimes: getFileLineTimes(prof, message.files),
 
       // DOM elements
@@ -127,7 +127,7 @@ profvis = (function() {
       var stackHeight = 15;   // Height of each layer on the stack, in pixels
 
       // Process data ---------------------------------------------------
-      var prof = collapseStacks(vis.prof, vis.collapse);
+      var prof = collapseStacks(vis.prof, vis.collapseItems);
       prof = consolidateRuns(prof);
 
       // Size of virtual graphing area ----------------------------------
@@ -650,67 +650,24 @@ profvis = (function() {
   }
 
 
-  // Given profiling data and a list of vertical sequences to collapse,
-  // collapse those sequences and replace them with one element named
-  // "<<Collapsed>>".
-  function collapseStacks(prof, collapseList) {
-
-    function arraysEqual(a, b) {
-      return (a.length === b.length) && a.every(function(element, i) {
-        return element === b[i];
-      });
-    }
-
-    // Match one array sequence in another array. If found, return start and
-    // end indices; if not found, return null.
-    function matchSequence(pattern, data) {
-      var noffsets = data.length - pattern.length + 1;
-
-      for (var offset=0; offset<noffsets; offset++) {
-        var dataSlice = data.slice(offset, offset + pattern.length);
-        if (arraysEqual(pattern, dataSlice)) {
-          return [offset, offset + pattern.length - 1];
-        }
-      }
-      return null;
-    }
-
-    // Convert object with arrays to array of objects with key and value.
-    collapseList = d3.entries(collapseList);
-
+  // Given profiling data and an array of function labels, remove samples
+  // that contain those labels.
+  function collapseStacks(prof, collapseItems) {
     var data = d3.nest()
       .key(function(d) { return d.startTime; })
       .rollup(function(leaves) {
-        leaves = leaves.sort(function(a, b) { return a.depth - b.depth; });
-        collapseList.forEach(function(collapseSeq) {
-          var name = collapseSeq.key;
-          var sequence = collapseSeq.value;
-          var matchIdx;
+        // Remove any leaves that have a label that's found in collapseItems.
+        leaves = leaves.filter(function(leaf) {
+          // If the leaf's label matches any of the collapse items, remove it.
+          var matchFound = collapseItems.some(function(collapseItem) {
+            return collapseItem === leaf.label;
+          });
 
-          // Search for the collapse sequence and repeat until no more matches
-          // are found.
-          do {
-            var labels = leaves.map(function(d) { return d.label; });
-            matchIdx = matchSequence(sequence, labels);
-            // If we matched a sequence, remove that sequence and insert the
-            // <<Collapsed>> entry.
-            if (!!matchIdx) {
-              var newLeaf = {
-                startTime: leaves[matchIdx[0]].startTime,
-                endTime: leaves[matchIdx[0]].endTime,
-                depth: leaves[matchIdx[0]].depth,
-                label: "<<Collapsed " + name + ">>",
-                filenum: null,
-                filename: null,
-                linenum: null
-              };
-              leaves.splice(matchIdx[0], matchIdx[1] - matchIdx[0] + 1,
-                            newLeaf);
-            }
-          } while (!!matchIdx);
+          return !matchFound;
         });
 
         // Recalculate depths so that collapsed stacks are contiguous.
+        leaves = leaves.sort(function(a, b) { return a.depth - b.depth; });
         var startDepth = leaves[0].depth;
         leaves.map(function(d, i) {
           d.depth = startDepth + i;
@@ -721,7 +678,9 @@ profvis = (function() {
       .map(prof);
 
     // Un-nest (flatten) the data
-    data = d3.merge(d3.map(data).values());
+    // Convert from object of arrays to array of arrays
+    data = d3.map(data).values();
+    data = d3.merge(data);
     return data;
   }
 
