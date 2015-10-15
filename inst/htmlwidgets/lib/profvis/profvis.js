@@ -19,13 +19,14 @@ profvis = (function() {
 
     var vis = {
       el: el,
-      rawProf: prof,
-      prof: prof,
+      sourceProf: prof,    // Original profiling data (after a little massaging)
+      curProf: prof,       // Current profiling data used in flame graph
       files: message.files,
       collapseItems: message.collapseItems,
       fileLineTimes: getFileLineTimes(prof, message.files),
 
       // DOM elements
+      controlPanel: null,
       codeTable: null,
       flameGraph: null,
 
@@ -61,14 +62,14 @@ profvis = (function() {
       var collapseCheckbox = d3.select(el).select("input.collapse");
 
       // We start checked, so start the data in the collapsed state
-      vis.prof = collapseStacks(vis.rawProf, vis.collapseItems);
+      vis.curProf = collapseStacks(vis.sourceProf, vis.collapseItems);
 
       collapseCheckbox
         .on("change", function() {
           if (this.checked) {
-            vis.prof = collapseStacks(vis.rawProf, vis.collapseItems);
+            vis.curProf = collapseStacks(vis.sourceProf, vis.collapseItems);
           } else {
-            vis.prof = vis.rawProf;
+            vis.curProf = vis.sourceProf;
           }
           generateFlameGraph();
         });
@@ -153,7 +154,7 @@ profvis = (function() {
       var stackHeight = 15;   // Height of each layer on the stack, in pixels
 
       // Process data ---------------------------------------------------
-      var prof = consolidateRuns(vis.prof);
+      var prof = consolidateRuns(vis.curProf);
 
       // Size of virtual graphing area ----------------------------------
       // (Can differ from visible area)
