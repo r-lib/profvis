@@ -164,7 +164,7 @@ profvis = (function() {
       var height = el.clientHeight - margin.top - margin.bottom;
 
       var xDomain = [
-        d3.min(prof, function(d) { return d.startTime; }) - 1,
+        d3.min(prof, function(d) { return d.startTime; }),
         d3.max(prof, function(d) { return d.endTime; })
       ];
       var yDomain = [
@@ -486,9 +486,8 @@ profvis = (function() {
 
       // When a cell is double-clicked, zoom x to that cell's width.
       cells.on("dblclick.zoomcell", function(d) {
-        x.domain([d.startTime, d.endTime + 1]);
+        x.domain([d.startTime, d.endTime]);
         zoom.x(x);
-
         redraw(250);
       });
 
