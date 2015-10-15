@@ -8,6 +8,12 @@
   border: 1px solid #ddd;
   border-radius: 5px;
   background-color: #f8f8f8;
+  font-family: Open Sans,Helvetica,Arial,sans-serif;
+  font-size: 12pt;
+}
+
+.profvis-control-panel label {
+  vertical-align: middle;
 }
 
 .profvis-code {
@@ -31,6 +37,7 @@
 
 table.profvis-table {
   border-collapse: collapse;
+  font-family: Open Sans,Helvetica,Arial,sans-serif;
   font-size: 12px;
   width: 100%;
   text-align: left;
@@ -38,6 +45,10 @@ table.profvis-table {
 
 table.profvis-table th {
   background-color: #ddd;
+}
+
+table.profvis-table th.filename {
+  font-family: monospace;
 }
 
 table.profvis-table tr {

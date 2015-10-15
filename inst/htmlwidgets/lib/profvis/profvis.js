@@ -93,6 +93,7 @@ profvis = (function() {
       var headerRows = tables.append("tr");
       headerRows.append("th")
         .attr("colspan", "2")
+        .attr("class", "filename")
         .text(function(d) { return d.filename; });
 
       headerRows.append("th")
