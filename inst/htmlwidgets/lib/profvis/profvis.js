@@ -54,10 +54,6 @@ profvis = (function() {
     vis.el.appendChild(vis.flameGraph);
     generateFlameGraph();
 
-    // Cache some components
-    vis.codeTableRows = d3.select(vis.codeTable).selectAll("tr.code-row");
-    vis.flameGraphCells = d3.select(vis.flameGraph).selectAll(".cell");
-
 
     function generateControlPanel() {
       var el = vis.controlPanel;
@@ -140,6 +136,9 @@ profvis = (function() {
         .on("click", clickItem)
         .on("mouseover", mouseOverItem)
         .on("mouseout", mouseOutItem);
+
+      // Cache rows
+      vis.codeTableRows = rows;
 
       return content;
     }
@@ -491,6 +490,9 @@ profvis = (function() {
 
         redraw(250);
       });
+
+      // Cache cells for faster access
+      vis.flameGraphCells = cells;
     }
 
 
