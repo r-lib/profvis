@@ -23,7 +23,7 @@ profvis = (function() {
       curProf: prof,       // Current profiling data used in flame graph
       files: message.files,
       collapseItems: message.collapseItems,
-      fileLineTimes: getFileLineTimes(prof, message.files),
+      fileLineTimes: getFileLineTimes(prof, message.files, false),
 
       // DOM elements
       controlPanel: null,
@@ -58,12 +58,15 @@ profvis = (function() {
 
     function generateControlPanel() {
       var el = vis.controlPanel;
-      el.innerHTML = '<label><input class="collapse" type="checkbox" checked>Collapse</label>';
+      el.innerHTML =
+        '<div><label><input class="collapse" type="checkbox" checked>Collapse</label></div>' +
+        '<div><label><input class="hide-zero-row" type="checkbox">Hide rows of code with zero time</label></div>';
+
       var collapseCheckbox = d3.select(el).select("input.collapse");
+      var hideZeroCheckbox = d3.select(el).select("input.hide-zero-row");
 
       // We start checked, so start the data in the collapsed state
       vis.curProf = collapseStacks(vis.sourceProf, vis.collapseItems);
-
       collapseCheckbox
         .on("change", function() {
           if (this.checked) {
@@ -73,6 +76,17 @@ profvis = (function() {
           }
           generateFlameGraph();
         });
+
+      hideZeroCheckbox
+        .on("change", function() {
+          if (this.checked) {
+            vis.fileLineTimes = getFileLineTimes(vis.sourceProf, message.files, true);
+          } else {
+            vis.fileLineTimes = getFileLineTimes(vis.sourceProf, message.files, false);
+          }
+          generateCodeTable();
+        });
+
     }
 
     // Generate the code table ----------------------------------------
@@ -588,7 +602,10 @@ profvis = (function() {
 
   // Calculate amount of time spent on each line of code. Returns nested objects
   // grouped by file, and then by line number.
-  function getFileLineTimes(prof, files) {
+  // If dropZero is true, drop the lines that have zero time.
+  function getFileLineTimes(prof, files, dropZero) {
+    dropZero = (dropZero === undefined ? false : dropZero);
+
     // Drop entries with null or "" filename
     prof = prof.filter(function(row) {
       return row.filename !== null && row.filename !== "";
@@ -645,6 +662,16 @@ profvis = (function() {
       });
     });
 
+
+    if (dropZero) {
+      fileLineTimes = fileLineTimes.map(function(lines) {
+        lines.lineData = lines.lineData.filter(function(line) {
+          return line.sumTime > 0;
+        });
+
+        return lines;
+      });
+    }
 
     // Calculate proportional times, relative to the longest time in the data
     // set. Modifies data in place.
