@@ -1,8 +1,20 @@
-.profvis-code {
+.profvis-control-panel {
   float: left;
   position: absolute;
   left: 10px;
   top: 10px;
+  height: 82px;
+  width: 750px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  background-color: #f8f8f8;
+}
+
+.profvis-code {
+  float: left;
+  position: absolute;
+  left: 10px;
+  top: 100px;
   bottom: 10px;
   overflow-y: scroll;
   width: 750px;

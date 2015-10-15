@@ -13,12 +13,13 @@ profvis = (function() {
   var profvis = {};
 
   profvis.render = function(el, message) {
+    // Convert object-with-arrays format prof data to array-of-objects format
     var prof = colToRows(message.prof);
     applyInterval(prof, message.interval);
 
     var vis = {
       el: el,
-      // Convert object-with-arrays format prof data to array-of-objects format
+      rawProf: prof,
       prof: prof,
       files: message.files,
       collapseItems: message.collapseItems,
@@ -38,6 +39,11 @@ profvis = (function() {
 
 
     // Render the objects ---------------------------------------------
+    vis.controlPanel = document.createElement("div");
+    vis.controlPanel.className = "profvis-control-panel";
+    vis.el.appendChild(vis.controlPanel);
+    generateControlPanel();
+
     vis.codeTable = document.createElement("div");
     vis.codeTable.className = "profvis-code";
     vis.el.appendChild(vis.codeTable);
@@ -52,6 +58,25 @@ profvis = (function() {
     vis.codeTableRows = d3.select(vis.codeTable).selectAll("tr.code-row");
     vis.flameGraphCells = d3.select(vis.flameGraph).selectAll(".cell");
 
+
+    function generateControlPanel() {
+      var el = vis.controlPanel;
+      el.innerHTML = '<label><input class="collapse" type="checkbox" checked>Collapse</label>';
+      var collapseCheckbox = d3.select(el).select("input.collapse");
+
+      // We start checked, so start the data in the collapsed state
+      vis.prof = collapseStacks(vis.rawProf, vis.collapseItems);
+
+      collapseCheckbox
+        .on("change", function() {
+          if (this.checked) {
+            vis.prof = collapseStacks(vis.rawProf, vis.collapseItems);
+          } else {
+            vis.prof = vis.rawProf;
+          }
+          generateFlameGraph();
+        });
+    }
 
     // Generate the code table ----------------------------------------
     function generateCodeTable() {
@@ -123,12 +148,12 @@ profvis = (function() {
     // Generate the flame graph ---------------------------------------
     function generateFlameGraph() {
       var el = vis.flameGraph;
+      el.innerHTML = "";
 
       var stackHeight = 15;   // Height of each layer on the stack, in pixels
 
       // Process data ---------------------------------------------------
-      var prof = collapseStacks(vis.prof, vis.collapseItems);
-      prof = consolidateRuns(prof);
+      var prof = consolidateRuns(vis.prof);
 
       // Size of virtual graphing area ----------------------------------
       // (Can differ from visible area)
@@ -653,6 +678,15 @@ profvis = (function() {
   // Given profiling data and an array of function labels, remove samples
   // that contain those labels.
   function collapseStacks(prof, collapseItems) {
+    function shallowClone(obj) {
+      var clone = {};
+      clone.prototype = obj.prototype;
+      for (var property in obj) {
+        clone[property] = obj[property];
+      }
+      return clone;
+   }
+
     var data = d3.nest()
       .key(function(d) { return d.startTime; })
       .rollup(function(leaves) {
@@ -669,11 +703,16 @@ profvis = (function() {
         // Recalculate depths so that collapsed stacks are contiguous.
         leaves = leaves.sort(function(a, b) { return a.depth - b.depth; });
         var startDepth = leaves[0].depth;
-        leaves.map(function(d, i) {
-          d.depth = startDepth + i;
+
+        // Make a clone of each leaf (so we don't change original data) and
+        // update the depth.
+        var newLeaves = leaves.map(function(leaf, i) {
+          var newLeaf = shallowClone(leaf);
+          newLeaf.depth = startDepth + i;
+          return newLeaf;
         });
 
-        return leaves;
+        return newLeaves;
       })
       .map(prof);
 
