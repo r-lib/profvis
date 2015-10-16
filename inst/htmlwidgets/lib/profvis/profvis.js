@@ -324,7 +324,15 @@ profvis = (function() {
           .attr("y", function(d) { return y(d.depth ); });
 
         activeLabels2
-          .attr("x", function(d) { return (x(d.endTime) + x(d.startTime)) / 2; })
+          .attr("x", function(d) {
+            // Left-align labels as far as possible, making sure they're on
+            // screen and within the rect.
+            var textWidth = getLabelWidth(this, d.label.length);
+            return Math.min(
+              Math.max(0, x(d.startTime)),
+              x(d.endTime) - textWidth
+            );
+          })
           .attr("y", function(d) { return y(d.depth - 0.5); });
 
         x_axis.call(xAxis);

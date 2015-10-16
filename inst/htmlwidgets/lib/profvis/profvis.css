@@ -140,7 +140,6 @@ table.profvis-table .timebar-cell > .timebar {
 }
 
 .profvis-flamegraph .cell .label {
-  text-anchor: middle;
   alignment-baseline: central;
   font-family: monospace;
   font-size: 11px;
