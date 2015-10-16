@@ -25,6 +25,7 @@ collapseItems <- function() {
 # of these names, there should be a corresponding CSS class in profvis.css.
 highlightPatterns <- function() {
   list(
-    shaded = list("^output\\$")
+    shaded = list("^output\\$"),
+    gc = list("^<GC>$")
   )
 }

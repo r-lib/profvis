@@ -127,6 +127,10 @@ table.profvis-table .timebar-cell > .timebar {
   fill: #eef;
 }
 
+.profvis-flamegraph .cell.gc .rect {
+  fill: #ddd;
+}
+
 .profvis-flamegraph .cell.locked {
   font-weight: bold;
 }
