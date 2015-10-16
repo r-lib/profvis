@@ -9,7 +9,8 @@ prof(expr, interval = 0.01, prof_file = NULL)
 \arguments{
 \item{expr}{Code to profile.}
 
-\item{interval}{Interval for profiling samples, in seconds.}
+\item{interval}{Interval for profiling samples, in seconds. Values less than
+0.005 (5 ms) will probably not result in accurate timings}
 
 \item{prof_file}{Name of an Rprof output file in which to save profiling
   data. If \code{NULL} (the default), a temporary file will be used and

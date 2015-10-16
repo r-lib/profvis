@@ -1,7 +1,8 @@
 #' Run an R expression and record profiling information
 #'
 #' @param expr Code to profile.
-#' @param interval Interval for profiling samples, in seconds.
+#' @param interval Interval for profiling samples, in seconds. Values less than
+#'   0.005 (5 ms) will probably not result in accurate timings
 #' @param prof_file Name of an Rprof output file in which to save profiling
 #'   data. If \code{NULL} (the default), a temporary file will be used and
 #'   automatically removed when the function exits.
@@ -14,6 +15,10 @@ prof <- function(expr, interval = 0.01, prof_file = NULL) {
   if (is.null(prof_file)) {
     prof_file <- tempfile(fileext = ".prof")
     remove_on_exit <- TRUE
+  }
+
+  if (interval < 0.005) {
+    message("Intervals smaller than ~5ms will probably not result in accurate timings.")
   }
 
   # Keep original expression source code
