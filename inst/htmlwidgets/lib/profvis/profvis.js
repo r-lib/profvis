@@ -708,15 +708,6 @@ profvis = (function() {
   // Given profiling data and an array of function labels, remove samples
   // that contain those labels.
   function collapseStacks(prof, collapseItems) {
-    function shallowClone(obj) {
-      var clone = {};
-      clone.prototype = obj.prototype;
-      for (var property in obj) {
-        clone[property] = obj[property];
-      }
-      return clone;
-   }
-
     var data = d3.nest()
       .key(function(d) { return d.startTime; })
       .rollup(function(leaves) {
@@ -807,8 +798,69 @@ profvis = (function() {
       })
       .map(prof);
 
+    // Convert from object of arrays to array of arrays
+    data = d3.map(data).values();
+    // Make sure that blocks are always the same or smaller than the one below.
+    // In other words, no block can rest on more than one other block.
+    // We'll do this by loop over rows, going from bottom to top. Along the way:
+    // * Store the start and end times of each block in a set `breaks`.
+    // * If a block contains any breaks between its start and end times, split
+    //   it up along those breaks.
+    var breaks = d3.set();
+    for (var i=0; i<data.length; i++) {
+      var row = data[i];
+      var newRow = [];
+
+      // Convert breaks from d3.set to array of numbers
+      var breaksNum = breaks.values()
+        .map(function(val) { return parseInt(val); });
+
+      row.map(function(block) {
+        var internalBreaks = containsBreaks(block.startTime, block.endTime, breaksNum);
+        var newBlocks = splitBlock(block, internalBreaks);
+        newRow = newRow.concat(newBlocks);
+
+        // Make sure the start and end times are added to the set of breaks.
+        breaks.add(block.startTime);
+        breaks.add(block.endTime);
+      });
+
+      // Replace old row with new one
+      data[i] = newRow;
+    }
+
+    // Given a start and end value, and an array of break values, return an
+    // array of breaks that are between the start and end (not inclusive).
+    function containsBreaks(start, end, breaks) {
+      return breaks.filter(function(b) {
+        return b > start && b < end;
+      });
+    }
+
+    // Given a block and an array of breaks, split up that block along the
+    // breaks. Returns an array of blocks with new startTime and endTime
+    // values.
+    function splitBlock(block, breaks) {
+      if (breaks.length === 0) return [block];
+
+      breaks.sort();
+      var newBlocks = [];
+      var tmp;
+      for (var i=-1; i<breaks.length; i++) {
+        tmp = shallowClone(block);
+        if (i >= 0)
+          tmp.startTime = breaks[i];
+        if (i < breaks.length-1)
+          tmp.endTime = breaks[i+1];
+
+        newBlocks.push(tmp);
+      }
+
+      return newBlocks;
+    }
+
     // Un-nest (flatten) the data
-    data = d3.merge(d3.map(data).values());
+    data = d3.merge(data);
 
     return data;
   }
@@ -856,6 +908,16 @@ profvis = (function() {
       .replace(/"/g, "&quot;")
       .replace(/'/g, "&#039;");
    }
+
+  // Clone an object
+  function shallowClone(obj) {
+    var clone = {};
+    clone.prototype = obj.prototype;
+    for (var property in obj) {
+      clone[property] = obj[property];
+    }
+    return clone;
+  }
 
   function debounce(f, delay) {
     var timer = null;
