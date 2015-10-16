@@ -183,8 +183,8 @@ profvis = (function() {
         d3.max(prof, function(d) { return d.endTime; })
       ];
       var yDomain = [
-        d3.min(prof, function(d) { return d.depth; }),
-        d3.max(prof, function(d) { return d.depth; }) + 1
+        d3.min(prof, function(d) { return d.depth; }) - 1,
+        d3.max(prof, function(d) { return d.depth; })
       ];
 
       // Scales
@@ -194,7 +194,7 @@ profvis = (function() {
 
       var y = d3.scale.linear()
         .domain(yDomain)
-        .range([(yDomain[1] - yDomain[0]) * stackHeight, 0]);
+        .range([height, height - (yDomain[1] - yDomain[0]) * stackHeight]);
 
       // Creat SVG objects ----------------------------------------------
       var wrapper = d3.select(el).append('div')
@@ -279,8 +279,8 @@ profvis = (function() {
         var activeCells = cells.filter(function(d) {
           if (x(d.endTime)   < 0     ||
               x(d.startTime) > width ||
-              y(d.depth)     < 0     ||
-              y(d.depth + 1) > height)
+              y(d.depth - 1) < 0     ||
+              y(d.depth)     > height)
           {
             // Set 'display' attribute instead of 'visible', because it's faster.
             if (this.getAttribute("display") !== "none")
@@ -321,11 +321,11 @@ profvis = (function() {
           .attr("width", function(d) { return x(d.endTime) - x(d.startTime); })
           .attr("height", y(0) - y(1))
           .attr("x", function(d) { return x(d.startTime); })
-          .attr("y", function(d) { return y(d.depth + 1); });
+          .attr("y", function(d) { return y(d.depth ); });
 
         activeLabels2
           .attr("x", function(d) { return (x(d.endTime) + x(d.startTime)) / 2; })
-          .attr("y", function(d) { return y(d.depth + 0.5); });
+          .attr("y", function(d) { return y(d.depth - 0.5); });
 
         x_axis.call(xAxis);
 
