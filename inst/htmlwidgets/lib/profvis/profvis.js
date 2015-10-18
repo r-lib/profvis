@@ -325,13 +325,29 @@ profvis = (function() {
 
         activeLabels2
           .attr("x", function(d) {
-            // Left-align labels as far as possible, making sure they're on
-            // screen and within the rect.
+            // To place the labels, check if there's enough space to fit the
+            // label plus padding in the rect. (We already know the label fits
+            // without padding if we got here.)
+            // * If there's not enough space, simply center the label in the
+            //   rect.
+            // * If there is enough space, keep the label within the rect, with
+            //   padding. Try to left-align, keeping the label within the
+            //   viewing area if possible.
+
+            // Padding on left and right
+            var pad = 2;
+
             var textWidth = getLabelWidth(this, d.label.length);
-            return Math.min(
-              Math.max(0, x(d.startTime)),
-              x(d.endTime) - textWidth
-            );
+            var rectWidth = x(d.endTime) - x(d.startTime);
+
+            if (textWidth + pad*2 > rectWidth) {
+              return x(d.startTime) + (rectWidth - textWidth) / 2;
+            } else {
+              return Math.min(
+                Math.max(0, x(d.startTime)) + pad,
+                x(d.endTime) - textWidth - pad
+              );
+            }
           })
           .attr("y", function(d) { return y(d.depth - 0.5); });
 
