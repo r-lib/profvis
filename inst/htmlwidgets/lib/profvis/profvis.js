@@ -60,7 +60,7 @@ profvis = (function() {
       var el = vis.controlPanel;
       el.innerHTML =
         '<div><label><input class="collapse" type="checkbox" checked>Collapse</label></div>' +
-        '<div><label><input class="hide-zero-row" type="checkbox">Hide rows of code with zero time</label></div>';
+        '<div><label><input class="hide-zero-row" type="checkbox">Hide lines of code with zero time</label></div>';
 
       var collapseCheckbox = d3.select(el).select("input.collapse");
       var hideZeroCheckbox = d3.select(el).select("input.hide-zero-row");
@@ -80,11 +80,14 @@ profvis = (function() {
       hideZeroCheckbox
         .on("change", function() {
           if (this.checked) {
-            vis.fileLineTimes = getFileLineTimes(vis.sourceProf, message.files, true);
+            d3.select(vis.codeTable).selectAll('tr.code-row')
+              .filter(function(d) { return d.sumTime === 0; })
+              .style("display", "none");
           } else {
-            vis.fileLineTimes = getFileLineTimes(vis.sourceProf, message.files, false);
+            d3.select(vis.codeTable).selectAll('tr.code-row')
+              .filter(function(d) { return d.sumTime === 0; })
+              .style("display", "");
           }
-          generateCodeTable();
         });
 
     }
