@@ -4,6 +4,11 @@ dependencies:
     src: "htmlwidgets/lib/profvis"
     script: profvis.js
     stylesheet: profvis.css
+  - name: jquery
+    version: 1.11.3
+    src: "htmlwidgets/lib/jquery"
+    script:
+      - jquery.min.js
   - name: d3
     version: 3.5.6
     src: "htmlwidgets/lib/d3"
