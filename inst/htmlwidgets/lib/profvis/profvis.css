@@ -26,6 +26,19 @@
   width: 750px;
 }
 
+.profvis-dragsplit {
+  cursor: col-resize;
+  position: absolute;
+  left: 762px;
+  width: 4px;
+  top: 10px;
+  bottom: 10px;
+  background: #eee;
+  border-width: 0 1px;
+  border-color: #ddd;
+  border-style: solid;
+}
+
 .profvis-flamegraph {
   position: absolute;
   right: 10px;

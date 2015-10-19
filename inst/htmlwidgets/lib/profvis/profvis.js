@@ -25,14 +25,10 @@ profvis = (function() {
       collapseItems: message.collapseItems,
       fileLineTimes: getFileLineTimes(prof, message.files, false),
 
-      // DOM elements
+      // Objects representing each component
       controlPanel: null,
       codeTable: null,
       flameGraph: null,
-
-      // Cache D3 selections for faster interactions
-      codeTableRows: null,
-      flameGraphCells: null,
 
       // Indicates whether any filename/linenum/label is selected and locked
       lockedSelection: null
@@ -40,24 +36,28 @@ profvis = (function() {
 
 
     // Render the objects ---------------------------------------------
-    vis.controlPanel = document.createElement("div");
-    vis.controlPanel.className = "profvis-control-panel";
-    vis.el.appendChild(vis.controlPanel);
-    generateControlPanel();
+    var controlPanelEl = document.createElement("div");
+    controlPanelEl.className = "profvis-control-panel";
+    vis.el.appendChild(controlPanelEl);
+    vis.controlPanel = generateControlPanel(controlPanelEl);
 
-    vis.codeTable = document.createElement("div");
-    vis.codeTable.className = "profvis-code";
-    vis.el.appendChild(vis.codeTable);
-    generateCodeTable();
+    var codeTableEl = document.createElement("div");
+    codeTableEl.className = "profvis-code";
+    vis.el.appendChild(codeTableEl);
+    vis.codeTable = generateCodeTable(codeTableEl);
 
-    vis.flameGraph = document.createElement("div");
-    vis.flameGraph.className = "profvis-flamegraph";
-    vis.el.appendChild(vis.flameGraph);
-    generateFlameGraph();
+    var flameGraphEl = document.createElement("div");
+    flameGraphEl.className = "profvis-flamegraph";
+    vis.el.appendChild(flameGraphEl);
+    vis.flameGraph = generateFlameGraph(flameGraphEl);
+
+    var dragSplitEl = document.createElement("div");
+    dragSplitEl.className = "profvis-dragsplit";
+    vis.el.appendChild(dragSplitEl);
+    enableDragSplit(dragSplitEl);
 
 
-    function generateControlPanel() {
-      var el = vis.controlPanel;
+    function generateControlPanel(el) {
       el.innerHTML =
         '<div><label><input class="collapse" type="checkbox" checked>Collapse</label></div>' +
         '<div><label><input class="hide-zero-row" type="checkbox">Hide lines of code with zero time</label></div>';
@@ -74,28 +74,27 @@ profvis = (function() {
           } else {
             vis.curProf = vis.sourceProf;
           }
-          generateFlameGraph();
+          generateFlameGraph(vis.flameGraph.el);
         });
 
       hideZeroCheckbox
         .on("change", function() {
           if (this.checked) {
-            d3.select(vis.codeTable).selectAll('tr.code-row')
+            vis.codeTable.rows
               .filter(function(d) { return d.sumTime === 0; })
               .style("display", "none");
           } else {
-            d3.select(vis.codeTable).selectAll('tr.code-row')
+            vis.codeTable.rows
               .filter(function(d) { return d.sumTime === 0; })
               .style("display", "");
           }
         });
 
+      return { el: el };
     }
 
     // Generate the code table ----------------------------------------
-    function generateCodeTable() {
-      var el = vis.codeTable;
-
+    function generateCodeTable(el) {
       el.innerHTML = '<div class="profvis-table-inner"></div>';
 
       var content = d3.select(el).select("div.profvis-table-inner");
@@ -156,16 +155,15 @@ profvis = (function() {
         .on("mouseover", mouseOverItem)
         .on("mouseout", mouseOutItem);
 
-      // Cache rows
-      vis.codeTableRows = rows;
-
-      return content;
+      return {
+        el: el,
+        rows: rows  // Cache rows for faster access
+      };
     }
 
 
     // Generate the flame graph ---------------------------------------
-    function generateFlameGraph() {
-      var el = vis.flameGraph;
+    function generateFlameGraph(el) {
       el.innerHTML = "";
 
       var stackHeight = 15;   // Height of each layer on the stack, in pixels
@@ -533,10 +531,84 @@ profvis = (function() {
         redraw(250);
       });
 
-      // Cache cells for faster access
-      vis.flameGraphCells = cells;
-    }
+      return {
+        el: el,
+        cells: cells,       // Cache cells for faster access
+        onResize: onResize
+      };
+    } // generateFlameGraph
 
+
+    // Enable dragging of the split bar ---------------------------------------
+    function enableDragSplit(el) {
+      var $el = $(el);
+
+      var dragging = false;
+      var startDragX;
+      var startOffsetLeft;
+
+      var stopDrag = function(e) {
+        if (!dragging) return;
+        dragging = false;
+
+        document.removeEventListener("mousemove", drag);
+        document.removeEventListener("mouseup", stopDrag);
+
+        el.style.opacity = "";
+
+        var dx = e.pageX - startDragX;
+        if (dx === 0) return;
+
+        // Resize components
+        var $controlPanel = $(vis.controlPanel.el);
+        $controlPanel.width($controlPanel.width() + dx);
+
+        var $codeTable = $(vis.codeTable.el);
+        $codeTable.width($codeTable.width() + dx);
+
+        var $flameGraph = $(vis.flameGraph.el);
+        $flameGraph.width($flameGraph.width() - dx);
+        $flameGraph.offset({ left: $flameGraph.offset().left + dx });
+        vis.flameGraph.onResize();
+      };
+
+      var startDrag = function(e) {
+        // Don't start another drag if we're already in one.
+        if (dragging) return;
+        dragging = true;
+        pauseEvent(e);
+
+        el.style.opacity = "0.5";
+
+        startDragX = e.pageX;
+        startOffsetLeft = $el.offset().left;
+
+        document.addEventListener("mousemove", drag);
+        document.addEventListener("mouseup", stopDrag);
+      };
+
+      var drag = function(e) {
+        if (!dragging) return;
+        pauseEvent(e);
+
+        var dx = e.pageX - startDragX;
+        if (dx === 0) return;
+
+        // Move the split bar
+        $el.offset({ left: startOffsetLeft + dx });
+      };
+
+      // Stop propogation so that we don't select text while dragging
+      function pauseEvent(e){
+        if(e.stopPropagation) e.stopPropagation();
+        if(e.preventDefault) e.preventDefault();
+        e.cancelBubble = true;
+        e.returnValue = false;
+        return false;
+      }
+
+      el.addEventListener("mousedown", startDrag);
+    }
 
     // Highlights line of code and flamegraph blocks corresponding to a
     // filenum. linenum and, if provided, label combination. (When this is called
@@ -545,19 +617,19 @@ profvis = (function() {
     // have the same label.
     function highlightSelectedCode(filename, linenum, label, locked) {
       // Un-highlight lines of code and flamegraph blocks
-      vis.codeTableRows.classed({ selected: false, locked: false });
-      vis.flameGraphCells.classed({ selected: false, locked: false });
+      vis.codeTable.rows.classed({ selected: false, locked: false });
+      vis.flameGraph.cells.classed({ selected: false, locked: false });
 
       if (filename && linenum) {
         // If we have filename and linenum, search for cells that match, and
         // set them as "selected".
-        var tr = vis.codeTableRows.filter(function(d) {
+        var tr = vis.codeTable.rows.filter(function(d) {
             return d.linenum === linenum && d.filename === filename;
           })
           .classed({ selected: true, locked: locked });
 
         // Highlight corresponding flamegraph blocks
-        vis.flameGraphCells
+        vis.flameGraph.cells
           .filter(function(d) {
             // Check for filename and linenum match, and if provided, a label match.
             var match = d.filename === filename && d.linenum === linenum;
@@ -579,7 +651,7 @@ profvis = (function() {
 
         // If we only have the label, search for cells that match, but make sure
         // to not select ones that have a filename and linenum.
-        vis.flameGraphCells
+        vis.flameGraph.cells
           .filter(function(d) {
             return d.label === label && d.filename === null && d.linenum === null;
           })
