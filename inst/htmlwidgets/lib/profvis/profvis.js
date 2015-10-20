@@ -874,7 +874,7 @@ profvis = (function() {
         // Make a clone of each leaf (so we don't change original data) and
         // update the depth.
         var newLeaves = leaves.map(function(leaf, i) {
-          var newLeaf = shallowClone(leaf);
+          var newLeaf = $.extend({}, leaf);
           newLeaf.depth = startDepth + i;
           return newLeaf;
         });
@@ -993,7 +993,7 @@ profvis = (function() {
       var newBlocks = [];
       var tmp;
       for (var i=-1; i<breaks.length; i++) {
-        tmp = shallowClone(block);
+        tmp = $.extend({}, block);
         if (i >= 0)
           tmp.startTime = breaks[i];
         if (i < breaks.length-1)
@@ -1054,16 +1054,6 @@ profvis = (function() {
       .replace(/"/g, "&quot;")
       .replace(/'/g, "&#039;");
    }
-
-  // Clone an object
-  function shallowClone(obj) {
-    var clone = {};
-    clone.prototype = obj.prototype;
-    for (var property in obj) {
-      clone[property] = obj[property];
-    }
-    return clone;
-  }
 
   function debounce(f, delay) {
     var timer = null;
