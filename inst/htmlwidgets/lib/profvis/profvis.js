@@ -16,6 +16,8 @@ profvis = (function() {
     // Convert object-with-arrays format prof data to array-of-objects format
     var prof = colToRows(message.prof);
     applyInterval(prof, message.interval);
+    prof = addCollapsedDepth(prof, message.collapseItems);
+    prof = consolidateRuns(prof);
 
     var vis = {
       el: el,
@@ -117,22 +119,21 @@ profvis = (function() {
 
     function generateControlPanel(el) {
       el.innerHTML =
-        '<div><label><input class="collapse" type="checkbox" checked>Collapse</label></div>' +
+        '<div><label><input class="collapse" type="checkbox" checked>Hide unimportant functions</label></div>' +
         '<div><label><input class="hide-zero-row" type="checkbox">Hide lines of code with zero time</label></div>';
 
       var collapseCheckbox = d3.select(el).select("input.collapse");
       var hideZeroCheckbox = d3.select(el).select("input.hide-zero-row");
 
-      // We start checked, so start the data in the collapsed state
-      vis.curProf = collapseStacks(vis.sourceProf, vis.collapseItems);
       collapseCheckbox
         .on("change", function() {
           if (this.checked) {
-            vis.curProf = collapseStacks(vis.sourceProf, vis.collapseItems);
+            vis.curProf.map(function(d) { d.depth = d.depthCollapsed; });
           } else {
-            vis.curProf = vis.sourceProf;
+            vis.curProf.map(function(d) { d.depth = d.depthOrig; });
           }
-          vis.flameGraph = generateFlameGraph(vis.flameGraph.el);
+         vis.flameGraph.updateData(vis.curProf);
+          vis.flameGraph.redraw(250);
         });
 
       hideZeroCheckbox
@@ -157,7 +158,6 @@ profvis = (function() {
 
       var content = d3.select(el).select("div.profvis-table-inner");
 
-      var prof = consolidateRuns(vis.curProf);
       var totalTime = d3.max(prof, function(d) { return d.endTime; }) -
                       d3.min(prof, function(d) { return d.startTime; });
 
@@ -244,9 +244,6 @@ profvis = (function() {
 
       var stackHeight = 15;   // Height of each layer on the stack, in pixels
 
-      // Process data ---------------------------------------------------
-      var prof = consolidateRuns(vis.curProf);
-
       // Size of virtual graphing area ----------------------------------
       // (Can differ from visible area)
 
@@ -291,7 +288,7 @@ profvis = (function() {
         .attr("height", height);
 
       var cells = container.selectAll(".cell")
-        .data(prof)
+        .data(prof, function(d) { return d.depthOrig + "-" + d.startTime + "-" + d.endTime; })
         .enter()
         .append("g")
           .attr("class", "cell")
@@ -374,6 +371,21 @@ profvis = (function() {
         activeLabels = activeCells.select("text");
       }
 
+      function updateData(data) {
+        console.log('updating data');
+        data = data.filter(function(d) { return d.depth !== null; });
+        var newCells = container.selectAll(".cell")
+          .data(data, function(d) {
+            return d.depthOrig + "-" + d.startTime + "-" + d.endTime;
+          });
+        // newCells
+        //   .enter()
+        //     .style("display", "");
+        newCells
+          .exit()
+            .style("display", "none");
+
+      }
 
       function redraw(duration) {
         if (duration === undefined) duration = 0;
@@ -398,7 +410,7 @@ profvis = (function() {
           .attr("width", function(d) { return x(d.endTime) - x(d.startTime); })
           .attr("height", y(0) - y(1))
           .attr("x", function(d) { return x(d.startTime); })
-          .attr("y", function(d) { return y(d.depth ); });
+          .attr("y", function(d) { return y(d.depth); });
 
         activeLabels2
           .attr("x", function(d) {
@@ -616,7 +628,9 @@ profvis = (function() {
       return {
         el: el,
         cells: cells,       // Cache cells for faster access
-        onResize: onResize
+        onResize: onResize,
+        redraw: redraw,
+        updateData: updateData
       };
     } // generateFlameGraph
 
@@ -920,33 +934,36 @@ profvis = (function() {
 
   // Given profiling data and an array of function labels, remove samples
   // that contain those labels.
-  function collapseStacks(prof, collapseItems) {
+  function addCollapsedDepth(prof, collapseItems) {
     var data = d3.nest()
       .key(function(d) { return d.startTime; })
       .rollup(function(leaves) {
+        leaves = leaves.sort(function(a, b) { return a.depth - b.depth; });
+
         // Remove any leaves that have a label that's found in collapseItems.
-        leaves = leaves.filter(function(leaf) {
+        var curDepth = leaves[0].depth;
+        leaves = leaves.map(function(leaf) {
           // If the leaf's label matches any of the collapse items, remove it.
-          var matchFound = collapseItems.some(function(collapseItem) {
+          var inCollapseList = collapseItems.some(function(collapseItem) {
             return collapseItem === leaf.label;
           });
 
-          return !matchFound;
+          // Record original depth; we'll toggle between.
+          leaf.depthOrig = leaf.depth;
+
+          // Add what the depth of the call is when in collapsed view. (null
+          // means this call is hidden.)
+          if (inCollapseList) {
+            leaf.depthCollapsed = null;
+          } else {
+            leaf.depthCollapsed = curDepth;
+            curDepth++;
+          }
+
+          return leaf;
         });
 
-        // Recalculate depths so that collapsed stacks are contiguous.
-        leaves = leaves.sort(function(a, b) { return a.depth - b.depth; });
-        var startDepth = leaves[0].depth;
-
-        // Make a clone of each leaf (so we don't change original data) and
-        // update the depth.
-        var newLeaves = leaves.map(function(leaf, i) {
-          var newLeaf = $.extend({}, leaf);
-          newLeaf.depth = startDepth + i;
-          return newLeaf;
-        });
-
-        return newLeaves;
+        return leaves;
       })
       .map(prof);
 
@@ -980,15 +997,9 @@ profvis = (function() {
                      leaf.filename !== startLeaf.filename ||
                      leaf.linenum !== startLeaf.linenum)
           {
-            newLeaves.push({
-              depth:     startLeaf.depth,
-              filename:  startLeaf.filename,
-              filenum:   startLeaf.filenum,
-              label:     startLeaf.label,
-              linenum:   startLeaf.linenum,
-              startTime: startLeaf.startTime,
-              endTime:   lastLeaf.endTime
-            });
+            var newLeaf = $.extend({}, startLeaf);
+            newLeaf.endTime = lastLeaf.endTime;
+            newLeaves.push(newLeaf);
 
             startLeaf = leaf;
           }
@@ -997,15 +1008,9 @@ profvis = (function() {
         }
 
         // Add the last one
-        newLeaves.push({
-          depth:     startLeaf.depth,
-          filename:  startLeaf.filename,
-          filenum:   startLeaf.filenum,
-          label:     startLeaf.label,
-          linenum:   startLeaf.linenum,
-          startTime: startLeaf.startTime,
-          endTime:   lastLeaf.endTime
-        });
+        var newLeaf = $.extend({}, startLeaf);
+        newLeaf.endTime = lastLeaf.endTime;
+        newLeaves.push(newLeaf);
 
         return newLeaves;
       })
