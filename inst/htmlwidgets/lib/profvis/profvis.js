@@ -989,7 +989,7 @@ profvis = (function() {
     function splitBlock(block, breaks) {
       if (breaks.length === 0) return [block];
 
-      breaks.sort();
+      breaks.sort(function(a, b) { return a-b; });
       var newBlocks = [];
       var tmp;
       for (var i=-1; i<breaks.length; i++) {
