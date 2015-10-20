@@ -133,6 +133,10 @@ profvis = (function() {
 
       var content = d3.select(el).select("div.profvis-table-inner");
 
+      var prof = consolidateRuns(vis.curProf);
+      var totalTime = d3.max(prof, function(d) { return d.endTime; }) -
+                      d3.max(prof, function(d) { return d.startTime; });
+
       // One table for each file
       var tables = content.selectAll("table")
           .data(vis.fileLineTimes)
@@ -150,6 +154,10 @@ profvis = (function() {
       headerRows.append("th")
         .attr("class", "time")
         .text("Total (ms)");
+
+      headerRows.append("th")
+        .attr("class", "percent")
+        .text("%");
 
       headerRows.append("th")
         .text("Proportion");
@@ -174,6 +182,10 @@ profvis = (function() {
       rows.append("td")
         .attr("class", "time")
         .text(function(d) { return (Math.round(d.sumTime * 100) / 100); });
+
+      rows.append("td")
+        .attr("class", "percent")
+        .text(function(d) { return Math.round(d.sumTime/totalTime * 100); });
 
       rows.append("td")
         .attr("class", "timebar-cell")

@@ -96,8 +96,8 @@ table.profvis-table .code {
 }
 
 
-table.profvis-table .time {
-  padding: 0 2em 0 1em;
+table.profvis-table .time, table.profvis-table .percent {
+  padding: 0 5px;
   text-align: right;
 }
 
