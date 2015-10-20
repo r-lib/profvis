@@ -23,6 +23,7 @@ profvis = (function() {
       curProf: prof,       // Current profiling data used in flame graph
       files: message.files,
       collapseItems: message.collapseItems,
+      aggLabelTimes: getAggregatedLabelTimes(prof),
       fileLineTimes: getFileLineTimes(prof, message.files, false),
 
       // Objects representing each component
@@ -774,6 +775,7 @@ profvis = (function() {
         "<tr><td class='infobox-title'>Label</td><td>" + label + "</td></tr>" +
         "<tr><td class='infobox-title'>Called from</td><td>" + ref + "</td></tr>" +
         "<tr><td class='infobox-title'>Total time</td><td>" + (d.endTime - d.startTime) + "ms</td></tr>" +
+        "<tr><td class='infobox-title'>Agg. total time</td><td>" + vis.aggLabelTimes[label] + "ms</td></tr>" +
         "<tr><td class='infobox-title'>Call stack depth</td><td>" + d.depth + "</td></tr>" +
         "</table>";
     }
@@ -889,6 +891,20 @@ profvis = (function() {
     return prof;
   }
 
+
+  // Calculate the total amount of time spent in each function label
+  function getAggregatedLabelTimes(prof) {
+    var labelTimes = {};
+    prof.map(function(d) {
+      var label = d.label;
+      if (labelTimes[label] === undefined)
+        labelTimes[label] = 0;
+
+      labelTimes[label] += d.endTime - d.startTime;
+    });
+
+    return labelTimes;
+  }
 
   // Given profiling data and an array of function labels, remove samples
   // that contain those labels.
