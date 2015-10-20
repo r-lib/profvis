@@ -135,7 +135,7 @@ profvis = (function() {
 
       var prof = consolidateRuns(vis.curProf);
       var totalTime = d3.max(prof, function(d) { return d.endTime; }) -
-                      d3.max(prof, function(d) { return d.startTime; });
+                      d3.min(prof, function(d) { return d.startTime; });
 
       // One table for each file
       var tables = content.selectAll("table")
