@@ -209,8 +209,14 @@ profvis = (function() {
 
       rows
         .on("click", clickItem)
-        .on("mouseover", mouseOverItem)
-        .on("mouseout", mouseOutItem);
+        .on("mouseover", function(d) {
+          if (vis.lockedSelection !== null) return;
+          highlightSelectedCode(d.filename, d.linenum, d.label, false);
+        })
+        .on("mouseout", function(d) {
+          if (vis.lockedSelection !== null) return;
+          highlightSelectedCode(null, null, null, false);
+        });
 
       return {
         el: el,
@@ -514,13 +520,18 @@ profvis = (function() {
             );
           }
 
-          showInfoBox(d);
-          mouseOverItem(d);
+          if (vis.lockedSelection === null) {
+            showInfoBox(d);
+            highlightSelectedCode(d.filename, d.linenum, d.label, false);
+          }
         })
         .on("mouseout", function(d) {
           hideTooltip();
-          hideInfoBox(d);
-          mouseOutItem(d);
+
+          if (vis.lockedSelection === null) {
+            hideInfoBox(d);
+            highlightSelectedCode(null, null, null, false);
+          }
         });
 
       // Tooltip --------------------------------------------------------
@@ -745,20 +756,6 @@ profvis = (function() {
         linenum: d.linenum
       };
       highlightSelectedCode(d.filename, d.linenum, d.label, true);
-    }
-
-    // This is called when a flamegraph cell or a line of code is moused over.
-    function mouseOverItem(d) {
-      if (vis.lockedSelection !== null) return;
-
-      highlightSelectedCode(d.filename, d.linenum, d.label, false);
-    }
-
-    // This is called when a flamegraph cell or a line of code is moused out.
-    function mouseOutItem(d) {
-      if (vis.lockedSelection !== null) return;
-
-      highlightSelectedCode(null, null, null, false);
     }
 
 
