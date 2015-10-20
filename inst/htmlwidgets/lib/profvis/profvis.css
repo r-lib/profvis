@@ -54,6 +54,7 @@ table.profvis-table {
   font-size: 12px;
   width: 100%;
   text-align: left;
+  cursor: default;
 }
 
 table.profvis-table th {
@@ -156,6 +157,7 @@ table.profvis-table .timebar-cell > .timebar {
   alignment-baseline: central;
   font-family: monospace;
   font-size: 11px;
+  cursor: default;
 }
 
 
