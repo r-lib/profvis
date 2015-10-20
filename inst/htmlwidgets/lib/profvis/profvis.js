@@ -84,7 +84,7 @@ profvis = (function() {
     })();
 
 
-    //
+    // Create the UI components
     vis.controlPanel = generateControlPanel(controlPanelEl);
     vis.codeTable = generateCodeTable(codeTableEl);
     vis.flameGraph = generateFlameGraph(flameGraphEl);
@@ -108,7 +108,7 @@ profvis = (function() {
           } else {
             vis.curProf = vis.sourceProf;
           }
-          generateFlameGraph(vis.flameGraph.el);
+          vis.flameGraph = generateFlameGraph(vis.flameGraph.el);
         });
 
       hideZeroCheckbox
