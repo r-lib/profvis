@@ -772,8 +772,8 @@ profvis = (function() {
 
       vis.infoBox.el.innerHTML =
         "<table>" +
-        "<tr><td class='infobox-title'>Label</td><td>" + label + "</td></tr>" +
-        "<tr><td class='infobox-title'>Called from</td><td>" + ref + "</td></tr>" +
+        "<tr><td class='infobox-title'>Label</td><td>" + escapeHTML(label) + "</td></tr>" +
+        "<tr><td class='infobox-title'>Called from</td><td>" + escapeHTML(ref) + "</td></tr>" +
         "<tr><td class='infobox-title'>Total time</td><td>" + (d.endTime - d.startTime) + "ms</td></tr>" +
         "<tr><td class='infobox-title'>Agg. total time</td><td>" + vis.aggLabelTimes[label] + "ms</td></tr>" +
         "<tr><td class='infobox-title'>Call stack depth</td><td>" + d.depth + "</td></tr>" +
