@@ -4,7 +4,7 @@
   left: 10px;
   top: 10px;
   height: 82px;
-  width: 750px;
+  width: 748px;
   border: 1px solid #ddd;
   border-radius: 5px;
   background-color: #f8f8f8;
@@ -26,7 +26,7 @@
   width: 750px;
 }
 
-.profvis-dragsplit {
+.profvis-splitbar {
   cursor: col-resize;
   position: absolute;
   left: 762px;

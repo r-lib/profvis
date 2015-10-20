@@ -39,22 +39,56 @@ profvis = (function() {
     var controlPanelEl = document.createElement("div");
     controlPanelEl.className = "profvis-control-panel";
     vis.el.appendChild(controlPanelEl);
-    vis.controlPanel = generateControlPanel(controlPanelEl);
 
     var codeTableEl = document.createElement("div");
     codeTableEl.className = "profvis-code";
     vis.el.appendChild(codeTableEl);
-    vis.codeTable = generateCodeTable(codeTableEl);
 
     var flameGraphEl = document.createElement("div");
     flameGraphEl.className = "profvis-flamegraph";
     vis.el.appendChild(flameGraphEl);
-    vis.flameGraph = generateFlameGraph(flameGraphEl);
 
-    var dragSplitEl = document.createElement("div");
-    dragSplitEl.className = "profvis-dragsplit";
-    vis.el.appendChild(dragSplitEl);
-    enableDragSplit(dragSplitEl);
+    var splitBarEl = document.createElement("div");
+    splitBarEl.className = "profvis-splitbar";
+    vis.el.appendChild(splitBarEl);
+
+    // Resize left and right sides to 50% of available space
+    (function() {
+      var $controlPanel = $(controlPanelEl);
+      var $codeTable = $(codeTableEl);
+      var $flameGraph = $(flameGraphEl);
+      var $splitBar = $(splitBarEl);
+
+      // Preserve the gap between the split bar and the objects to left and right
+      var splitBarGap = {
+        left: $splitBar.offset().left - offsetRight($controlPanel),
+        right: $flameGraph.offset().left - offsetRight($splitBar)
+      };
+
+      var sumPanelWidth = $controlPanel.outerWidth() + $flameGraph.outerWidth();
+
+      // Size and position the elements
+      $controlPanel.outerWidth(sumPanelWidth/2);
+      $codeTable.outerWidth(sumPanelWidth/2);
+      $splitBar.offset({
+        left: offsetRight($controlPanel) + splitBarGap.left
+      });
+      $flameGraph.offset({
+        left: offsetRight($splitBar) + splitBarGap.right
+      });
+      $flameGraph.outerWidth(sumPanelWidth/2);
+
+      function offsetRight($el) {
+        return $el.offset().left + $el.outerWidth();
+      }
+    })();
+
+
+    //
+    vis.controlPanel = generateControlPanel(controlPanelEl);
+    vis.codeTable = generateCodeTable(codeTableEl);
+    vis.flameGraph = generateFlameGraph(flameGraphEl);
+    enableSplitBarDrag(splitBarEl);
 
 
     function generateControlPanel(el) {
@@ -540,7 +574,7 @@ profvis = (function() {
 
 
     // Enable dragging of the split bar ---------------------------------------
-    function enableDragSplit(el) {
+    function enableSplitBarDrag(el) {
       var $el = $(el);
 
       var dragging = false;
@@ -609,6 +643,7 @@ profvis = (function() {
 
       el.addEventListener("mousedown", startDrag);
     }
+
 
     // Highlights line of code and flamegraph blocks corresponding to a
     // filenum. linenum and, if provided, label combination. (When this is called
