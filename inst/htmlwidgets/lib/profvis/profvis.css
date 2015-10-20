@@ -187,3 +187,20 @@ table.profvis-table .timebar-cell > .timebar {
   font-family: monospace;
   font-size: 11px;
 }
+
+.profvis-infobox {
+  position: absolute;
+  left: 770px;
+  top: 10px;
+  opacity: 0.85;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  background-color: #fff;
+  padding: 5px 10px;
+  font-family: Open Sans,Helvetica,Arial,sans-serif;
+  font-size: 12px;
+}
+
+.profvis-infobox .infobox-title {
+  font-weight: bold;
+}

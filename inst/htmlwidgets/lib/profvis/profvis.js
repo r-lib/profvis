@@ -29,6 +29,7 @@ profvis = (function() {
       controlPanel: null,
       codeTable: null,
       flameGraph: null,
+      infoBox: null,
 
       // Indicates whether any filename/linenum/label is selected and locked
       lockedSelection: null
@@ -48,6 +49,10 @@ profvis = (function() {
     flameGraphEl.className = "profvis-flamegraph";
     vis.el.appendChild(flameGraphEl);
 
+    var infoBoxEl = document.createElement("div");
+    infoBoxEl.className = "profvis-infobox";
+    vis.el.appendChild(infoBoxEl);
+
     var splitBarEl = document.createElement("div");
     splitBarEl.className = "profvis-splitbar";
     vis.el.appendChild(splitBarEl);
@@ -57,6 +62,7 @@ profvis = (function() {
       var $controlPanel = $(controlPanelEl);
       var $codeTable = $(codeTableEl);
       var $flameGraph = $(flameGraphEl);
+      var $infoBox = $(infoBoxEl);
       var $splitBar = $(splitBarEl);
 
       // Preserve the gap between the split bar and the objects to left and right
@@ -73,6 +79,9 @@ profvis = (function() {
       $splitBar.offset({
         left: offsetRight($controlPanel) + splitBarGap.left
       });
+      $infoBox.offset({
+        left: offsetRight($splitBar) + splitBarGap.right
+      });
       $flameGraph.offset({
         left: offsetRight($splitBar) + splitBarGap.right
       });
@@ -88,6 +97,7 @@ profvis = (function() {
     vis.controlPanel = generateControlPanel(controlPanelEl);
     vis.codeTable = generateCodeTable(codeTableEl);
     vis.flameGraph = generateFlameGraph(flameGraphEl);
+    vis.infoBox = initInfoBox(infoBoxEl);
     enableSplitBarDrag(splitBarEl);
 
 
@@ -503,10 +513,12 @@ profvis = (function() {
             );
           }
 
+          showInfoBox(d);
           mouseOverItem(d);
         })
         .on("mouseout", function(d) {
           hideTooltip();
+          hideInfoBox(d);
           mouseOutItem(d);
         });
 
@@ -657,6 +669,10 @@ profvis = (function() {
     }
 
 
+    function initInfoBox(el) {
+      return { el: el };
+    }
+
     // Highlights line of code and flamegraph blocks corresponding to a
     // filenum. linenum and, if provided, label combination. (When this is called
     // from hovering over code, no label is provided.)
@@ -732,16 +748,39 @@ profvis = (function() {
 
     // This is called when a flamegraph cell or a line of code is moused over.
     function mouseOverItem(d) {
-      if (vis.lockedSelection === null)
-        highlightSelectedCode(d.filename, d.linenum, d.label, false);
+      if (vis.lockedSelection !== null) return;
+
+      highlightSelectedCode(d.filename, d.linenum, d.label, false);
     }
 
     // This is called when a flamegraph cell or a line of code is moused out.
     function mouseOutItem(d) {
-      if (vis.lockedSelection === null)
-        highlightSelectedCode(null, null, null, false);
+      if (vis.lockedSelection !== null) return;
+
+      highlightSelectedCode(null, null, null, false);
     }
 
+
+    function showInfoBox(d) {
+      var label = d.label ? d.label : "";
+      var ref = (d.filename && d.linenum) ?
+        (d.filename + "#" + d.linenum) :
+        "(source unavailable)";
+
+      vis.infoBox.el.style.display = "";
+
+      vis.infoBox.el.innerHTML =
+        "<table>" +
+        "<tr><td class='infobox-title'>Label</td><td>" + label + "</td></tr>" +
+        "<tr><td class='infobox-title'>Called from</td><td>" + ref + "</td></tr>" +
+        "<tr><td class='infobox-title'>Total time</td><td>" + (d.endTime - d.startTime) + "ms</td></tr>" +
+        "<tr><td class='infobox-title'>Call stack depth</td><td>" + d.depth + "</td></tr>" +
+        "</table>";
+    }
+
+    function hideInfoBox() {
+      vis.infoBox.el.style.display = "none";
+    }
 
     return vis;
   };  // profvis.render()
