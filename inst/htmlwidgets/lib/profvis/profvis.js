@@ -99,6 +99,8 @@ profvis = (function() {
     vis.codeTable = generateCodeTable(codeTableEl);
     vis.flameGraph = generateFlameGraph(flameGraphEl);
     vis.infoBox = initInfoBox(infoBoxEl);
+
+    hideInfoBox();
     enableSplitBarDrag(splitBarEl);
 
 
