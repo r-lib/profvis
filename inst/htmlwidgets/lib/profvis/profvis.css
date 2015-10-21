@@ -195,9 +195,8 @@ table.profvis-table .timebar-cell > .timebar {
   left: 770px;
   top: 10px;
   opacity: 0.85;
-  border: 1px solid #ccc;
   border-radius: 3px;
-  background-color: #fff;
+  background-color: #f4f4f4;
   padding: 5px 10px;
   font-family: Open Sans,Helvetica,Arial,sans-serif;
   font-size: 12px;
