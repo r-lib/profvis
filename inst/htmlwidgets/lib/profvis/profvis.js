@@ -640,6 +640,9 @@ profvis = (function() {
         $flameGraph.width($flameGraph.width() - dx);
         $flameGraph.offset({ left: $flameGraph.offset().left + dx });
         vis.flameGraph.onResize();
+
+        var $infoBox = $(vis.infoBox.el);
+        $infoBox.offset({ left: $infoBox.offset().left + dx });
       };
 
       var startDrag = function(e) {
