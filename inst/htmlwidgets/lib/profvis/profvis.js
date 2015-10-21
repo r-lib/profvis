@@ -88,6 +88,17 @@ profvis = (function() {
       });
       $flameGraph.outerWidth(sumPanelWidth/2);
 
+
+      // Make sure the flame graph resizes after the window is resized
+      // Capture the initial distance from the right
+      var flameGraphRightMargin = window.innerWidth - offsetRight($flameGraph);
+      $(window).resize(
+        debounce(function() {
+          $flameGraph.outerWidth(window.innerWidth - flameGraphRightMargin - $flameGraph.offset().left);
+          vis.flameGraph.onResize();
+        }, 250)
+      );
+
       function offsetRight($el) {
         return $el.offset().left + $el.outerWidth();
       }
@@ -505,7 +516,6 @@ profvis = (function() {
         zoom.x(x);
         redraw();
       }
-      d3.select(window).on("resize", onResize);
 
       // Attach mouse event handlers ------------------------------------
       cells
