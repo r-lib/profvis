@@ -226,6 +226,8 @@ profvis = (function() {
         .on("click", clickItem)
         .on("mouseover", function(d) {
           if (vis.lockedSelection !== null) return;
+          // Info box is only relevant when mousing over flamegraph
+          hideInfoBox();
           highlightSelectedCode(d.filename, d.linenum, d.label, false);
         })
         .on("mouseout", function(d) {
@@ -658,7 +660,10 @@ profvis = (function() {
       // Attach mouse event handlers ------------------------------------
       function addMouseEventHandlers(cells) {
         cells
-          .on("click", clickItem)
+          .on("click", function(d) {
+            showInfoBox(d);
+            clickItem(d);
+          })
           .on("mouseover", function(d) {
             // If no label currently shown, display a tooltip
             var label = this.querySelector(".label");
