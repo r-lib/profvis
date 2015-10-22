@@ -297,32 +297,6 @@ profvis = (function() {
         return d.depth + "-" + d.startTime + "-" + d.endTime;
       };
 
-      var cells = container.selectAll(".cell")
-        .data(prof, dataKey)
-        .enter()
-        .append("g")
-          .attr("class", "cell")
-          .classed("highlighted", function(d) { return d.filename !== null; });
-
-      var rects = cells.append("rect")
-        .attr("class", "rect");
-
-      // Add CSS classes for highlighting cells with labels that match particular
-      // regex patterns.
-      var highlightPatterns = d3.entries(message.highlight);
-      highlightPatterns.map(function(item) {
-        var cssClass = item.key;
-        var regexp = new RegExp(item.value);
-
-        cells.classed(cssClass, function(d) {
-          return d.label.search(regexp) !== -1;
-        });
-      });
-
-      var labels = cells.append("text")
-        .attr("class", "label")
-        .text(function(d) { return d.label; });
-
 
       // Axes ------------------------------------------------------------
       var xAxis = d3.svg.axis()
@@ -403,39 +377,10 @@ profvis = (function() {
             .delay(exitDuration + updateDuration)
 
         cells = container.selectAll(".cell");
+
+        // TODO: Remove this hack
+        if (vis.flameGraph) vis.flameGraph.cells = cells;
       }
-
-      // // Data updates ---------------------------------------------------------
-      // function updateData(data) {
-      //   data = data.filter(function(d) { return d.depth !== null; });
-      //   var newCells = container.selectAll(".cell")
-      //     .data(data, function(d) {
-      //       return d.depthOrig + "-" + d.startTime + "-" + d.endTime;
-      //     });
-
-      //   var enterCells = newCells
-      //     .enter()
-      //       .append("g")
-      //       .attr("class", "cell")
-      //       .classed("highlighted", function(d) { return d.filename !== null; });
-
-      //   enterCells
-      //     .append("rect")
-      //     .attr("class", "rect")
-      //     .attr("y", function(d) { return y(d.depthCollapsed); });
-
-      //   enterCells
-      //     .append("text")
-      //     .attr("class", "label")
-      //     .text(function(d) { return d.label; })
-      //     .attr("y", function(d) { return y(d.depthCollapsed - 0.5); })
-      //     .attr("display", "none");
-
-      //   newCells
-      //     .exit().remove();
-
-      //   cells = newCells;
-      // }
 
 
       // Redrawing ------------------------------------------------------------
@@ -450,44 +395,16 @@ profvis = (function() {
       //   display to "none" if it's not in the visible area. (Note that
       //   display:none results in much better performance than
       //   visibility:hidden)
-      // * Set the external vars activeRects and activeLabels from these cells.
+      // * Set the external vars rects and labels from these cells.
       // * Then during redraws, set x, y, etc. attributes on those active
       //   elements only.
       //
       // Rendering text elements is slow, so setting hidden labels to
       // display:none improves performance a lot.
 
-      var activeRects;
-      var activeLabels;
-      // This sets the activeRects and activeCells, based on whether they're in
-      // the visible area.
-      function filterActiveElements() {
-        // TODO: remove these lines
-        activeRects = cells.select("rect");
-        activeLabels = cells.select("text");
-        return;
-
-        // Filter based on whether the rect is in the plotting area
-        var activeCells = cells.filter(function(d) {
-          if (x(d.endTime)       < 0     ||
-              x(d.startTime)     > width ||
-              y(getDepth(d) - 1) < 0     ||
-              y(getDepth(d))     > height)
-          {
-            // Set 'display' attribute instead of 'visible', because it's faster.
-            if (this.getAttribute("display") !== "none")
-              this.setAttribute("display", "none");
-            return false;
-          }
-
-          if (this.getAttribute("display") !== "inherit")
-            this.setAttribute("display", "inherit");
-          return true;
-        });
-
-        activeRects = activeCells.select("rect");
-        activeLabels = activeCells.select("text");
-      }
+      var cells;
+      var rects;
+      var labels;
 
       function positionRects(rects) {
         return rects
@@ -531,36 +448,107 @@ profvis = (function() {
         if (duration === undefined) duration = 0;
         if (delay === undefined) delay = 0;
 
-       filterActiveElements();
+        // If there's no transition:
+        // * Filter the data based on the NEW scales (and data accessor)
+        // * Add the enter items
+        // * Set the positions of the update (and enter) items
+        // * Remove the exit items
+        // If there's a double-click zoom transition:
+        // * Filter the data based on the NEW scales (and data accessor)
+        // * Add the enter items
+        // * Position the enter selection, using the OLD scales (and data accessor)
+        // * Set the update (and enter) and exit items in their new positions, with transition
+        // * Remove exit items
+        // If there's a collapse transition:
+        // * Filter the data based on the NEW (scales and) data accessor
+        // * Add the enter items
+        // * Remove exit items with duration
+        // * Position update (and enter) items with delay and duration
+        // If there's an un-collapse transition:
+        // * Filter the data based on the NEW (scales and) data accessor
+        // * Position update items with duration
+        // * Add the enter items with delay and duration
+
+        // Filter based on whether the rect is in the plotting area
+        var data = prof.filter(function(d) {
+          return !(x(d.endTime)       < 0      ||
+                   x(d.startTime)     > width  ||
+                   y(getDepth(d) - 1) < 0      ||
+                   y(getDepth(d))     > height);
+        });
+
+        cells = container.selectAll(".cell")
+          .data(data, dataKey);
+
+        var enterCells = cells.enter()
+          .append("g")
+          .attr("class", "cell")
+          .classed("highlighted", function(d) { return d.filename !== null; })
+          .call(addMouseEventHandlers);
+
+        enterCells.append("rect")
+          .attr("class", "rect")
+          .call(positionRects);
+
+        // TODO: Clean this up
+        // Add CSS classes for highlighting cells with labels that match particular
+        // regex patterns.
+        var highlightPatterns = d3.entries(message.highlight);
+        highlightPatterns.map(function(item) {
+          var cssClass = item.key;
+          var regexp = new RegExp(item.value);
+
+          enterCells.classed(cssClass, function(d) {
+            return d.label.search(regexp) !== -1;
+          });
+        });
+
+        enterCells.append("text")
+          .attr("class", "label")
+          .text(function(d) { return d.label; })
+          .call(positionLabels)
+          .call(updateLabelVisibility);
+
+        rects = cells.select("rect");
+        labels = cells.select("text");
 
         // Create local copies because we might add a transition and we don't
         // want to modify the original.
-        var activeRects2 = activeRects;
-        var activeLabels2 = activeLabels;
+        var exitCells = cells.exit();
+        var rects2 = rects;
+        var labels2 = labels;
         var x_axis = svg.select(".x.axis");
 
         // Only add the transition if needed (duration!=0) because there's a
         // performance penalty
         if (duration !== 0) {
-          activeRects2 = activeRects2.transition().duration(duration).delay(delay);
-          activeLabels2 = activeLabels2.transition().duration(duration).delay(delay);
+          exitCells = exitCells.transition().delay(duration);
+          rects2 = rects2.transition().duration(duration).delay(delay);
+          labels2 = labels2.transition().duration(duration).delay(delay);
           x_axis = x_axis.transition().duration(duration).delay(delay);
         }
 
-        activeRects2 = activeRects2.call(positionRects);
-        activeLabels2 = activeLabels2.call(positionLabels);
+        exitCells.remove();
+        rects2 = rects2.call(positionRects);
+        labels2 = labels2.call(positionLabels);
 
         x_axis.call(xAxis);
 
         if (duration === 0) {
+          //TODO: un-debounce?
           updateLabelVisibilityDebounced();
-
         } else {
           // If there's a transition, select a single rect element, and add the
           // function to be called at the end of the transition.
-          activeRects2.filter(function(d, i) { return i === 0; })
-            .each("end", updateLabelVisibilityDebounced);
+          rects2
+            .filter(function(d, i) { return i === 0; })
+            .each("end", function() {
+              labels.call(updateLabelVisibility);
+            });
         }
+
+        // TODO: Remove this hack
+        if (vis.flameGraph) vis.flameGraph.cells = cells;
       }
 
       // Calculate whether to display label in each cell -----------------
@@ -584,7 +572,7 @@ profvis = (function() {
       }
 
       // Show labels that fit in the corresponding rectangle, and hide others.
-      function updateLabelVisibility() {
+      function updateLabelVisibility(labels) {
         // Cache the width of rects. This is a lookup table which, given the
         // timespan (width in data), gives the number of pixels. The width of
         // rects changes with the x scale, so we have to rebuild the table each
@@ -600,21 +588,20 @@ profvis = (function() {
         }
 
         // Now calculate text and rect width for each cell.
-        activeLabels.attr("display", function(d) {
+        labels.attr("display", function(d) {
           var labelWidth = getLabelWidth(this, d.label.length);
           var boxWidth = getRectWidth(d.endTime - d.startTime);
 
           return (labelWidth <= boxWidth) ? "inherit" : "none";
         });
+
+        return labels;
       }
-      var updateLabelVisibilityDebounced = debounce(updateLabelVisibility, 150);
+      var updateLabelVisibilityDebounced = debounce(function() {
+        updateLabelVisibility(labels);
+      }, 150);
 
-
-      // Make all labels start invisible, so that if they start offscreen, they
-      // won't be visible when we drag them onscreen.
-      labels.attr("display", "none");
       redraw();
-      updateLabelVisibility(); // Call immediately the first time
 
       // Recalculate dimensions on resize
       function onResize() {
@@ -640,44 +627,50 @@ profvis = (function() {
       }
 
       // Attach mouse event handlers ------------------------------------
-      cells
-        .on("click", clickItem)
-        .on("mouseover", function(d) {
-          // If no label currently shown, display a tooltip
-          var label = this.querySelector(".label");
-          if (label.getAttribute("display") === "none") {
-            var box = this.getBBox();
-            showTooltip(
-              d.label,
-              box.x + box.width / 2,
-              box.y - box.height - 5
-            );
-          }
+      function addMouseEventHandlers(cells) {
+        cells
+          .on("click", clickItem)
+          .on("mouseover", function(d) {
+            // If no label currently shown, display a tooltip
+            var label = this.querySelector(".label");
+            if (label.getAttribute("display") === "none") {
+              var box = this.getBBox();
+              showTooltip(
+                d.label,
+                box.x + box.width / 2,
+                box.y - box.height - 5
+              );
+            }
 
-          if (vis.lockedSelection === null) {
-            showInfoBox(d);
-            highlightSelectedCode(d.filename, d.linenum, d.label, false);
-          }
-        })
-        .on("mouseout", function(d) {
-          hideTooltip();
+            if (vis.lockedSelection === null) {
+              showInfoBox(d);
+              highlightSelectedCode(d.filename, d.linenum, d.label, false);
+            }
+          })
+          .on("mouseout", function(d) {
+            hideTooltip();
 
-          if (vis.lockedSelection === null) {
-            hideInfoBox(d);
-            highlightSelectedCode(null, null, null, false);
-          }
-        });
+            if (vis.lockedSelection === null) {
+              hideInfoBox(d);
+              highlightSelectedCode(null, null, null, false);
+            }
+          })
+          .on("dblclick.zoomcell", function(d) {
+            // When a cell is double-clicked, zoom x to that cell's width.
+            x.domain([d.startTime, d.endTime]);
+            zoom.x(x);
+            redraw(250);
+          });
+
+        return cells;
+      }
 
       // Tooltip --------------------------------------------------------
-      var tooltip = container.append("g").attr("class", "tooltip");
-      var tooltipRect = tooltip.append("rect");
-      var tooltipLabel = tooltip.append("text");
-
       function showTooltip(label, x, y) {
-        tooltip.attr("visibility", "visible");
-
-        // Add label
-        tooltipLabel.text(label)
+        var tooltip = container.append("g").attr("class", "tooltip");
+        var tooltipRect = tooltip.append("rect");
+        var tooltipLabel = tooltip.append("text")
+          .text(label)
           .attr("x", x)
           .attr("y", y);
 
@@ -693,7 +686,7 @@ profvis = (function() {
       }
 
       function hideTooltip() {
-        tooltip.attr("visibility", "hidden");
+        container.select("g.tooltip").remove();
       }
 
 
@@ -728,12 +721,6 @@ profvis = (function() {
         redraw(250);
       });
 
-      // When a cell is double-clicked, zoom x to that cell's width.
-      cells.on("dblclick.zoomcell", function(d) {
-        x.domain([d.startTime, d.endTime]);
-        zoom.x(x);
-        redraw(250);
-      });
 
       return {
         el: el,
