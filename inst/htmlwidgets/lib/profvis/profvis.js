@@ -119,7 +119,7 @@ profvis = (function() {
 
     function generateControlPanel(el) {
       el.innerHTML =
-        '<div><label><input class="collapse" type="checkbox" checked>Hide unimportant functions</label></div>' +
+        '<div><label><input class="collapse" type="checkbox" checked>Hide internal functions</label></div>' +
         '<div><label><input class="hide-zero-row" type="checkbox">Hide lines of code with zero time</label></div>';
 
       var collapseCheckbox = d3.select(el).select("input.collapse");
@@ -273,8 +273,22 @@ profvis = (function() {
             .domain(yDomain)
             .range([height, height - (yDomain[1] - yDomain[0]) * stackHeight]),
 
-        getDepth: function(d) { return d.depthCollapsed; }
+        // This will be a function that, given a data point, returns the depth.
+        // This function can change; sometimes it returns the original depth,
+        // and sometimes it returns the collapsed depth. This isn't exactly a
+        // scale function, but it's close enough.
+        getDepth: null
       };
+
+      function useCollapsedDepth() {
+        scales.getDepth = function(d) { return d.depthCollapsed; };
+      }
+      function useUncollapsedDepth() {
+        scales.getDepth = function(d) { return d.depth; };
+      }
+
+      useCollapsedDepth();
+
 
       // Creat SVG objects ----------------------------------------------
       var wrapper = d3.select(el).append('div')
@@ -304,21 +318,6 @@ profvis = (function() {
         .call(xAxis);
 
 
-      // Data updates ---------------------------------------------------------
-
-      function useCollapsedDepth() {
-        scales.getDepth = function(d) { return d.depthCollapsed; };
-      }
-
-      function useUncollapsedDepth() {
-        scales.getDepth = function(d) { return d.depth; };
-      }
-
-      // For a data element, return identifying key
-      function dataKey(d) {
-        return d.depth + "-" + d.startTime + "-" + d.endTime;
-      }
-
       // Redrawing ------------------------------------------------------------
 
       // Cache cells for faster access
@@ -326,6 +325,11 @@ profvis = (function() {
       // Externally-visible function
       function getCells() {
         return cells;
+      }
+
+      // For a data element, return identifying key
+      function dataKey(d) {
+        return d.depth + "-" + d.startTime + "-" + d.endTime;
       }
 
       // For transitions with animation, we need to have a copy of the previous
