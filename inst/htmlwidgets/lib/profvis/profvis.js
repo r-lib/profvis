@@ -321,8 +321,12 @@ profvis = (function() {
 
       // Redrawing ------------------------------------------------------------
 
-      // TODO: put this in vis.flameGraph ?
+      // Cache cells for faster access
       var cells;
+      // Externally-visible function
+      function getCells() {
+        return cells;
+      }
 
       // For transitions with animation, we need to have a copy of the previous
       // scales in addition to the current ones.
@@ -355,11 +359,7 @@ profvis = (function() {
                    yScale(depthVal)     > height);
         });
 
-        var cells = container.selectAll("g.cell").data(data, dataKey);
-
-        // TODO: Simplify this
-        if (vis.flameGraph)
-          vis.flameGraph.cells = cells;
+        cells = container.selectAll("g.cell").data(data, dataKey);
 
         return cells;
       }
@@ -721,7 +721,7 @@ profvis = (function() {
 
       return {
         el: el,
-        cells: cells,       // Cache cells for faster access
+        getCells: getCells,
         onResize: onResize,
         redrawImmediate: redrawImmediate,
         redrawZoom: redrawZoom,
@@ -821,7 +821,7 @@ profvis = (function() {
     function highlightSelectedCode(filename, linenum, label, locked) {
       // Un-highlight lines of code and flamegraph blocks
       vis.codeTable.rows.classed({ selected: false, locked: false });
-      vis.flameGraph.cells.classed({ selected: false, locked: false });
+      vis.flameGraph.getCells().classed({ selected: false, locked: false });
 
       if (filename && linenum) {
         // If we have filename and linenum, search for cells that match, and
@@ -832,7 +832,7 @@ profvis = (function() {
           .classed({ selected: true, locked: locked });
 
         // Highlight corresponding flamegraph blocks
-        vis.flameGraph.cells
+        vis.flameGraph.getCells()
           .filter(function(d) {
             // Check for filename and linenum match, and if provided, a label match.
             var match = d.filename === filename && d.linenum === linenum;
@@ -854,7 +854,7 @@ profvis = (function() {
 
         // If we only have the label, search for cells that match, but make sure
         // to not select ones that have a filename and linenum.
-        vis.flameGraph.cells
+        vis.flameGraph.getCells()
           .filter(function(d) {
             return d.label === label && d.filename === null && d.linenum === null;
           })
