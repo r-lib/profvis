@@ -32,10 +32,7 @@ profvis = (function() {
       controlPanel: null,
       codeTable: null,
       flameGraph: null,
-      infoBox: null,
-
-      // Indicates whether any filename/linenum/label is selected and locked
-      lockedSelection: null
+      infoBox: null
     };
 
 
@@ -223,16 +220,20 @@ profvis = (function() {
           .html("&nbsp;");
 
       rows
-        .on("click", clickItem)
-        .on("mouseover", function(d) {
-          if (vis.lockedSelection !== null) return;
+        .on("click", function(d) {
           // Info box is only relevant when mousing over flamegraph
           hideInfoBox();
-          highlightSelectedCode(d.filename, d.linenum, d.label, false);
+          clickItem(d, this);
+        })
+        .on("mouseover", function(d) {
+          if (lockedSelection !== null) return;
+          // Info box is only relevant when mousing over flamegraph
+          hideInfoBox();
+          highlightSelectedCode(d);
         })
         .on("mouseout", function(d) {
-          if (vis.lockedSelection !== null) return;
-          highlightSelectedCode(null, null, null, false);
+          if (lockedSelection !== null) return;
+          highlightSelectedCode(null);
         });
 
       return {
@@ -662,7 +663,7 @@ profvis = (function() {
         cells
           .on("click", function(d) {
             showInfoBox(d);
-            clickItem(d);
+            clickItem(d, this);
           })
           .on("mouseover", function(d) {
             // If no label currently shown, display a tooltip
@@ -676,17 +677,17 @@ profvis = (function() {
               );
             }
 
-            if (vis.lockedSelection === null) {
+            if (lockedSelection === null) {
               showInfoBox(d);
-              highlightSelectedCode(d.filename, d.linenum, d.label, false);
+              highlightSelectedCode(d);
             }
           })
           .on("mouseout", function(d) {
             hideTooltip();
 
-            if (vis.lockedSelection === null) {
+            if (lockedSelection === null) {
               hideInfoBox(d);
-              highlightSelectedCode(null, null, null, false);
+              highlightSelectedCode(null);
             }
           })
           .on("dblclick.zoomcell", function(d) {
@@ -862,37 +863,47 @@ profvis = (function() {
     // from hovering over code, no label is provided.)
     // If only a label is provided, search for cells (only in the flamegraph) that
     // have the same label.
-    function highlightSelectedCode(filename, linenum, label, locked) {
+    function highlightSelectedCode(d) {
       // Un-highlight lines of code and flamegraph blocks
-      vis.codeTable.rows.classed({ selected: false, locked: false });
-      vis.flameGraph.getCells().classed({ selected: false, locked: false });
+      vis.codeTable.rows
+        .filter(".selected")
+        .classed({ selected: false });
+      vis.flameGraph.getCells()
+        .filter(".selected")
+        .classed({ selected: false });
 
-      if (filename && linenum) {
+      if (d === null) return;
+
+      var target = d;
+
+      if (target.filename && target.linenum) {
         // If we have filename and linenum, search for cells that match, and
         // set them as "selected".
         var tr = vis.codeTable.rows.filter(function(d) {
-            return d.linenum === linenum && d.filename === filename;
+            return d.linenum === target.linenum &&
+                   d.filename === target.filename;
           })
-          .classed({ selected: true, locked: locked });
+          .classed({ selected: true });
 
         // Highlight corresponding flamegraph blocks
         vis.flameGraph.getCells()
           .filter(function(d) {
             // Check for filename and linenum match, and if provided, a label match.
-            var match = d.filename === filename && d.linenum === linenum;
-            if (!!label) {
-              match = match && (d.label === label);
+            var match = d.filename === target.filename &&
+                        d.linenum === target.linenum;
+            if (!!target.label) {
+              match = match && (d.label === target.label);
             }
             return match;
           })
-          .classed({ selected: true, locked: locked });
+          .classed({ selected: true });
 
         tr.node().scrollIntoViewIfNeeded();
 
-      } else if (label) {
+      } else if (target.label) {
         // Don't highlight blocks for these labels
         var exclusions = ["<Anonymous>", "FUN"];
-        if (exclusions.some(function(x) { return label === x; })) {
+        if (exclusions.some(function(x) { return target.label === x; })) {
           return;
         }
 
@@ -900,34 +911,48 @@ profvis = (function() {
         // to not select ones that have a filename and linenum.
         vis.flameGraph.getCells()
           .filter(function(d) {
-            return d.label === label && d.filename === null && d.linenum === null;
+            return d.label === target.label &&
+                   d.filename === null &&
+                   d.linenum === null;
           })
-          .classed({ selected: true, locked: locked });
+          .classed({ selected: true });
       }
     }
 
 
+    var lockedSelection = null;
+
+    function lockSelection(d, el) {
+      lockedSelection = {
+        data: d,
+        el: el
+      };
+
+      d3.select(el).classed({ locked: true });
+    }
+
+    function unlockSelection() {
+      if (lockedSelection) {
+        d3.select(lockedSelection.el).classed({ locked: false });
+        lockedSelection = null;
+      }
+    }
+
     // This is called when a flamegraph cell or a line of code is clicked on.
-    function clickItem(d) {
+    function clickItem(d, el) {
       // If locked, and this click is on the currently locked selection,
-      // unlock.
-      if (vis.lockedSelection &&
-          vis.lockedSelection.filename === d.filename &&
-          vis.lockedSelection.linenum === d.linenum)
-      {
-        vis.lockedSelection = null;
-        highlightSelectedCode(d.filename, d.linenum, d.label, false);
+      // just unlock and return.
+      if (lockedSelection && el === lockedSelection.el) {
+        unlockSelection();
         return;
       }
 
       // If nothing currently locked, or if locked and this click is on
       // something other than the currently locked selection, then lock the
       // current selection.
-      vis.lockedSelection = {
-        filename: d.filename,
-        linenum: d.linenum
-      };
-      highlightSelectedCode(d.filename, d.linenum, d.label, true);
+      unlockSelection();
+      lockSelection(d, el);
+      highlightSelectedCode(d);
     }
 
 
