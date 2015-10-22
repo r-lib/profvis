@@ -591,9 +591,6 @@ profvis = (function() {
 
         return labels;
       }
-      var updateLabelVisibilityDebounced = debounce(function() {
-        updateLabelVisibility(cells.select("text"));
-      }, 150);
 
       redrawImmediate();
 
