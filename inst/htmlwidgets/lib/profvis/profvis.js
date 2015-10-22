@@ -127,13 +127,15 @@ profvis = (function() {
 
       collapseCheckbox
         .on("change", function() {
+          vis.flameGraph.savePrevScales();
+
           if (this.checked) {
-            vis.flameGraph.useCollapsed(true);
+            vis.flameGraph.useCollapsedDepth();
+            vis.flameGraph.redrawCollapse(400, 400);
           } else {
-            vis.flameGraph.useCollapsed(false);
+            vis.flameGraph.useUncollapsedDepth();
+            vis.flameGraph.redrawUncollapse(400, 250);
           }
-          vis.flameGraph.updateData();
-          // vis.flameGraph.redraw(250);
         });
 
       hideZeroCheckbox
@@ -242,11 +244,6 @@ profvis = (function() {
     function generateFlameGraph(el) {
       el.innerHTML = "";
 
-      // By default, use collapsed depths
-      // TODO: Clean this up
-      var getDepth;
-      useCollapsed(true);
-
       var stackHeight = 15;   // Height of each layer on the stack, in pixels
 
       // Size of virtual graphing area ----------------------------------
@@ -262,18 +259,22 @@ profvis = (function() {
         d3.max(prof, function(d) { return d.endTime; })
       ];
       var yDomain = [
-        d3.min(prof, getDepth) - 1,
-        d3.max(prof, getDepth)
+        d3.min(prof, function(d) { return d.depth; }) - 1,
+        d3.max(prof, function(d) { return d.depth; })
       ];
 
-      // Scales
-      var x = d3.scale.linear()
-        .domain(xDomain)
-        .range([0, width]);
+      // Scales ---------------------------------------------------------------
+      var scales = {
+        x: d3.scale.linear()
+            .domain(xDomain)
+            .range([0, width]),
 
-      var y = d3.scale.linear()
-        .domain(yDomain)
-        .range([height, height - (yDomain[1] - yDomain[0]) * stackHeight]);
+        y: d3.scale.linear()
+            .domain(yDomain)
+            .range([height, height - (yDomain[1] - yDomain[0]) * stackHeight]),
+
+        getDepth: function(d) { return d.depthCollapsed; }
+      };
 
       // Creat SVG objects ----------------------------------------------
       var wrapper = d3.select(el).append('div')
@@ -292,15 +293,9 @@ profvis = (function() {
         .attr("width", width)
         .attr("height", height);
 
-      // For a data element, return identifying key
-      var dataKey = function(d) {
-        return d.depth + "-" + d.startTime + "-" + d.endTime;
-      };
-
-
       // Axes ------------------------------------------------------------
       var xAxis = d3.svg.axis()
-        .scale(x)
+        .scale(scales.x)
         .orient("bottom");
 
       svg.append("g")
@@ -311,111 +306,115 @@ profvis = (function() {
 
       // Data updates ---------------------------------------------------------
 
-      // TODO: Don't use a function here?
-      function useCollapsed(value) {
-        if (value) {
-          getDepth = function(d) { return d.depthCollapsed; };
-        } else {
-          getDepth = function(d) { return d.depth; };
-        }
+      function useCollapsedDepth() {
+        scales.getDepth = function(d) { return d.depthCollapsed; };
       }
 
-      // TODO: rename function
-      function updateData() {
-        var exitDuration = 500;
-        var updateDuration = 250;
-        var enterDuration = 500;
-
-        // Steps:
-        // - Find existing positions
-        // - exit: remove the old cells
-        // - update: transition the update cells
-        // - enter: the new cells
-        var data = prof;
-
-        // Keep only the items that have a depth
-        data = data.filter(function(d) {
-          return getDepth(d) !== null;
-        })
-
-        var newCells = container.selectAll(".cell")
-          .data(data, dataKey);
-
-        newCells.exit()
-          .transition()
-            .duration(exitDuration)
-            .style("opacity", 0)
-            .remove();
-
-        redraw(updateDuration, exitDuration);
-
-        var enterCells = newCells.enter()
-          .append("g")
-          .attr("class", "cell")
-          .classed("highlighted", function(d) { return d.filename !== null; });
-
-        var newRects = enterCells
-          .append("rect")
-          .attr("class", "rect")
-          .attr("y", function(d) { return y(getDepth(d)); })
-          .style("opacity", 0)
-        // TODO: Replace with .call() ?
-          .call(positionRects)
-          .transition()
-            .duration(enterDuration)
-            .delay(exitDuration + updateDuration)
-            .style("opacity", 1)
-
-        var newLabels = enterCells
-          .append("text")
-          .attr("class", "label")
-          .text(function(d) { return d.label; })
-          .attr("display", "none")
-          .call(positionLabels)
-          .transition()
-            .duration(enterDuration)
-            .delay(exitDuration + updateDuration)
-
-        cells = container.selectAll(".cell");
-
-        // TODO: Remove this hack
-        if (vis.flameGraph) vis.flameGraph.cells = cells;
+      function useUncollapsedDepth() {
+        scales.getDepth = function(d) { return d.depth; };
       }
 
+      // For a data element, return identifying key
+      function dataKey(d) {
+        return d.depth + "-" + d.startTime + "-" + d.endTime;
+      }
 
       // Redrawing ------------------------------------------------------------
 
-      // Updating the attributes of lots of SVG elements is expensive. The
-      // basic strategy here is to first filter out all the elements that
-      // don't fit in the plotting area, and then only operate on what's left.
-      //
-      // d3.select() and setAttribute are expensive. To minimize calls to them,
-      // this is what we'll do:
-      // * Do one pass finding which cells will be in the visible area. Set
-      //   display to "none" if it's not in the visible area. (Note that
-      //   display:none results in much better performance than
-      //   visibility:hidden)
-      // * Set the external vars rects and labels from these cells.
-      // * Then during redraws, set x, y, etc. attributes on those active
-      //   elements only.
-      //
-      // Rendering text elements is slow, so setting hidden labels to
-      // display:none improves performance a lot.
-
+      // TODO: put this in vis.flameGraph ?
       var cells;
-      var rects;
-      var labels;
 
-      function positionRects(rects) {
-        return rects
-          .attr("width", function(d) { return x(d.endTime) - x(d.startTime); })
-          .attr("height", y(0) - y(1))
-          .attr("x", function(d) { return x(d.startTime); })
-          .attr("y", function(d) { return y(getDepth(d)); });
+      // For transitions with animation, we need to have a copy of the previous
+      // scales in addition to the current ones.
+      var prevScales = {};
+      function savePrevScales() {
+        prevScales = {
+          x:        scales.x.copy(),
+          y:        scales.y.copy(),
+          getDepth: scales.getDepth
+        };
+      }
+      savePrevScales();
+
+
+      // Returns a D3 selection of the cells that are within the plotting
+      // region. A set of scales can be passed in; by default, use the current
+      // set of scales.
+      function selectActiveCells(s) {
+        if (s === undefined) s = scales;
+        var xScale = s.x;
+        var yScale = s.y;
+        var depth = s.getDepth;
+
+        var data = prof.filter(function(d) {
+          var depthVal = depth(d);
+          return !(xScale(d.endTime)    < 0      ||
+                   xScale(d.startTime)  > width  ||
+                   depthVal           === null   ||
+                   yScale(depthVal - 1) < 0      ||
+                   yScale(depthVal)     > height);
+        });
+
+        var cells = container.selectAll("g.cell").data(data, dataKey);
+
+        // TODO: Simplify this
+        if (vis.flameGraph)
+          vis.flameGraph.cells = cells;
+
+        return cells;
       }
 
-      function positionLabels(labels) {
-        return labels
+      // Given an enter selection, add the rect and text objects, but don't
+      // position them. Returns a selection of the new <g> elements.
+      // This should usually be called with addItems(sel.enter()) instead
+      // of sel.enter().call(addItems), because the latter returns the original
+      // enter selection, not the selection of <g> elements, and can't be
+      // used for chaining more function calls on the <g> selection.
+      function addItems(enterSelection) {
+        var cells = enterSelection.append("g")
+          .attr("class", "cell")
+          .classed("highlighted", function(d) { return d.filename !== null; })
+          .call(addMouseEventHandlers);
+
+        // Add CSS classes for highlighting cells with labels that match particular
+        // regex patterns.
+        var highlightPatterns = d3.entries(message.highlight);
+        highlightPatterns.map(function(item) {
+          var cssClass = item.key;
+          var regexp = new RegExp(item.value);
+
+          cells.classed(cssClass, function(d) {
+            return d.label.search(regexp) !== -1;
+          });
+        });
+
+        cells.append("rect")
+          .attr("class", "rect");
+
+        cells.append("text")
+          .attr("class", "label")
+          .text(function(d) { return d.label; });
+
+        return cells;
+      }
+
+      // Given a selection, position the rects and labels, using a set of
+      // scales. If none is provided, use the current set of scales.
+      function positionItems(cells, s) {
+        if (s === undefined) s = scales;
+        var xScale = s.x;
+        var yScale = s.y;
+        var depth = s.getDepth;
+
+        cells.select("rect")
+          .attr("width", function(d) {
+            return xScale(d.endTime) - xScale(d.startTime);
+          })
+          .attr("height", yScale(0) - yScale(1))
+          .attr("x", function(d) { return xScale(d.startTime); })
+          .attr("y", function(d) { return yScale(depth(d)); });
+
+        cells.select("text")
           .attr("x", function(d) {
             // To place the labels, check if there's enough space to fit the
             // label plus padding in the rect. (We already know the label fits
@@ -430,126 +429,117 @@ profvis = (function() {
             var pad = 2;
 
             var textWidth = getLabelWidth(this, d.label.length);
-            var rectWidth = x(d.endTime) - x(d.startTime);
+            var rectWidth = xScale(d.endTime) - xScale(d.startTime);
 
             if (textWidth + pad*2 > rectWidth) {
-              return x(d.startTime) + (rectWidth - textWidth) / 2;
+              return xScale(d.startTime) + (rectWidth - textWidth) / 2;
             } else {
               return Math.min(
-                Math.max(0, x(d.startTime)) + pad,
-                x(d.endTime) - textWidth - pad
+                Math.max(0, xScale(d.startTime)) + pad,
+                xScale(d.endTime) - textWidth - pad
               );
             }
           })
-          .attr("y", function(d) { return y(getDepth(d) - 0.5); });
-      }
-
-      function redraw(duration, delay) {
-        if (duration === undefined) duration = 0;
-        if (delay === undefined) delay = 0;
-
-        // If there's no transition:
-        // * Filter the data based on the NEW scales (and data accessor)
-        // * Add the enter items
-        // * Set the positions of the update (and enter) items
-        // * Remove the exit items
-        // If there's a double-click zoom transition:
-        // * Filter the data based on the NEW scales (and data accessor)
-        // * Add the enter items
-        // * Position the enter selection, using the OLD scales (and data accessor)
-        // * Set the update (and enter) and exit items in their new positions, with transition
-        // * Remove exit items
-        // If there's a collapse transition:
-        // * Filter the data based on the NEW (scales and) data accessor
-        // * Add the enter items
-        // * Remove exit items with duration
-        // * Position update (and enter) items with delay and duration
-        // If there's an un-collapse transition:
-        // * Filter the data based on the NEW (scales and) data accessor
-        // * Position update items with duration
-        // * Add the enter items with delay and duration
-
-        // Filter based on whether the rect is in the plotting area
-        var data = prof.filter(function(d) {
-          return !(x(d.endTime)       < 0      ||
-                   x(d.startTime)     > width  ||
-                   y(getDepth(d) - 1) < 0      ||
-                   y(getDepth(d))     > height);
-        });
-
-        cells = container.selectAll(".cell")
-          .data(data, dataKey);
-
-        var enterCells = cells.enter()
-          .append("g")
-          .attr("class", "cell")
-          .classed("highlighted", function(d) { return d.filename !== null; })
-          .call(addMouseEventHandlers);
-
-        enterCells.append("rect")
-          .attr("class", "rect")
-          .call(positionRects);
-
-        // TODO: Clean this up
-        // Add CSS classes for highlighting cells with labels that match particular
-        // regex patterns.
-        var highlightPatterns = d3.entries(message.highlight);
-        highlightPatterns.map(function(item) {
-          var cssClass = item.key;
-          var regexp = new RegExp(item.value);
-
-          enterCells.classed(cssClass, function(d) {
-            return d.label.search(regexp) !== -1;
-          });
-        });
-
-        enterCells.append("text")
-          .attr("class", "label")
-          .text(function(d) { return d.label; })
-          .call(positionLabels)
+          .attr("y", function(d) { return yScale(depth(d) - 0.5); })
           .call(updateLabelVisibility);
 
-        rects = cells.select("rect");
-        labels = cells.select("text");
-
-        // Create local copies because we might add a transition and we don't
-        // want to modify the original.
-        var exitCells = cells.exit();
-        var rects2 = rects;
-        var labels2 = labels;
-        var x_axis = svg.select(".x.axis");
-
-        // Only add the transition if needed (duration!=0) because there's a
-        // performance penalty
-        if (duration !== 0) {
-          exitCells = exitCells.transition().delay(duration);
-          rects2 = rects2.transition().duration(duration).delay(delay);
-          labels2 = labels2.transition().duration(duration).delay(delay);
-          x_axis = x_axis.transition().duration(duration).delay(delay);
-        }
-
-        exitCells.remove();
-        rects2 = rects2.call(positionRects);
-        labels2 = labels2.call(positionLabels);
-
-        x_axis.call(xAxis);
-
-        if (duration === 0) {
-          //TODO: un-debounce?
-          updateLabelVisibilityDebounced();
-        } else {
-          // If there's a transition, select a single rect element, and add the
-          // function to be called at the end of the transition.
-          rects2
-            .filter(function(d, i) { return i === 0; })
-            .each("end", function() {
-              labels.call(updateLabelVisibility);
-            });
-        }
-
-        // TODO: Remove this hack
-        if (vis.flameGraph) vis.flameGraph.cells = cells;
+        return cells;
       }
+
+
+      // Redraw without a transition (regular panning and zooming)
+      function redrawImmediate() {
+        cells = selectActiveCells();
+
+        cells.exit().remove();
+        addItems(cells.enter());
+        cells.call(positionItems);
+        svg.select(".x.axis").call(xAxis);
+      }
+
+      // Redraw for double-click zooming, where there's a transition
+      function redrawZoom(duration) {
+        cells = selectActiveCells();
+
+        // Phase 1
+        // Add the enter items and position them using the previous scales
+        addItems(cells.enter())
+          .call(positionItems, prevScales);
+
+        // Phase 2
+        // Position the update (and enter) items using the new scales
+        cells
+          .transition().duration(duration)
+            .call(positionItems);
+
+        // Position the exit items using the new scales
+        cells.exit()
+          .transition().duration(duration)
+            .call(positionItems);
+
+        // Update x axis
+        svg.select(".x.axis")
+          .transition().duration(duration)
+            .call(xAxis);
+
+        // Phase 3
+        // Remove the exit items
+        cells.exit()
+          .transition().delay(duration)
+            .remove();
+      }
+
+      // Redraw when internal functions are hidden
+      function redrawCollapse(exitDuration, updateDuration) {
+        cells = selectActiveCells();
+
+        // Phase 1
+        // Add the enter items and position them using the previous scales
+        addItems(cells.enter())
+          .call(positionItems, prevScales);
+
+        // Phase 2
+        // Fade out exit items
+        cells.exit()
+          .transition().duration(exitDuration)
+            .style("opacity", 0)
+            .remove();
+
+        // Phase 3
+        // Position the update (and enter) items using the new scales
+        cells
+          .transition().delay(exitDuration).duration(updateDuration)
+            .call(positionItems);
+      }
+
+      // Redraw when internal functions are un-hidden
+      function redrawUncollapse(updateDuration, enterDuration) {
+        cells = selectActiveCells();
+
+        // Phase 1
+        // Position the update and exit items with a transition
+        cells
+          .transition().duration(updateDuration)
+            .call(positionItems);
+        cells.exit()
+          .transition().duration(updateDuration)
+            .call(positionItems);
+
+        // Phase 2
+        // Add the enter items and position them, then fade in
+        addItems(cells.enter())
+            .style("opacity", 0)
+          .transition().delay(updateDuration).duration(enterDuration)
+            .style("opacity", 1)
+            .call(positionItems);
+
+        // Phase 3
+        // Remove the exit items
+        cells.exit()
+          .transition().delay(updateDuration + enterDuration)
+            .remove();
+      }
+
 
       // Calculate whether to display label in each cell -----------------
 
@@ -578,11 +568,11 @@ profvis = (function() {
         // rects changes with the x scale, so we have to rebuild the table each
         // time we have an update.
         var rectWidthTable = {};
-        var x0 = x(0);
+        var x0 = scales.x(0);
         function getRectWidth(time) {
           // Add entry if it doesn't already exist
           if (rectWidthTable[time] === undefined) {
-            rectWidthTable[time] = x(time) - x0;
+            rectWidthTable[time] = scales.x(time) - x0;
           }
           return rectWidthTable[time];
         }
@@ -598,10 +588,10 @@ profvis = (function() {
         return labels;
       }
       var updateLabelVisibilityDebounced = debounce(function() {
-        updateLabelVisibility(labels);
+        updateLabelVisibility(cells.select("text"));
       }, 150);
 
-      redraw();
+      redrawImmediate();
 
       // Recalculate dimensions on resize
       function onResize() {
@@ -621,9 +611,9 @@ profvis = (function() {
 
         // Update the x range so that we're able to double-click on a block to
         // zoom, and have it fill the whole x width.
-        x.range([0, width]);
-        zoom.x(x);
-        redraw();
+        scales.x.range([0, width]);
+        zoom.x(scales.x);
+        redrawImmediate();
       }
 
       // Attach mouse event handlers ------------------------------------
@@ -657,9 +647,12 @@ profvis = (function() {
           })
           .on("dblclick.zoomcell", function(d) {
             // When a cell is double-clicked, zoom x to that cell's width.
-            x.domain([d.startTime, d.endTime]);
-            zoom.x(x);
-            redraw(250);
+            savePrevScales();
+
+            scales.x.domain([d.startTime, d.endTime]);
+            zoom.x(scales.x);
+
+            redrawZoom(250);
           });
 
         return cells;
@@ -697,15 +690,16 @@ profvis = (function() {
       // need to use d3.behavior.drag and set the y domain appropriately.
       var drag = d3.behavior.drag()
         .on("drag", function() {
+          var y = scales.y;
           var ydom = y.domain();
           var ydiff = y.invert(d3.event.dy) - y.invert(0);
           y.domain([ydom[0] - ydiff, ydom[1] - ydiff]);
         });
 
       var zoom = d3.behavior.zoom()
-        .x(x)
+        .x(scales.x)
         .scaleExtent([0.01, 1000])
-        .on("zoom", redraw);
+        .on("zoom", redrawImmediate);
 
       // Register drag before zooming, because we need the drag to set the y
       // scale before the zoom triggers a redraw.
@@ -716,9 +710,12 @@ profvis = (function() {
 
       // Zoom out when background is double-clicked
       backgroundRect.on("dblclick.zoombackground", function() {
-        x.domain(xDomain);
-        zoom.x(x);
-        redraw(250);
+        savePrevScales();
+
+        scales.x.domain(xDomain);
+        zoom.x(scales.x);
+
+        redrawZoom(250);
       });
 
 
@@ -726,9 +723,13 @@ profvis = (function() {
         el: el,
         cells: cells,       // Cache cells for faster access
         onResize: onResize,
-        redraw: redraw,
-        updateData: updateData,
-        useCollapsed: useCollapsed
+        redrawImmediate: redrawImmediate,
+        redrawZoom: redrawZoom,
+        redrawCollapse: redrawCollapse,
+        redrawUncollapse: redrawUncollapse,
+        savePrevScales: savePrevScales,
+        useCollapsedDepth: useCollapsedDepth,
+        useUncollapsedDepth: useUncollapsedDepth
       };
     } // generateFlameGraph
 
