@@ -497,31 +497,69 @@ profvis = (function() {
       function redrawCollapse(exitDuration, updateDuration) {
         cells = selectActiveCells();
 
+        // There are two subsets of the exit items:
+        //   1. Those that exit because depth is null. These should fade out.
+        //   2. Those that exit because they move off screen. These should wait
+        //      for subset 1 to fade out, then move with a transition.
+        var fadeOutCells = cells.exit()
+          .filter(function(d) { return scales.getDepth(d) === null; });
+        var moveOutCells = cells.exit()
+          .filter(function(d) { return scales.getDepth(d) !== null; });
+
         // Phase 1
         // Add the enter items and position them using the previous scales
         addItems(cells.enter())
           .call(positionItems, prevScales);
 
         // Phase 2
-        // Fade out exit items
-        cells.exit()
+        // Fade out the items that have a null depth
+        fadeOutCells
           .transition().duration(exitDuration)
-            .style("opacity", 0)
-            .remove();
+            .style("opacity", 0);
 
         // Phase 3
         // Position the update (and enter) items using the new scales
         cells
           .transition().delay(exitDuration).duration(updateDuration)
             .call(positionItems);
+
+        // Position the exit items that move out, using the new scales
+        moveOutCells
+          .transition().delay(exitDuration).duration(updateDuration)
+            .call(positionItems);
+
+        // Phase 4
+        // Remove all the exit items
+        cells.exit()
+          .transition().delay(exitDuration + updateDuration)
+          .remove()
       }
 
       // Redraw when internal functions are un-hidden
       function redrawUncollapse(updateDuration, enterDuration) {
         cells = selectActiveCells();
 
+        var enterCells = addItems(cells.enter());
+        // There are two subsets of the enter items:
+        //   1. Those that enter because they move on screen (but the previous
+        //      depth was not null). These should move with a transition.
+        //   2. Those that enter because the previous depth was null. These
+        //      should wait for subset 1 to move, then fade in.
+        var moveInCells = enterCells
+          .filter(function(d) { return prevScales.getDepth(d) !== null; });
+        var fadeInCells = enterCells
+          .filter(function(d) { return prevScales.getDepth(d) === null; });
+
         // Phase 1
-        // Position the update and exit items with a transition
+        // Position the move-in items with the old scales
+        moveInCells
+            .call(positionItems, prevScales)
+
+        // Phase 2
+        // Position the move-in, update, and exit items with a transition
+        moveInCells
+          .transition().duration(updateDuration)
+            .call(positionItems);
         cells
           .transition().duration(updateDuration)
             .call(positionItems);
@@ -529,15 +567,15 @@ profvis = (function() {
           .transition().duration(updateDuration)
             .call(positionItems);
 
-        // Phase 2
-        // Add the enter items and position them, then fade in
-        addItems(cells.enter())
+        // Phase 3
+        // Position the fade-in items, then fade in
+        fadeInCells
+            .call(positionItems)
             .style("opacity", 0)
           .transition().delay(updateDuration).duration(enterDuration)
-            .style("opacity", 1)
-            .call(positionItems);
+            .style("opacity", 1);
 
-        // Phase 3
+        // Phase 4
         // Remove the exit items
         cells.exit()
           .transition().delay(updateDuration + enterDuration)
