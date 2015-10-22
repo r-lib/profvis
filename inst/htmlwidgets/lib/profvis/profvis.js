@@ -119,13 +119,13 @@ profvis = (function() {
 
     function generateControlPanel(el) {
       el.innerHTML =
-        '<div><label><input class="collapse" type="checkbox" checked>Hide internal functions</label></div>' +
+        '<div><label><input class="hide-internal" type="checkbox" checked>Hide internal functions</label></div>' +
         '<div><label><input class="hide-zero-row" type="checkbox">Hide lines of code with zero time</label></div>';
 
-      var collapseCheckbox = d3.select(el).select("input.collapse");
+      var hideInternalCheckbox = d3.select(el).select("input.hide-internal");
       var hideZeroCheckbox = d3.select(el).select("input.hide-zero-row");
 
-      collapseCheckbox
+      hideInternalCheckbox
         .on("change", function() {
           vis.flameGraph.savePrevScales();
 
