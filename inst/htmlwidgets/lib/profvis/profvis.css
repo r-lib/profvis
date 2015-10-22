@@ -200,6 +200,7 @@ table.profvis-table .timebar-cell > .timebar {
   padding: 5px 10px;
   font-family: Open Sans,Helvetica,Arial,sans-serif;
   font-size: 12px;
+  pointer-events: none;
 }
 
 .profvis-infobox .infobox-title {
