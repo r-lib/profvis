@@ -128,12 +128,12 @@ profvis = (function() {
       collapseCheckbox
         .on("change", function() {
           if (this.checked) {
-            vis.curProf.map(function(d) { d.depth = d.depthCollapsed; });
+            vis.flameGraph.useCollapsed(true);
           } else {
-            vis.curProf.map(function(d) { d.depth = d.depthOrig; });
+            vis.flameGraph.useCollapsed(false);
           }
-         vis.flameGraph.updateData(vis.curProf);
-          vis.flameGraph.redraw(250);
+          vis.flameGraph.updateData();
+          // vis.flameGraph.redraw(250);
         });
 
       hideZeroCheckbox
@@ -242,6 +242,11 @@ profvis = (function() {
     function generateFlameGraph(el) {
       el.innerHTML = "";
 
+      // By default, use collapsed depths
+      // TODO: Clean this up
+      var getDepth;
+      useCollapsed(true);
+
       var stackHeight = 15;   // Height of each layer on the stack, in pixels
 
       // Size of virtual graphing area ----------------------------------
@@ -257,8 +262,8 @@ profvis = (function() {
         d3.max(prof, function(d) { return d.endTime; })
       ];
       var yDomain = [
-        d3.min(prof, function(d) { return d.depth; }) - 1,
-        d3.max(prof, function(d) { return d.depth; })
+        d3.min(prof, getDepth) - 1,
+        d3.max(prof, getDepth)
       ];
 
       // Scales
@@ -287,8 +292,13 @@ profvis = (function() {
         .attr("width", width)
         .attr("height", height);
 
+      // For a data element, return identifying key
+      var dataKey = function(d) {
+        return d.depth + "-" + d.startTime + "-" + d.endTime;
+      };
+
       var cells = container.selectAll(".cell")
-        .data(prof, function(d) { return d.depthOrig + "-" + d.startTime + "-" + d.endTime; })
+        .data(prof, dataKey)
         .enter()
         .append("g")
           .attr("class", "cell")
@@ -325,6 +335,109 @@ profvis = (function() {
         .call(xAxis);
 
 
+      // Data updates ---------------------------------------------------------
+
+      // TODO: Don't use a function here?
+      function useCollapsed(value) {
+        if (value) {
+          getDepth = function(d) { return d.depthCollapsed; };
+        } else {
+          getDepth = function(d) { return d.depth; };
+        }
+      }
+
+      // TODO: rename function
+      function updateData() {
+        var exitDuration = 500;
+        var updateDuration = 250;
+        var enterDuration = 500;
+
+        // Steps:
+        // - Find existing positions
+        // - exit: remove the old cells
+        // - update: transition the update cells
+        // - enter: the new cells
+        var data = prof;
+
+        // Keep only the items that have a depth
+        data = data.filter(function(d) {
+          return getDepth(d) !== null;
+        })
+
+        var newCells = container.selectAll(".cell")
+          .data(data, dataKey);
+
+        newCells.exit()
+          .transition()
+            .duration(exitDuration)
+            .style("opacity", 0)
+            .remove();
+
+        redraw(updateDuration, exitDuration);
+
+        var enterCells = newCells.enter()
+          .append("g")
+          .attr("class", "cell")
+          .classed("highlighted", function(d) { return d.filename !== null; });
+
+        var newRects = enterCells
+          .append("rect")
+          .attr("class", "rect")
+          .attr("y", function(d) { return y(getDepth(d)); })
+          .style("opacity", 0)
+        // TODO: Replace with .call() ?
+          .call(positionRects)
+          .transition()
+            .duration(enterDuration)
+            .delay(exitDuration + updateDuration)
+            .style("opacity", 1)
+
+        var newLabels = enterCells
+          .append("text")
+          .attr("class", "label")
+          .text(function(d) { return d.label; })
+          .attr("display", "none")
+          .call(positionLabels)
+          .transition()
+            .duration(enterDuration)
+            .delay(exitDuration + updateDuration)
+
+        cells = container.selectAll(".cell");
+      }
+
+      // // Data updates ---------------------------------------------------------
+      // function updateData(data) {
+      //   data = data.filter(function(d) { return d.depth !== null; });
+      //   var newCells = container.selectAll(".cell")
+      //     .data(data, function(d) {
+      //       return d.depthOrig + "-" + d.startTime + "-" + d.endTime;
+      //     });
+
+      //   var enterCells = newCells
+      //     .enter()
+      //       .append("g")
+      //       .attr("class", "cell")
+      //       .classed("highlighted", function(d) { return d.filename !== null; });
+
+      //   enterCells
+      //     .append("rect")
+      //     .attr("class", "rect")
+      //     .attr("y", function(d) { return y(d.depthCollapsed); });
+
+      //   enterCells
+      //     .append("text")
+      //     .attr("class", "label")
+      //     .text(function(d) { return d.label; })
+      //     .attr("y", function(d) { return y(d.depthCollapsed - 0.5); })
+      //     .attr("display", "none");
+
+      //   newCells
+      //     .exit().remove();
+
+      //   cells = newCells;
+      // }
+
+
       // Redrawing ------------------------------------------------------------
 
       // Updating the attributes of lots of SVG elements is expensive. The
@@ -349,12 +462,17 @@ profvis = (function() {
       // This sets the activeRects and activeCells, based on whether they're in
       // the visible area.
       function filterActiveElements() {
+        // TODO: remove these lines
+        activeRects = cells.select("rect");
+        activeLabels = cells.select("text");
+        return;
+
         // Filter based on whether the rect is in the plotting area
         var activeCells = cells.filter(function(d) {
-          if (x(d.endTime)   < 0     ||
-              x(d.startTime) > width ||
-              y(d.depth - 1) < 0     ||
-              y(d.depth)     > height)
+          if (x(d.endTime)       < 0     ||
+              x(d.startTime)     > width ||
+              y(getDepth(d) - 1) < 0     ||
+              y(getDepth(d))     > height)
           {
             // Set 'display' attribute instead of 'visible', because it's faster.
             if (this.getAttribute("display") !== "none")
@@ -371,48 +489,16 @@ profvis = (function() {
         activeLabels = activeCells.select("text");
       }
 
-      function updateData(data) {
-        console.log('updating data');
-        data = data.filter(function(d) { return d.depth !== null; });
-        var newCells = container.selectAll(".cell")
-          .data(data, function(d) {
-            return d.depthOrig + "-" + d.startTime + "-" + d.endTime;
-          });
-        // newCells
-        //   .enter()
-        //     .style("display", "");
-        newCells
-          .exit()
-            .style("display", "none");
-
-      }
-
-      function redraw(duration) {
-        if (duration === undefined) duration = 0;
-
-        filterActiveElements();
-
-        // Create local copies because we might add a transition and we don't
-        // want to modify the original.
-        var activeRects2 = activeRects;
-        var activeLabels2 = activeLabels;
-        var x_axis = svg.select(".x.axis");
-
-        // Only add the transition if needed (duration!=0) because there's a
-        // performance penalty
-        if (duration !== 0) {
-          activeRects2 = activeRects2.transition().duration(duration);
-          activeLabels2 = activeLabels2.transition().duration(duration);
-          x_axis = x_axis.transition().duration(duration);
-        }
-
-        activeRects2
+      function positionRects(rects) {
+        return rects
           .attr("width", function(d) { return x(d.endTime) - x(d.startTime); })
           .attr("height", y(0) - y(1))
           .attr("x", function(d) { return x(d.startTime); })
-          .attr("y", function(d) { return y(d.depth); });
+          .attr("y", function(d) { return y(getDepth(d)); });
+      }
 
-        activeLabels2
+      function positionLabels(labels) {
+        return labels
           .attr("x", function(d) {
             // To place the labels, check if there's enough space to fit the
             // label plus padding in the rect. (We already know the label fits
@@ -438,7 +524,31 @@ profvis = (function() {
               );
             }
           })
-          .attr("y", function(d) { return y(d.depth - 0.5); });
+          .attr("y", function(d) { return y(getDepth(d) - 0.5); });
+      }
+
+      function redraw(duration, delay) {
+        if (duration === undefined) duration = 0;
+        if (delay === undefined) delay = 0;
+
+       filterActiveElements();
+
+        // Create local copies because we might add a transition and we don't
+        // want to modify the original.
+        var activeRects2 = activeRects;
+        var activeLabels2 = activeLabels;
+        var x_axis = svg.select(".x.axis");
+
+        // Only add the transition if needed (duration!=0) because there's a
+        // performance penalty
+        if (duration !== 0) {
+          activeRects2 = activeRects2.transition().duration(duration).delay(delay);
+          activeLabels2 = activeLabels2.transition().duration(duration).delay(delay);
+          x_axis = x_axis.transition().duration(duration).delay(delay);
+        }
+
+        activeRects2 = activeRects2.call(positionRects);
+        activeLabels2 = activeLabels2.call(positionLabels);
 
         x_axis.call(xAxis);
 
@@ -630,7 +740,8 @@ profvis = (function() {
         cells: cells,       // Cache cells for faster access
         onResize: onResize,
         redraw: redraw,
-        updateData: updateData
+        updateData: updateData,
+        useCollapsed: useCollapsed
       };
     } // generateFlameGraph
 
@@ -947,9 +1058,6 @@ profvis = (function() {
           var inCollapseList = collapseItems.some(function(collapseItem) {
             return collapseItem === leaf.label;
           });
-
-          // Record original depth; we'll toggle between.
-          leaf.depthOrig = leaf.depth;
 
           // Add what the depth of the call is when in collapsed view. (null
           // means this call is hidden.)
