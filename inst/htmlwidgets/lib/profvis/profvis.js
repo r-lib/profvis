@@ -242,19 +242,20 @@ profvis = (function() {
     }
 
 
-    // Generate the flame graph ---------------------------------------
+    // Generate the flame graph -----------------------------------------------
     function generateFlameGraph(el) {
       el.innerHTML = "";
 
       var stackHeight = 15;   // Height of each layer on the stack, in pixels
 
-      // Size of virtual graphing area ----------------------------------
-      // (Can differ from visible area)
+      // Dimensions -----------------------------------------------------------
 
       // Margin inside the svg where the plotting occurs
-      var margin = { top: 0, right: 0, left: 0, bottom: 20 };
-      var width = el.clientWidth - margin.left - margin.right;
-      var height = el.clientHeight - margin.top - margin.bottom;
+      var dims = {
+        margin: { top: 0, right: 0, left: 0, bottom: 20 }
+      };
+      dims.width = el.clientWidth - dims.margin.left - dims.margin.right;
+      dims.height = el.clientHeight - dims.margin.top - dims.margin.bottom;
 
       var xDomain = [
         d3.min(prof, function(d) { return d.startTime; }),
@@ -269,16 +270,16 @@ profvis = (function() {
       var scales = {
         x: d3.scale.linear()
             .domain(xDomain)
-            .range([0, width]),
+            .range([0, dims.width]),
 
         y: d3.scale.linear()
             .domain(yDomain)
-            .range([height, height - (yDomain[1] - yDomain[0]) * stackHeight]),
+            .range([dims.height, dims.height - (yDomain[1] - yDomain[0]) * stackHeight]),
 
         // This will be a function that, given a data point, returns the depth.
         // This function can change; sometimes it returns the original depth,
         // and sometimes it returns the collapsed depth. This isn't exactly a
-        // scale function, but it's close enough.
+        // scale function, but it's close enough for our purposes.
         getDepth: null
       };
 
@@ -292,31 +293,23 @@ profvis = (function() {
       useCollapsedDepth();
 
 
-      // Creat SVG objects ----------------------------------------------
+      // SVG container objects ------------------------------------------------
       var wrapper = d3.select(el).append('div')
         .attr('class', 'profvis-flamegraph-inner');
 
-      var svg = wrapper.append('svg')
-        .attr('width', width + margin.left + margin.right)
-        .attr('height', height + margin.top + margin.bottom);
+      var svg = wrapper.append('svg');
 
-      svg.append("clipPath")
+      var clipRect = svg.append("clipPath")
           .attr("id", "clip")
-        .append("rect")
-          .attr("x", margin.left)
-          .attr("y", margin.top)
-          .attr("width", width)
-          .attr("height", height);
+        .append("rect");
 
       var container = svg.append('g')
-        .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+        .attr("transform", "translate(" + dims.margin.left + "," + dims.margin.top + ")")
         .attr("clip-path", "url(" + urlNoHash() + "#clip)");
 
       // Add a background rect so we have something to grab for zooming/panning
       var backgroundRect = container.append("rect")
-        .attr("class", "background")
-        .attr("width", width)
-        .attr("height", height);
+        .attr("class", "background");
 
       // Axes ------------------------------------------------------------
       var xAxis = d3.svg.axis()
@@ -325,13 +318,55 @@ profvis = (function() {
 
       svg.append("g")
         .attr("class", "x axis")
-        .attr("transform", "translate(" + margin.left + "," + height + ")")
         .call(xAxis);
+
+      // Container sizing -----------------------------------------------------
+      // Update dimensions of various container elements, based on the overall
+      // dimensions of the containing div.
+      function updateContainerSize() {
+        dims.width = el.clientWidth - dims.margin.left - dims.margin.right;
+        dims.height = el.clientHeight - dims.margin.top - dims.margin.bottom;
+
+        svg
+          .attr('width', dims.width + dims.margin.left + dims.margin.right)
+          .attr('height', dims.height + dims.margin.top + dims.margin.bottom);
+
+        clipRect
+          .attr("x", dims.margin.left)
+          .attr("y", dims.margin.top)
+          .attr("width", dims.width)
+          .attr("height", dims.height);
+
+        backgroundRect
+          .attr("width", dims.width)
+          .attr("height", dims.height);
+
+        svg.select(".x.axis")
+          .attr("transform", "translate(" + dims.margin.left + "," + dims.height + ")");
+      }
 
 
       // Redrawing ------------------------------------------------------------
 
-      // Cache cells for faster access
+      // Redrawing is a little complicated. For performance reasons, the
+      // flamegraph cells that are offscreen aren't rendered; they're removed
+      // from the D3 selection of cells. However, when transitions are
+      // involved, it may be necssary to add objects in their correct
+      // off-screen starting locations before the transition, and then do the
+      // transition. Similarly, it may be necssary to transition objects to
+      // their correct off-screen ending positions.
+      //
+      // In order to handle this, whenever there's a transition, we need to
+      // have the scales for before the transition, and after. When a function
+      // invokes a transition, it will generally do the following: (1) save the
+      // previous scales, (2) modify the current scales, (3) call a redraw
+      // function. The redraw functions are customized for different types of
+      // transitions, and they will use the saved previous scales to position
+      // objects correctly for the transition. When there's no transition, the
+      // previous scales aren't needed, and the redrawImmediate() function
+      // should be used.
+
+      // Cache cells for faster access (avoid a d3.select())
       var cells;
       // Externally-visible function
       function getCells() {
@@ -357,13 +392,13 @@ profvis = (function() {
 
 
       // Returns a D3 selection of the cells that are within the plotting
-      // region. A set of scales can be passed in; by default, use the current
-      // set of scales.
-      function selectActiveCells(s) {
-        if (s === undefined) s = scales;
-        var xScale = s.x;
-        var yScale = s.y;
-        var depth = s.getDepth;
+      // region, using a set of scales.
+      function selectActiveCells(scales) {
+        var xScale = scales.x;
+        var yScale = scales.y;
+        var depth = scales.getDepth;
+        var width = dims.width;
+        var height = dims.height;
 
         var data = prof.filter(function(d) {
           var depthVal = depth(d);
@@ -414,12 +449,11 @@ profvis = (function() {
       }
 
       // Given a selection, position the rects and labels, using a set of
-      // scales. If none is provided, use the current set of scales.
-      function positionItems(cells, s) {
-        if (s === undefined) s = scales;
-        var xScale = s.x;
-        var yScale = s.y;
-        var depth = s.getDepth;
+      // scales.
+      function positionItems(cells, scales) {
+        var xScale = scales.x;
+        var yScale = scales.y;
+        var depth = scales.getDepth;
 
         cells.select("rect")
           .attr("width", function(d) {
@@ -464,17 +498,17 @@ profvis = (function() {
 
       // Redraw without a transition (regular panning and zooming)
       function redrawImmediate() {
-        cells = selectActiveCells();
+        cells = selectActiveCells(scales);
 
         cells.exit().remove();
         addItems(cells.enter());
-        cells.call(positionItems);
+        cells.call(positionItems, scales);
         svg.select(".x.axis").call(xAxis);
       }
 
       // Redraw for double-click zooming, where there's a transition
       function redrawZoom(duration) {
-        cells = selectActiveCells();
+        cells = selectActiveCells(scales);
 
         // Phase 1
         // Add the enter items and position them using the previous scales
@@ -485,12 +519,12 @@ profvis = (function() {
         // Position the update (and enter) items using the new scales
         cells
           .transition().duration(duration)
-            .call(positionItems);
+            .call(positionItems, scales);
 
         // Position the exit items using the new scales
         cells.exit()
           .transition().duration(duration)
-            .call(positionItems);
+            .call(positionItems, scales);
 
         // Update x axis
         svg.select(".x.axis")
@@ -506,7 +540,7 @@ profvis = (function() {
 
       // Redraw when internal functions are hidden
       function redrawCollapse(exitDuration, updateDuration) {
-        cells = selectActiveCells();
+        cells = selectActiveCells(scales);
 
         // There are two subsets of the exit items:
         //   1. Those that exit because depth is null. These should fade out.
@@ -532,12 +566,12 @@ profvis = (function() {
         // Position the update (and enter) items using the new scales
         cells
           .transition().delay(exitDuration).duration(updateDuration)
-            .call(positionItems);
+            .call(positionItems, scales);
 
         // Position the exit items that move out, using the new scales
         moveOutCells
           .transition().delay(exitDuration).duration(updateDuration)
-            .call(positionItems);
+            .call(positionItems, scales);
 
         // Phase 4
         // Remove all the exit items
@@ -548,7 +582,7 @@ profvis = (function() {
 
       // Redraw when internal functions are un-hidden
       function redrawUncollapse(updateDuration, enterDuration) {
-        cells = selectActiveCells();
+        cells = selectActiveCells(scales);
 
         var enterCells = addItems(cells.enter());
         // There are two subsets of the enter items:
@@ -570,18 +604,18 @@ profvis = (function() {
         // Position the move-in, update, and exit items with a transition
         moveInCells
           .transition().duration(updateDuration)
-            .call(positionItems);
+            .call(positionItems, scales);
         cells
           .transition().duration(updateDuration)
-            .call(positionItems);
+            .call(positionItems, scales);
         cells.exit()
           .transition().duration(updateDuration)
-            .call(positionItems);
+            .call(positionItems, scales);
 
         // Phase 3
         // Position the fade-in items, then fade in
         fadeInCells
-            .call(positionItems)
+            .call(positionItems, scales)
             .style("opacity", 0)
           .transition().delay(updateDuration).duration(enterDuration)
             .style("opacity", 1);
@@ -594,7 +628,10 @@ profvis = (function() {
       }
 
 
-      // Calculate whether to display label in each cell -----------------
+      // Calculate whether to display label in each cell ----------------------
+
+      // Finding the dimensions of SVG elements is expensive. We'll reduce the
+      // calls getBoundingClientRect() by caching the dimensions.
 
       // Cache the width of labels. This is a lookup table which, given the
       // number of characters, gives the number of pixels. The label width
@@ -619,7 +656,7 @@ profvis = (function() {
         // Cache the width of rects. This is a lookup table which, given the
         // timespan (width in data), gives the number of pixels. The width of
         // rects changes with the x scale, so we have to rebuild the table each
-        // time we have an update.
+        // time the scale changes.
         var rectWidthTable = {};
         var x0 = scales.x(0);
         function getRectWidth(time) {
@@ -641,27 +678,11 @@ profvis = (function() {
         return labels;
       }
 
-      redrawImmediate();
 
-      // Recalculate dimensions on resize
       function onResize() {
-        width = el.clientWidth - margin.left - margin.right;
-        height = el.clientHeight - margin.top - margin.bottom;
+        updateContainerSize();
 
-        svg
-          .attr('width', width + margin.left + margin.right)
-          .attr('height', height + margin.top + margin.bottom);
-
-        backgroundRect
-          .attr("width", width)
-          .attr("height", height);
-
-        svg.select(".x.axis")
-          .attr("transform", "translate(" + margin.left + "," + height + ")");
-
-        // Update the x range so that we're able to double-click on a block to
-        // zoom, and have it fill the whole x width.
-        scales.x.range([0, width]);
+        scales.x.range([0, dims.width]);
         zoom.x(scales.x);
         redrawImmediate();
       }
@@ -771,6 +792,8 @@ profvis = (function() {
         redrawZoom(250);
       });
 
+
+      onResize();
 
       return {
         el: el,
