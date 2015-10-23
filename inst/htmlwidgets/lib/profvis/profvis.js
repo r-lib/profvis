@@ -110,7 +110,6 @@ profvis = (function() {
     vis.flameGraph = generateFlameGraph(flameGraphEl);
     vis.infoBox = initInfoBox(infoBoxEl);
 
-    hideInfoBox();
     enableSplitBarDrag(splitBarEl);
 
 
@@ -864,6 +863,7 @@ profvis = (function() {
 
 
     function initInfoBox(el) {
+      el.style.display = "none";
       return { el: el };
     }
 
