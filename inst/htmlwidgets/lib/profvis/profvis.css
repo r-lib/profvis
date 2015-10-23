@@ -178,8 +178,6 @@ table.profvis-table .timebar-cell > .timebar {
   opacity: 0.75;
   stroke-opacity: 0.75;
   stroke-width: 0.5;
-  rx: 4;
-  ry: 4;
 }
 
 .profvis-flamegraph .tooltip text {

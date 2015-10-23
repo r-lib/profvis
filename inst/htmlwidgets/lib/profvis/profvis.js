@@ -749,7 +749,9 @@ profvis = (function() {
           .attr("width", rectWidth)
           .attr("height", rectHeight)
           .attr("x", x - rectWidth / 2)
-          .attr("y", y - rectHeight / 2);
+          .attr("y", y - rectHeight / 2)
+          .attr("rx", 4)    // Rounded corners -- can't set this in CSS
+          .attr("ry", 4);
       }
 
       function hideTooltip() {
