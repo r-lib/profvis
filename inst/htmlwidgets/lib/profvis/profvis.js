@@ -774,7 +774,12 @@ profvis = (function() {
 
       var zoom = d3.behavior.zoom()
         .x(scales.x)
-        .on("zoom", redrawImmediate);
+        .on("zoom", function() {
+          // Limit zoom amount - needed because in Firefox, zoom increments are
+          // too big.
+          zoom.scaleExtent([zoom.scale() / 1.2, zoom.scale() * 1.2]);
+          redrawImmediate();
+        });
 
       // Register drag before zooming, because we need the drag to set the y
       // scale before the zoom triggers a redraw.
