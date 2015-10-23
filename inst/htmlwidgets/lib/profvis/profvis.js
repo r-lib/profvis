@@ -301,8 +301,17 @@ profvis = (function() {
         .attr('width', width + margin.left + margin.right)
         .attr('height', height + margin.top + margin.bottom);
 
+      svg.append("clipPath")
+          .attr("id", "clip")
+        .append("rect")
+          .attr("x", margin.left)
+          .attr("y", margin.top)
+          .attr("width", width)
+          .attr("height", height);
+
       var container = svg.append('g')
-        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+        .attr("clip-path", "url(" + urlNoHash() + "#clip)");
 
       // Add a background rect so we have something to grab for zooming/panning
       var backgroundRect = container.append("rect")
@@ -1290,7 +1299,14 @@ profvis = (function() {
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;")
       .replace(/'/g, "&#039;");
-   }
+  }
+
+  // This returns the current page URL without any trailing hash. Should be
+  // used in url() references in SVGs to avoid problems when there's a <base>
+  // tag in the document.
+  function urlNoHash() {
+    return window.location.href.split("#")[0];
+  }
 
   function debounce(f, delay) {
     var timer = null;
