@@ -154,7 +154,6 @@ table.profvis-table .timebar-cell > .timebar {
 }
 
 .profvis-flamegraph .cell .label {
-  alignment-baseline: central;
   font-family: monospace;
   font-size: 11px;
   cursor: default;
@@ -185,7 +184,6 @@ table.profvis-table .timebar-cell > .timebar {
 
 .profvis-flamegraph .tooltip text {
   text-anchor: middle;
-  alignment-baseline: central;
   font-family: monospace;
   font-size: 11px;
 }

@@ -489,7 +489,7 @@ profvis = (function() {
               );
             }
           })
-          .attr("y", function(d) { return yScale(depth(d) - 0.5); })
+          .attr("y", function(d) { return yScale(depth(d) - 0.8); })
           .call(updateLabelVisibility);
 
         return cells;
@@ -702,7 +702,7 @@ profvis = (function() {
               showTooltip(
                 d.label,
                 box.x + box.width / 2,
-                box.y - box.height - 5
+                box.y - box.height
               );
             }
 
@@ -739,7 +739,7 @@ profvis = (function() {
         var tooltipLabel = tooltip.append("text")
           .text(label)
           .attr("x", x)
-          .attr("y", y);
+          .attr("y", y + stackHeight * 0.2); // Shift down slightly for baseline
 
         // Add box around label
         var labelBox = tooltipLabel.node().getBBox();
