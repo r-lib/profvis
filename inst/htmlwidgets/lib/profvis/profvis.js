@@ -688,13 +688,36 @@ profvis = (function() {
       }
 
       // Attach mouse event handlers ------------------------------------
+      var mouse = {
+        down: false,
+        dragging: false,
+
+        reset: function() {
+          this.down = false;
+          this.dragging = false;
+        }
+      };
+
       function addMouseEventHandlers(cells) {
         cells
-          .on("click", function(d) {
+          .on("mousedown", function() {
+            mouse.down = true;
+          })
+          .on("mouseup", function(d) {
+            // If this was a drag, then return
+            if (mouse.dragging) {
+              mouse.reset();
+              return;
+            }
+
+            // If it wasn't a drag, treat it as a click
+            mouse.reset();
             showInfoBox(d);
             clickItem(d, this);
           })
           .on("mouseover", function(d) {
+            if (mouse.dragging) return;
+
             // If no label currently shown, display a tooltip
             var label = this.querySelector(".label");
             if (label.getAttribute("display") === "none") {
@@ -712,6 +735,8 @@ profvis = (function() {
             }
           })
           .on("mouseout", function(d) {
+            if (mouse.dragging) return;
+
             hideTooltip();
 
             if (lockedSelection === null) {
@@ -766,6 +791,7 @@ profvis = (function() {
       // need to use d3.behavior.drag and set the y domain appropriately.
       var drag = d3.behavior.drag()
         .on("drag", function() {
+          mouse.dragging = true;
           var y = scales.y;
           var ydom = y.domain();
           var ydiff = y.invert(d3.event.dy) - y.invert(0);
