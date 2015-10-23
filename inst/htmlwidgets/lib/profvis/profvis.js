@@ -772,7 +772,6 @@ profvis = (function() {
 
       var zoom = d3.behavior.zoom()
         .x(scales.x)
-        .scaleExtent([0.01, 1000])
         .on("zoom", redrawImmediate);
 
       // Register drag before zooming, because we need the drag to set the y
