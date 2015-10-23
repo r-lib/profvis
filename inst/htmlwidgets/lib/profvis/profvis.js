@@ -577,7 +577,7 @@ profvis = (function() {
         // Remove all the exit items
         cells.exit()
           .transition().delay(exitDuration + updateDuration)
-          .remove()
+          .remove();
       }
 
       // Redraw when internal functions are un-hidden
@@ -598,7 +598,7 @@ profvis = (function() {
         // Phase 1
         // Position the move-in items with the old scales
         moveInCells
-            .call(positionItems, prevScales)
+            .call(positionItems, prevScales);
 
         // Phase 2
         // Position the move-in, update, and exit items with a transition
@@ -1205,7 +1205,7 @@ profvis = (function() {
         }
 
         // Add the last one
-        var newLeaf = $.extend({}, startLeaf);
+        newLeaf = $.extend({}, startLeaf);
         newLeaf.endTime = lastLeaf.endTime;
         newLeaves.push(newLeaf);
 
