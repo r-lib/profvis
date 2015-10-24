@@ -225,13 +225,13 @@ profvis = (function() {
           clickItem(d, this);
         })
         .on("mouseover", function(d) {
-          if (lockedSelection !== null) return;
+          if (highlighter.hasLock()) return;
           // Info box is only relevant when mousing over flamegraph
           hideInfoBox();
           highlightSelectedCode(d);
         })
         .on("mouseout", function(d) {
-          if (lockedSelection !== null) return;
+          if (highlighter.hasLock()) return;
           highlightSelectedCode(null);
         });
 
@@ -240,6 +240,42 @@ profvis = (function() {
         rows: rows  // Cache rows for faster access
       };
     }
+
+
+    var highlighter = (function() {
+      var lockItem = null;
+
+      function lock(d, el) {
+        lockItem = {
+          data: d,
+          el: el
+        };
+
+        d3.select(el).classed({ locked: true });
+      }
+
+      function unlock() {
+        if (hasLock()) {
+          d3.select(lockItem.el).classed({ locked: false });
+          lockItem = null;
+        }
+      }
+
+      function hasLock() {
+        return lockItem !== null;
+      }
+
+      function currentLock() {
+        return lockItem;
+      }
+
+      return {
+        lock: lock,
+        unlock: unlock,
+        hasLock: hasLock,
+        currentLock: currentLock
+      };
+    })();
 
 
     // Generate the flame graph -----------------------------------------------
@@ -729,7 +765,7 @@ profvis = (function() {
               );
             }
 
-            if (lockedSelection === null) {
+            if (!highlighter.hasLock()) {
               showInfoBox(d);
               highlightSelectedCode(d);
             }
@@ -739,7 +775,7 @@ profvis = (function() {
 
             hideTooltip();
 
-            if (lockedSelection === null) {
+            if (!highlighter.hasLock()) {
               hideInfoBox(d);
               highlightSelectedCode(null);
             }
@@ -984,38 +1020,20 @@ profvis = (function() {
     }
 
 
-    var lockedSelection = null;
-
-    function lockSelection(d, el) {
-      lockedSelection = {
-        data: d,
-        el: el
-      };
-
-      d3.select(el).classed({ locked: true });
-    }
-
-    function unlockSelection() {
-      if (lockedSelection) {
-        d3.select(lockedSelection.el).classed({ locked: false });
-        lockedSelection = null;
-      }
-    }
-
     // This is called when a flamegraph cell or a line of code is clicked on.
     function clickItem(d, el) {
       // If locked, and this click is on the currently locked selection,
       // just unlock and return.
-      if (lockedSelection && el === lockedSelection.el) {
-        unlockSelection();
+      if (highlighter.hasLock() && el === highlighter.currentLock().el) {
+        highlighter.unlock();
         return;
       }
 
       // If nothing currently locked, or if locked and this click is on
       // something other than the currently locked selection, then lock the
       // current selection.
-      unlockSelection();
-      lockSelection(d, el);
+      highlighter.unlock();
+      highlighter.lock(d, el);
       highlightSelectedCode(d);
     }
 
