@@ -104,15 +104,6 @@ profvis = (function() {
     })();
 
 
-    // Create the UI components
-    vis.controlPanel = generateControlPanel(controlPanelEl);
-    vis.codeTable = generateCodeTable(codeTableEl);
-    vis.flameGraph = generateFlameGraph(flameGraphEl);
-    vis.infoBox = initInfoBox(infoBoxEl);
-
-    enableSplitBarDrag(splitBarEl);
-
-
     function generateControlPanel(el) {
       el.innerHTML =
         '<div><label><input class="hide-internal" type="checkbox" checked>Hide internal functions</label></div>' +
@@ -243,6 +234,7 @@ profvis = (function() {
 
 
     var highlighter = (function() {
+      // D3 datum for the currently locked item
       var lockItem = null;
 
       function lock(d) {
@@ -263,12 +255,23 @@ profvis = (function() {
         return lockItem;
       }
 
-      function addLockHighlight(el) {
-        d3.select(el).classed({ locked: true });
+      // Given a D3 selection, filter for items that match the lockItem data
+      // and give them the 'locked' class.
+      function addLockHighlight(selection) {
+        selection
+          .filter(function(d) { return d === lockItem; } )
+          .classed({ locked: true });
       }
-      function clearLockHighlight(el) {
-        if (!el) el = vis.el;
-        d3.select(vis.el).select(".locked").classed({ locked: false });
+
+      // Remove the 'locked' class from any objects within the D3 selection.
+      // If no selection is passed in, operate on the whole profvis object.
+      function clearLockHighlight(selection) {
+        if (!selection)
+          selection = d3.select(vis.el);
+
+        selection
+          .selectAll(".locked")
+          .classed({ locked: false });
       }
 
       return {
@@ -541,7 +544,8 @@ profvis = (function() {
         cells = selectActiveCells(scales);
 
         cells.exit().remove();
-        addItems(cells.enter());
+        addItems(cells.enter())
+          .call(highlighter.addLockHighlight);
         cells.call(positionItems, scales);
         svg.select(".x.axis").call(xAxis);
       }
@@ -551,8 +555,10 @@ profvis = (function() {
         cells = selectActiveCells(scales);
 
         // Phase 1
-        // Add the enter items and position them using the previous scales
+        // Add the enter items, highlight them, and position them using the
+        // previous scales
         addItems(cells.enter())
+          .call(highlighter.addLockHighlight)
           .call(positionItems, prevScales);
 
         // Phase 2
@@ -592,8 +598,10 @@ profvis = (function() {
           .filter(function(d) { return scales.getDepth(d) !== null; });
 
         // Phase 1
-        // Add the enter items and position them using the previous scales
+        // Add the enter items, highlight them, and position them using the
+        // previous scales
         addItems(cells.enter())
+          .call(highlighter.addLockHighlight)
           .call(positionItems, prevScales);
 
         // Phase 2
@@ -636,9 +644,10 @@ profvis = (function() {
           .filter(function(d) { return prevScales.getDepth(d) === null; });
 
         // Phase 1
-        // Position the move-in items with the old scales
+        // Highlight and position the move-in items with the old scales
         moveInCells
-            .call(positionItems, prevScales);
+          .call(highlighter.addLockHighlight)
+          .call(positionItems, prevScales);
 
         // Phase 2
         // Position the move-in, update, and exit items with a transition
@@ -653,8 +662,9 @@ profvis = (function() {
             .call(positionItems, scales);
 
         // Phase 3
-        // Position the fade-in items, then fade in
+        // Highlight and position the fade-in items, then fade in
         fadeInCells
+            .call(highlighter.addLockHighlight)
             .call(positionItems, scales)
             .style("opacity", 0)
           .transition().delay(updateDuration).duration(enterDuration)
@@ -1029,7 +1039,7 @@ profvis = (function() {
       highlighter.clearLockHighlight();
 
       highlighter.lock(d);
-      highlighter.addLockHighlight(el);
+      highlighter.addLockHighlight(d3.select(el));
       highlightSelectedCode(d);
     }
 
@@ -1055,6 +1065,16 @@ profvis = (function() {
     function hideInfoBox() {
       vis.infoBox.el.style.display = "none";
     }
+
+
+    // Create the UI components
+    vis.controlPanel = generateControlPanel(controlPanelEl);
+    vis.codeTable = generateCodeTable(codeTableEl);
+    vis.flameGraph = generateFlameGraph(flameGraphEl);
+    vis.infoBox = initInfoBox(infoBoxEl);
+
+    enableSplitBarDrag(splitBarEl);
+
 
     return vis;
   };  // profvis.render()
