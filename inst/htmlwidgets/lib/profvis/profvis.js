@@ -728,35 +728,19 @@ profvis = (function() {
       }
 
       // Attach mouse event handlers ------------------------------------
-      var mouse = {
-        down: false,
-        dragging: false,
-
-        reset: function() {
-          this.down = false;
-          this.dragging = false;
-        }
-      };
+      var dragging = false;
 
       function addMouseEventHandlers(cells) {
         cells
-          .on("mousedown", function() {
-            mouse.down = true;
-          })
           .on("mouseup", function(d) {
-            // If this was a drag, then return
-            if (mouse.dragging) {
-              mouse.reset();
-              return;
-            }
+            if (dragging) return;
 
             // If it wasn't a drag, treat it as a click
-            mouse.reset();
             showInfoBox(d);
             clickItem(d, this);
           })
           .on("mouseover", function(d) {
-            if (mouse.dragging) return;
+            if (dragging) return;
 
             // If no label currently shown, display a tooltip
             var label = this.querySelector(".label");
@@ -775,7 +759,7 @@ profvis = (function() {
             }
           })
           .on("mouseout", function(d) {
-            if (mouse.dragging) return;
+            if (dragging) return;
 
             hideTooltip();
 
@@ -831,7 +815,7 @@ profvis = (function() {
       // need to use d3.behavior.drag and set the y domain appropriately.
       var drag = d3.behavior.drag()
         .on("drag", function() {
-          mouse.dragging = true;
+          dragging = true;
           var y = scales.y;
           var ydom = y.domain();
           var ydiff = y.invert(d3.event.dy) - y.invert(0);
@@ -850,19 +834,23 @@ profvis = (function() {
       // Register drag before zooming, because we need the drag to set the y
       // scale before the zoom triggers a redraw.
       svg
+        .on("mouseup", function(d) {
+          dragging = false;
+        })
         .call(drag)
         .call(zoom)
         .on("dblclick.zoom", null); // Disable zoom's built-in double-click behavior
 
       // Zoom out when background is double-clicked
-      backgroundRect.on("dblclick.zoombackground", function() {
-        savePrevScales();
+      backgroundRect
+        .on("dblclick.zoombackground", function() {
+          savePrevScales();
 
-        scales.x.domain(xDomain);
-        zoom.x(scales.x);
+          scales.x.domain(xDomain);
+          zoom.x(scales.x);
 
-        redrawZoom(250);
-      });
+          redrawZoom(250);
+        });
 
 
       onResize();
