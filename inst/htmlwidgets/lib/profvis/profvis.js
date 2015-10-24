@@ -245,18 +245,12 @@ profvis = (function() {
     var highlighter = (function() {
       var lockItem = null;
 
-      function lock(d, el) {
-        lockItem = {
-          data: d,
-          el: el
-        };
-
-        d3.select(el).classed({ locked: true });
+      function lock(d) {
+        lockItem = d;
       }
 
       function unlock() {
         if (hasLock()) {
-          d3.select(lockItem.el).classed({ locked: false });
           lockItem = null;
         }
       }
@@ -269,11 +263,21 @@ profvis = (function() {
         return lockItem;
       }
 
+      function addLockHighlight(el) {
+        d3.select(el).classed({ locked: true });
+      }
+      function clearLockHighlight(el) {
+        if (!el) el = vis.el;
+        d3.select(vis.el).select(".locked").classed({ locked: false });
+      }
+
       return {
         lock: lock,
         unlock: unlock,
         hasLock: hasLock,
-        currentLock: currentLock
+        currentLock: currentLock,
+        addLockHighlight: addLockHighlight,
+        clearLockHighlight: clearLockHighlight
       };
     })();
 
@@ -1024,8 +1028,9 @@ profvis = (function() {
     function clickItem(d, el) {
       // If locked, and this click is on the currently locked selection,
       // just unlock and return.
-      if (highlighter.hasLock() && el === highlighter.currentLock().el) {
+      if (highlighter.hasLock() && d === highlighter.currentLock()) {
         highlighter.unlock();
+        highlighter.clearLockHighlight();
         return;
       }
 
@@ -1033,7 +1038,10 @@ profvis = (function() {
       // something other than the currently locked selection, then lock the
       // current selection.
       highlighter.unlock();
-      highlighter.lock(d, el);
+      highlighter.clearLockHighlight();
+
+      highlighter.lock(d);
+      highlighter.addLockHighlight(el);
       highlightSelectedCode(d);
     }
 
