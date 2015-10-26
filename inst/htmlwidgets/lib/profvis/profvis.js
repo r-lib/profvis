@@ -213,7 +213,7 @@ profvis = (function() {
         .on("click", function(d) {
           // Info box is only relevant when mousing over flamegraph
           hideInfoBox();
-          highlighter.click(d, this);
+          highlighter.click(d);
         })
         .on("mouseover", function(d) {
           if (highlighter.isLocked()) return;
@@ -806,7 +806,7 @@ profvis = (function() {
 
             // If it wasn't a drag, treat it as a click
             showInfoBox(d);
-            highlighter.click(d, this);
+            highlighter.click(d);
           })
           .on("mouseover", function(d) {
             if (dragging) return;
