@@ -1215,6 +1215,7 @@ profvis = (function() {
         var startLeaf = null;  // leaf starting this run
         var lastLeaf = null;   // The last leaf we've looked at
         var newLeaves = [];
+        var newLeaf;
         for (var i=0; i<leaves.length; i++) {
           var leaf = leaves[i];
 
@@ -1226,7 +1227,7 @@ profvis = (function() {
                      leaf.filename !== startLeaf.filename ||
                      leaf.linenum !== startLeaf.linenum)
           {
-            var newLeaf = $.extend({}, startLeaf);
+            newLeaf = $.extend({}, startLeaf);
             newLeaf.endTime = lastLeaf.endTime;
             newLeaves.push(newLeaf);
 
