@@ -115,8 +115,7 @@ parse_rprof <- function(path = "Rprof.out", expr_source = NULL) {
     }
   })
 
-  # Drop NULLs. Yes, this actually works.
-  file_contents[vapply(file_contents, is.null, logical(1))] <- NULL
+  file_contents <- drop_nulls(file_contents)
 
   # Remove srcref info from the prof_data in casens where no file is present.
   no_file_idx <- !(prof_data$filename %in% names(file_contents))
