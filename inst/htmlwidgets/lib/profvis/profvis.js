@@ -965,14 +965,25 @@ profvis = (function() {
           y.domain([ydom[0] - ydiff, ydom[1] - ydiff]);
         });
 
+
+      // For mousewheel zooming, we need to limit zoom amount. This is needed
+      // because in Firefox, zoom increments are too big. To do this, we limit
+      // scaleExtent before the first zoom event, and after each subsequent
+      // one. Then, at the end of the zooming, we can restore the extent to
+      // full range.
+      var maxZoomPerStep = 1.1;
       var zoom = d3.behavior.zoom()
         .x(scales.x)
-        .on("zoom", function() {
-          // Limit zoom amount - needed because in Firefox, zoom increments are
-          // too big.
-          zoom.scaleExtent([zoom.scale() / 1.2, zoom.scale() * 1.2]);
+        .on("zoomstart", function() {
+          zoom.scaleExtent([zoom.scale() / maxZoomPerStep, zoom.scale() * maxZoomPerStep]);
+        })
+        .on("zoom", function(e) {
           redrawImmediate();
-        });
+          zoom.scaleExtent([zoom.scale() / maxZoomPerStep, zoom.scale() * maxZoomPerStep]);
+        })
+        .on("zoomend", function() {
+          zoom.scaleExtent([0, Infinity]);
+        })
 
       // Register drag before zooming, because we need the drag to set the y
       // scale before the zoom triggers a redraw.
