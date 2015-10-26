@@ -102,6 +102,10 @@ table.profvis-table .code {
 table.profvis-table .time, table.profvis-table .percent {
   padding: 0 5px;
   text-align: right;
+
+  min-width: 2em;
+  max-width: 2em;
+  overflow: hidden;
 }
 
 table.profvis-table .timebar-cell {
