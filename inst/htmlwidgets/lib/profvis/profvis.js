@@ -212,14 +212,14 @@ profvis = (function() {
       rows
         .on("click", function(d) {
           // Info box is only relevant when mousing over flamegraph
-          hideInfoBox();
+          vis.infoBox.hide();
           highlighter.click(d);
         })
         .on("mouseover", function(d) {
           if (highlighter.isLocked()) return;
 
           // Info box is only relevant when mousing over flamegraph
-          hideInfoBox();
+          vis.infoBox.hide();
           highlighter.hover(d);
         })
         .on("mouseout", function(d) {
@@ -805,7 +805,7 @@ profvis = (function() {
             if (dragging) return;
 
             // If it wasn't a drag, treat it as a click
-            showInfoBox(d);
+            vis.infoBox.show(d);
             highlighter.click(d);
           })
           .on("mouseover", function(d) {
@@ -823,7 +823,7 @@ profvis = (function() {
             }
 
             if (!highlighter.isLocked()) {
-              showInfoBox(d);
+              vis.infoBox.show(d);
               highlighter.hover(d);
             }
           })
@@ -833,7 +833,7 @@ profvis = (function() {
             hideTooltip();
 
             if (!highlighter.isLocked()) {
-              hideInfoBox();
+              vis.infoBox.hide();
               highlighter.hover(null);
             }
           })
@@ -1092,31 +1092,36 @@ profvis = (function() {
 
 
     function initInfoBox(el) {
-      el.style.display = "none";
-      return { el: el };
-    }
 
+      function show(d) {
+        var label = d.label ? d.label : "";
+        var ref = (d.filename && d.linenum) ?
+          (d.filename + "#" + d.linenum) :
+          "(source unavailable)";
 
-    function showInfoBox(d) {
-      var label = d.label ? d.label : "";
-      var ref = (d.filename && d.linenum) ?
-        (d.filename + "#" + d.linenum) :
-        "(source unavailable)";
+        el.style.display = "";
 
-      vis.infoBox.el.style.display = "";
+        el.innerHTML =
+          "<table>" +
+          "<tr><td class='infobox-title'>Label</td><td>" + escapeHTML(label) + "</td></tr>" +
+          "<tr><td class='infobox-title'>Called from</td><td>" + escapeHTML(ref) + "</td></tr>" +
+          "<tr><td class='infobox-title'>Total time</td><td>" + (d.endTime - d.startTime) + "ms</td></tr>" +
+          "<tr><td class='infobox-title'>Agg. total time</td><td>" + vis.aggLabelTimes[label] + "ms</td></tr>" +
+          "<tr><td class='infobox-title'>Call stack depth</td><td>" + d.depth + "</td></tr>" +
+          "</table>";
+      }
 
-      vis.infoBox.el.innerHTML =
-        "<table>" +
-        "<tr><td class='infobox-title'>Label</td><td>" + escapeHTML(label) + "</td></tr>" +
-        "<tr><td class='infobox-title'>Called from</td><td>" + escapeHTML(ref) + "</td></tr>" +
-        "<tr><td class='infobox-title'>Total time</td><td>" + (d.endTime - d.startTime) + "ms</td></tr>" +
-        "<tr><td class='infobox-title'>Agg. total time</td><td>" + vis.aggLabelTimes[label] + "ms</td></tr>" +
-        "<tr><td class='infobox-title'>Call stack depth</td><td>" + d.depth + "</td></tr>" +
-        "</table>";
-    }
+      function hide() {
+        el.style.display = "none";
+      }
 
-    function hideInfoBox() {
-      vis.infoBox.el.style.display = "none";
+      hide();
+
+      return {
+        el: el,
+        show: show,
+        hide: hide
+      };
     }
 
 
