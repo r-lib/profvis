@@ -23,7 +23,9 @@
   top: 100px;
   bottom: 10px;
   overflow-y: scroll;
-  width: 750px;
+  width: 748px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
 }
 
 .profvis-splitbar {
