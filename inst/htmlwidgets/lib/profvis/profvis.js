@@ -912,7 +912,8 @@ profvis = (function() {
         var target = d;
         selection
           .filter(function(d) { return d === target; } )
-          .classed({ locked: true });
+          .classed({ locked: true })
+          .call(moveToFront);
       }
 
       function addActiveHighlightSelection(selection, d) {
@@ -950,6 +951,17 @@ profvis = (function() {
             .classed({ active: true });
         }
       }
+
+      // Move a D3 selection to front. If this is called on a selection, that
+      // selection should have been created with a data indexing function (e.g.
+      // data(data, function(d) { return ... })). Otherwise, the wrong object
+      // may be moved to the front.
+      function moveToFront(selection) {
+        return selection.each(function() {
+          this.parentNode.appendChild(this);
+        });
+      }
+
 
       // Panning and zooming --------------------------------------------
       // For panning and zooming x, d3.behavior.zoom does most of what we want
