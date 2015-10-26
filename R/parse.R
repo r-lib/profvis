@@ -117,6 +117,10 @@ parse_rprof <- function(path = "Rprof.out", expr_source = NULL) {
 
   file_contents <- drop_nulls(file_contents)
 
+  # Trim filenames to make output a bit easier to interpret
+  prof_data$filename <- trim_filenames(prof_data$filename)
+  names(file_contents) <- trim_filenames(names(file_contents))
+
   # Remove srcref info from the prof_data in casens where no file is present.
   no_file_idx <- !(prof_data$filename %in% names(file_contents))
   prof_data$filename[no_file_idx] <- NA
@@ -173,4 +177,15 @@ insert_code_line_labels <- function(prof_data, file_contents) {
   prof_data$label[filename_idx] <- labels
 
   prof_data
+}
+
+
+trim_filenames <- function(filenames) {
+  # Strip off current working directory from filenames
+  filenames <- sub(getwd(), "", filenames, fixed = TRUE)
+
+  # Replace /xxx/yyy/package/R/zzz.R with package/R/zzz.R
+  filenames <- sub("^.*?([^/]+/R/.*\\.R$)", "\\1", filenames, ignore.case = TRUE)
+
+  filenames
 }
