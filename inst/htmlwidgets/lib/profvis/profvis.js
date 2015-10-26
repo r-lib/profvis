@@ -216,26 +216,38 @@ profvis = (function() {
           highlighter.click(d, this);
         })
         .on("mouseover", function(d) {
-          if (highlighter.hasLock()) return;
+          if (highlighter.isLocked()) return;
 
           // Info box is only relevant when mousing over flamegraph
           hideInfoBox();
           highlighter.hover(d);
         })
         .on("mouseout", function(d) {
-          if (highlighter.hasLock()) return;
+          if (highlighter.isLocked()) return;
 
           highlighter.hover(null);
         });
 
-      function addActiveHighlight(selection, d) {
-        if (!selection) selection = rows;
 
+      function addLockHighlight(d) {
+        var target = d;
+        rows
+          .filter(function(d) { return d === target; } )
+          .classed({ locked: true });
+      }
+
+      function clearLockHighlight() {
+        rows
+          .filter(".locked")
+          .classed({ locked: false });
+      }
+
+      function addActiveHighlight(d) {
         // If we have filename and linenum, search for cells that match, and
         // set them as "active".
         var target = d;
         if (target.filename && target.linenum) {
-          var tr = selection
+          var tr = rows
             .filter(function(d) {
               return d.linenum === target.linenum &&
                      d.filename === target.filename;
@@ -246,16 +258,16 @@ profvis = (function() {
         }
       }
 
-      function clearActiveHighlight(selection) {
-        if (!selection) selection = rows;
-
-        selection
+      function clearActiveHighlight() {
+        rows
           .filter(".active")
           .classed({ active: false });
       }
 
       return {
         el: el,
+        addLockHighlight: addLockHighlight,
+        clearLockHighlight: clearLockHighlight,
         addActiveHighlight: addActiveHighlight,
         clearActiveHighlight: clearActiveHighlight
       };
@@ -267,43 +279,13 @@ profvis = (function() {
       var lockItem = null;
       var activeItem = null;
 
-      function lock(d) {
-        lockItem = d;
-      }
-
-      function unlock() {
-        if (hasLock()) {
-          lockItem = null;
-        }
-      }
-
-      function hasLock() {
+      function isLocked() {
         return lockItem !== null;
       }
 
       function currentLock() {
         return lockItem;
       }
-
-      // Given a D3 selection, filter for items that match the lockItem data
-      // and give them the 'locked' class.
-      function addLockHighlight(selection) {
-        selection
-          .filter(function(d) { return d === lockItem; } )
-          .classed({ locked: true });
-      }
-
-      // Remove the 'locked' class from any objects within the D3 selection.
-      // If no selection is passed in, operate on the whole profvis object.
-      function clearLockHighlight(selection) {
-        if (!selection)
-          selection = d3.select(vis.el);
-
-        selection
-          .selectAll(".locked")
-          .classed({ locked: false });
-      }
-
 
       function currentActive() {
         return activeItem;
@@ -312,25 +294,27 @@ profvis = (function() {
 
       // This is called when a flamegraph cell or a line of code is clicked on.
       // Clicks also should trigger hover events.
-      function click(d, el) {
+      function click(d) {
         // If locked, and this click is on the currently locked selection,
         // just unlock and return.
-        if (hasLock() && d === currentLock()) {
-          unlock();
-          clearLockHighlight();
+        if (lockItem && d === lockItem) {
+          lockItem = null;
+          vis.flameGraph.clearLockHighlight();
+          vis.codeTable.clearLockHighlight();
           return;
         }
 
         // If nothing currently locked, or if locked and this click is on
         // something other than the currently locked selection, then lock the
         // current selection.
-        unlock();
-        clearLockHighlight();
+        lockItem = d;
+
+        vis.flameGraph.clearLockHighlight();
+        vis.codeTable.clearLockHighlight();
         hover(null);
 
-        lock(d);
-        addLockHighlight(d3.select(el));
-
+        vis.flameGraph.addLockHighlight(d);
+        vis.codeTable.addLockHighlight(d);
         hover(d);
       }
 
@@ -339,8 +323,8 @@ profvis = (function() {
         activeItem = d;
 
         if (activeItem) {
-          vis.flameGraph.addActiveHighlight(null, activeItem);
-          vis.codeTable.addActiveHighlight(null, activeItem);
+          vis.flameGraph.addActiveHighlight(activeItem);
+          vis.codeTable.addActiveHighlight(activeItem);
           return;
         }
 
@@ -349,13 +333,10 @@ profvis = (function() {
       }
 
       return {
-        lock: lock,
-        unlock: unlock,
-        hasLock: hasLock,
+        isLocked: isLocked,
         currentLock: currentLock,
-        addLockHighlight: addLockHighlight,
-        clearLockHighlight: clearLockHighlight,
         currentActive: currentActive,
+
         click: click,
         hover: hover
       };
@@ -618,8 +599,8 @@ profvis = (function() {
 
         cells.exit().remove();
         addItems(cells.enter())
-          .call(highlighter.addLockHighlight)
-          .call(addActiveHighlight, highlighter.currentActive());
+          .call(addLockHighlightSelection, highlighter.currentLock())
+          .call(addActiveHighlightSelection, highlighter.currentActive());
         cells.call(positionItems, scales);
         svg.select(".x.axis").call(xAxis);
       }
@@ -632,8 +613,8 @@ profvis = (function() {
         // Add the enter items, highlight them, and position them using the
         // previous scales
         addItems(cells.enter())
-          .call(highlighter.addLockHighlight)
-          .call(addActiveHighlight, highlighter.currentActive())
+          .call(addLockHighlightSelection, highlighter.currentLock())
+          .call(addActiveHighlightSelection, highlighter.currentActive())
           .call(positionItems, prevScales);
 
         // Phase 2
@@ -676,8 +657,8 @@ profvis = (function() {
         // Add the enter items, highlight them, and position them using the
         // previous scales
         addItems(cells.enter())
-          .call(highlighter.addLockHighlight)
-          .call(addActiveHighlight, highlighter.currentActive())
+          .call(addLockHighlightSelection, highlighter.currentLock())
+          .call(addActiveHighlightSelection, highlighter.currentActive())
           .call(positionItems, prevScales);
 
         // Phase 2
@@ -722,8 +703,8 @@ profvis = (function() {
         // Phase 1
         // Highlight and position the move-in items with the old scales
         moveInCells
-          .call(highlighter.addLockHighlight)
-          .call(addActiveHighlight, highlighter.currentActive())
+          .call(addLockHighlightSelection, highlighter.currentLock())
+          .call(addActiveHighlightSelection, highlighter.currentActive())
           .call(positionItems, prevScales);
 
         // Phase 2
@@ -741,8 +722,8 @@ profvis = (function() {
         // Phase 3
         // Highlight and position the fade-in items, then fade in
         fadeInCells
-            .call(highlighter.addLockHighlight)
-            .call(addActiveHighlight, highlighter.currentActive())
+            .call(addLockHighlightSelection, highlighter.currentLock())
+            .call(addActiveHighlightSelection, highlighter.currentActive())
             .call(positionItems, scales)
             .style("opacity", 0)
           .transition().delay(updateDuration).duration(enterDuration)
@@ -841,7 +822,7 @@ profvis = (function() {
               );
             }
 
-            if (!highlighter.hasLock()) {
+            if (!highlighter.isLocked()) {
               showInfoBox(d);
               highlighter.hover(d);
             }
@@ -851,7 +832,7 @@ profvis = (function() {
 
             hideTooltip();
 
-            if (!highlighter.hasLock()) {
+            if (!highlighter.isLocked()) {
               hideInfoBox();
               highlighter.hover(null);
             }
@@ -896,11 +877,46 @@ profvis = (function() {
       }
 
 
-      // Hover highlight ------------------------------------------------------
+      // Highlighting ---------------------------------------------------------
 
-      function addActiveHighlight(selection, d) {
+      function addLockHighlight(d) {
+        var target = d;
+        addLockHighlightSelection(cells, d);
+      }
+
+      function clearLockHighlight() {
+        cells
+          .filter(".locked")
+          .classed({ locked: false });
+      }
+
+
+      function addActiveHighlight(d) {
         if (!d) return;
-        if (!selection) selection = cells;
+        addActiveHighlightSelection(cells, d);
+      }
+
+      function clearActiveHighlight() {
+        cells
+          .filter(".active")
+          .classed({ active: false });
+      }
+
+      // These are versions of addLockHighlight and addActiveHighlight which
+      // are only internally visible. It must be passed a selection of cells to
+      // perform the highlighting on. This can be more efficient because it can
+      // operate on just an enter selection instead of all cells.
+      function addLockHighlightSelection(selection, d) {
+        if (!d) return;
+
+        var target = d;
+        selection
+          .filter(function(d) { return d === target; } )
+          .classed({ locked: true });
+      }
+
+      function addActiveHighlightSelection(selection, d) {
+        if (!d) return;
 
         var target = d;
         if (target.filename && target.linenum) {
@@ -933,14 +949,6 @@ profvis = (function() {
             })
             .classed({ active: true });
         }
-      }
-
-      function clearActiveHighlight(selection) {
-        if (!selection) selection = cells;
-
-        selection
-          .filter(".active")
-          .classed({ active: false });
       }
 
       // Panning and zooming --------------------------------------------
@@ -1000,6 +1008,8 @@ profvis = (function() {
         savePrevScales: savePrevScales,
         useCollapsedDepth: useCollapsedDepth,
         useUncollapsedDepth: useUncollapsedDepth,
+        addLockHighlight: addLockHighlight,
+        clearLockHighlight: clearLockHighlight,
         addActiveHighlight: addActiveHighlight,
         clearActiveHighlight: clearActiveHighlight
       };
