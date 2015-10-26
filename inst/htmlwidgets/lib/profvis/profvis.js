@@ -128,13 +128,9 @@ profvis = (function() {
       hideZeroCheckbox
         .on("change", function() {
           if (this.checked) {
-            vis.codeTable.rows
-              .filter(function(d) { return d.sumTime === 0; })
-              .style("display", "none");
+            vis.codeTable.hideZeroTimeRows();
           } else {
-            vis.codeTable.rows
-              .filter(function(d) { return d.sumTime === 0; })
-              .style("display", "");
+            vis.codeTable.showZeroTimeRows();
           }
         });
 
@@ -228,6 +224,17 @@ profvis = (function() {
           highlighter.hover(null);
         });
 
+      function hideZeroTimeRows() {
+        rows
+          .filter(function(d) { return d.sumTime === 0; })
+          .style("display", "none");
+      }
+
+      function showZeroTimeRows() {
+        rows
+          .filter(function(d) { return d.sumTime === 0; })
+          .style("display", "");
+      }
 
       function addLockHighlight(d) {
         var target = d;
@@ -266,6 +273,8 @@ profvis = (function() {
 
       return {
         el: el,
+        hideZeroTimeRows: hideZeroTimeRows,
+        showZeroTimeRows: showZeroTimeRows,
         addLockHighlight: addLockHighlight,
         clearLockHighlight: clearLockHighlight,
         addActiveHighlight: addActiveHighlight,
