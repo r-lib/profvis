@@ -76,7 +76,7 @@ table.profvis-table tr.locked {
   border-color: black;
 }
 
-table.profvis-table tr.selected {
+table.profvis-table tr.active {
   background-color: #fc8;
 }
 
@@ -124,7 +124,7 @@ table.profvis-table .timebar-cell > .timebar {
   fill: #fff;
 }
 
-.profvis-flamegraph .cell.selected .rect {
+.profvis-flamegraph .cell.active .rect {
   stroke-width: 0.75px;
   fill: #ddd;
 }
@@ -133,7 +133,7 @@ table.profvis-table .timebar-cell > .timebar {
   fill: #ffb;
 }
 
-.profvis-flamegraph .cell.highlighted.selected .rect {
+.profvis-flamegraph .cell.highlighted.active .rect {
   fill: #fc8;
 }
 

@@ -213,29 +213,59 @@ profvis = (function() {
         .on("click", function(d) {
           // Info box is only relevant when mousing over flamegraph
           hideInfoBox();
-          clickItem(d, this);
+          highlighter.click(d, this);
         })
         .on("mouseover", function(d) {
           if (highlighter.hasLock()) return;
+
           // Info box is only relevant when mousing over flamegraph
           hideInfoBox();
-          highlightSelectedCode(d);
+          highlighter.hover(d);
         })
         .on("mouseout", function(d) {
           if (highlighter.hasLock()) return;
-          highlightSelectedCode(null);
+
+          highlighter.hover(null);
         });
+
+      function addActiveHighlight(selection, d) {
+        if (!selection) selection = rows;
+
+        // If we have filename and linenum, search for cells that match, and
+        // set them as "active".
+        var target = d;
+        if (target.filename && target.linenum) {
+          var tr = selection
+            .filter(function(d) {
+              return d.linenum === target.linenum &&
+                     d.filename === target.filename;
+            })
+            .classed({ active: true });
+
+          tr.node().scrollIntoViewIfNeeded();
+        }
+      }
+
+      function clearActiveHighlight(selection) {
+        if (!selection) selection = rows;
+
+        selection
+          .filter(".active")
+          .classed({ active: false });
+      }
 
       return {
         el: el,
-        rows: rows  // Cache rows for faster access
+        addActiveHighlight: addActiveHighlight,
+        clearActiveHighlight: clearActiveHighlight
       };
     }
 
 
     var highlighter = (function() {
-      // D3 datum for the currently locked item
+      // D3 data objects for the currently locked and active items
       var lockItem = null;
+      var activeItem = null;
 
       function lock(d) {
         lockItem = d;
@@ -274,13 +304,60 @@ profvis = (function() {
           .classed({ locked: false });
       }
 
+
+      function currentActive() {
+        return activeItem;
+      }
+
+
+      // This is called when a flamegraph cell or a line of code is clicked on.
+      // Clicks also should trigger hover events.
+      function click(d, el) {
+        // If locked, and this click is on the currently locked selection,
+        // just unlock and return.
+        if (hasLock() && d === currentLock()) {
+          unlock();
+          clearLockHighlight();
+          return;
+        }
+
+        // If nothing currently locked, or if locked and this click is on
+        // something other than the currently locked selection, then lock the
+        // current selection.
+        unlock();
+        clearLockHighlight();
+        hover(null);
+
+        lock(d);
+        addLockHighlight(d3.select(el));
+
+        hover(d);
+      }
+
+
+      function hover(d) {
+        activeItem = d;
+
+        if (activeItem) {
+          vis.flameGraph.addActiveHighlight(null, activeItem);
+          vis.codeTable.addActiveHighlight(null, activeItem);
+          return;
+        }
+
+        vis.flameGraph.clearActiveHighlight();
+        vis.codeTable.clearActiveHighlight();
+      }
+
       return {
         lock: lock,
         unlock: unlock,
         hasLock: hasLock,
         currentLock: currentLock,
         addLockHighlight: addLockHighlight,
-        clearLockHighlight: clearLockHighlight
+        clearLockHighlight: clearLockHighlight,
+        currentActive: currentActive,
+        click: click,
+        hover: hover
       };
     })();
 
@@ -411,10 +488,6 @@ profvis = (function() {
 
       // Cache cells for faster access (avoid a d3.select())
       var cells;
-      // Externally-visible function
-      function getCells() {
-        return cells;
-      }
 
       // For a data element, return identifying key
       function dataKey(d) {
@@ -545,7 +618,8 @@ profvis = (function() {
 
         cells.exit().remove();
         addItems(cells.enter())
-          .call(highlighter.addLockHighlight);
+          .call(highlighter.addLockHighlight)
+          .call(addActiveHighlight, highlighter.currentActive());
         cells.call(positionItems, scales);
         svg.select(".x.axis").call(xAxis);
       }
@@ -559,6 +633,7 @@ profvis = (function() {
         // previous scales
         addItems(cells.enter())
           .call(highlighter.addLockHighlight)
+          .call(addActiveHighlight, highlighter.currentActive())
           .call(positionItems, prevScales);
 
         // Phase 2
@@ -602,6 +677,7 @@ profvis = (function() {
         // previous scales
         addItems(cells.enter())
           .call(highlighter.addLockHighlight)
+          .call(addActiveHighlight, highlighter.currentActive())
           .call(positionItems, prevScales);
 
         // Phase 2
@@ -647,6 +723,7 @@ profvis = (function() {
         // Highlight and position the move-in items with the old scales
         moveInCells
           .call(highlighter.addLockHighlight)
+          .call(addActiveHighlight, highlighter.currentActive())
           .call(positionItems, prevScales);
 
         // Phase 2
@@ -665,6 +742,7 @@ profvis = (function() {
         // Highlight and position the fade-in items, then fade in
         fadeInCells
             .call(highlighter.addLockHighlight)
+            .call(addActiveHighlight, highlighter.currentActive())
             .call(positionItems, scales)
             .style("opacity", 0)
           .transition().delay(updateDuration).duration(enterDuration)
@@ -747,7 +825,7 @@ profvis = (function() {
 
             // If it wasn't a drag, treat it as a click
             showInfoBox(d);
-            clickItem(d, this);
+            highlighter.click(d, this);
           })
           .on("mouseover", function(d) {
             if (dragging) return;
@@ -765,7 +843,7 @@ profvis = (function() {
 
             if (!highlighter.hasLock()) {
               showInfoBox(d);
-              highlightSelectedCode(d);
+              highlighter.hover(d);
             }
           })
           .on("mouseout", function(d) {
@@ -774,8 +852,8 @@ profvis = (function() {
             hideTooltip();
 
             if (!highlighter.hasLock()) {
-              hideInfoBox(d);
-              highlightSelectedCode(null);
+              hideInfoBox();
+              highlighter.hover(null);
             }
           })
           .on("dblclick.zoomcell", function(d) {
@@ -817,6 +895,53 @@ profvis = (function() {
         container.select("g.tooltip").remove();
       }
 
+
+      // Hover highlight ------------------------------------------------------
+
+      function addActiveHighlight(selection, d) {
+        if (!d) return;
+        if (!selection) selection = cells;
+
+        var target = d;
+        if (target.filename && target.linenum) {
+          selection
+            .filter(function(d) {
+              // Check for filename and linenum match, and if provided, a label match.
+              var match = d.filename === target.filename &&
+                          d.linenum === target.linenum;
+              if (!!target.label) {
+                match = match && (d.label === target.label);
+              }
+              return match;
+            })
+            .classed({ active: true });
+
+        } else if (target.label) {
+          // Don't highlight blocks for these labels
+          var exclusions = ["<Anonymous>", "FUN"];
+          if (exclusions.some(function(x) { return target.label === x; })) {
+            return;
+          }
+
+          // If we only have the label, search for cells that match, but make sure
+          // to not select ones that have a filename and linenum.
+          selection
+            .filter(function(d) {
+              return d.label === target.label &&
+                     d.filename === null &&
+                     d.linenum === null;
+            })
+            .classed({ active: true });
+        }
+      }
+
+      function clearActiveHighlight(selection) {
+        if (!selection) selection = cells;
+
+        selection
+          .filter(".active")
+          .classed({ active: false });
+      }
 
       // Panning and zooming --------------------------------------------
       // For panning and zooming x, d3.behavior.zoom does most of what we want
@@ -867,7 +992,6 @@ profvis = (function() {
 
       return {
         el: el,
-        getCells: getCells,
         onResize: onResize,
         redrawImmediate: redrawImmediate,
         redrawZoom: redrawZoom,
@@ -875,7 +999,9 @@ profvis = (function() {
         redrawUncollapse: redrawUncollapse,
         savePrevScales: savePrevScales,
         useCollapsedDepth: useCollapsedDepth,
-        useUncollapsedDepth: useUncollapsedDepth
+        useUncollapsedDepth: useUncollapsedDepth,
+        addActiveHighlight: addActiveHighlight,
+        clearActiveHighlight: clearActiveHighlight
       };
     } // generateFlameGraph
 
@@ -958,89 +1084,6 @@ profvis = (function() {
     function initInfoBox(el) {
       el.style.display = "none";
       return { el: el };
-    }
-
-    // Highlights line of code and flamegraph blocks corresponding to a
-    // filenum. linenum and, if provided, label combination. (When this is called
-    // from hovering over code, no label is provided.)
-    // If only a label is provided, search for cells (only in the flamegraph) that
-    // have the same label.
-    function highlightSelectedCode(d) {
-      // Un-highlight lines of code and flamegraph blocks
-      vis.codeTable.rows
-        .filter(".selected")
-        .classed({ selected: false });
-      vis.flameGraph.getCells()
-        .filter(".selected")
-        .classed({ selected: false });
-
-      if (d === null) return;
-
-      var target = d;
-
-      if (target.filename && target.linenum) {
-        // If we have filename and linenum, search for cells that match, and
-        // set them as "selected".
-        var tr = vis.codeTable.rows.filter(function(d) {
-            return d.linenum === target.linenum &&
-                   d.filename === target.filename;
-          })
-          .classed({ selected: true });
-
-        // Highlight corresponding flamegraph blocks
-        vis.flameGraph.getCells()
-          .filter(function(d) {
-            // Check for filename and linenum match, and if provided, a label match.
-            var match = d.filename === target.filename &&
-                        d.linenum === target.linenum;
-            if (!!target.label) {
-              match = match && (d.label === target.label);
-            }
-            return match;
-          })
-          .classed({ selected: true });
-
-        tr.node().scrollIntoViewIfNeeded();
-
-      } else if (target.label) {
-        // Don't highlight blocks for these labels
-        var exclusions = ["<Anonymous>", "FUN"];
-        if (exclusions.some(function(x) { return target.label === x; })) {
-          return;
-        }
-
-        // If we only have the label, search for cells that match, but make sure
-        // to not select ones that have a filename and linenum.
-        vis.flameGraph.getCells()
-          .filter(function(d) {
-            return d.label === target.label &&
-                   d.filename === null &&
-                   d.linenum === null;
-          })
-          .classed({ selected: true });
-      }
-    }
-
-
-    // This is called when a flamegraph cell or a line of code is clicked on.
-    function clickItem(d, el) {
-      // If locked, and this click is on the currently locked selection,
-      // just unlock and return.
-      if (highlighter.hasLock() && d === highlighter.currentLock()) {
-        highlighter.unlock();
-        highlighter.clearLockHighlight();
-        return;
-      }
-
-      // If nothing currently locked, or if locked and this click is on
-      // something other than the currently locked selection, then lock the
-      // current selection.
-      highlighter.unlock();
-      highlighter.clearLockHighlight();
-
-      highlighter.lock(d);
-      highlighter.addLockHighlight(d3.select(el));
-      highlightSelectedCode(d);
     }
 
 
