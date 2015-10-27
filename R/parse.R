@@ -184,8 +184,8 @@ trim_filenames <- function(filenames) {
   # Strip off current working directory from filenames
   filenames <- sub(getwd(), "", filenames, fixed = TRUE)
 
-  # Replace /xxx/yyy/package/R/zzz.R with package/R/zzz.R
-  filenames <- sub("^.*?([^/]+/R/.*\\.R$)", "\\1", filenames, ignore.case = TRUE)
+  # Replace /xxx/yyy/package/R/zzz.R with package/R/zzz.R, and same for inst/.
+  filenames <- sub("^.*?([^/]+/(R|inst)/.*\\.R$)", "\\1", filenames, ignore.case = TRUE)
 
   filenames
 }
