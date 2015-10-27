@@ -28,6 +28,7 @@ profvis <- function(message, width = NULL, height = NULL) {
       browser.fill = TRUE,
       viewer.fill = TRUE,
       knitr.defaultWidth = "100%",
+      knitr.defaultHeight = "600px",
       knitr.figure = FALSE
     )
   )
@@ -36,7 +37,7 @@ profvis <- function(message, width = NULL, height = NULL) {
 #' Widget output function for use in Shiny
 #'
 #' @export
-profvisOutput <- function(outputId, width = '100%', height = '400px'){
+profvisOutput <- function(outputId, width = '100%', height = '600px'){
   shinyWidgetOutput(outputId, 'profvis', width, height, package = 'profvis')
 }
 
