@@ -59,6 +59,7 @@ profvis = (function() {
 
     // Resize left and right sides to 50% of available space
     (function() {
+      var $el = $(vis.el);
       var $controlPanel = $(controlPanelEl);
       var $codeTable = $(codeTableEl);
       var $flameGraph = $(flameGraphEl);
@@ -90,14 +91,19 @@ profvis = (function() {
 
       // Make sure the flame graph resizes after the window is resized
       // Capture the initial distance from the right
-      var flameGraphRightMargin = window.innerWidth - offsetRight($flameGraph);
+      var flameGraphRightMargin = $el.innerWidth() - positionRight($flameGraph);
       $(window).resize(
         debounce(function() {
-          $flameGraph.outerWidth(window.innerWidth - flameGraphRightMargin - $flameGraph.offset().left);
+          $flameGraph.outerWidth(
+            $el.innerWidth() - flameGraphRightMargin - $flameGraph.position().left
+          );
           vis.flameGraph.onResize();
         }, 250)
       );
 
+      function positionRight($el) {
+        return $el.position().left + $el.outerWidth();
+      }
       function offsetRight($el) {
         return $el.offset().left + $el.outerWidth();
       }
@@ -1004,7 +1010,7 @@ profvis = (function() {
         })
         .on("zoomend", function() {
           zoom.scaleExtent([0, Infinity]);
-        })
+        });
 
       // Register drag before zooming, because we need the drag to set the y
       // scale before the zoom triggers a redraw.

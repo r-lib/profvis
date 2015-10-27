@@ -24,7 +24,11 @@ profvis <- function(message, width = NULL, height = NULL) {
     height = height,
     package = 'profvis',
     sizingPolicy = htmlwidgets::sizingPolicy(
-      browser.defaultWidth = "100%"
+      padding = 0,
+      browser.fill = TRUE,
+      viewer.fill = TRUE,
+      knitr.defaultWidth = "100%",
+      knitr.figure = FALSE
     )
   )
 }

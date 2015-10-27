@@ -1,3 +1,7 @@
+.profvis {
+  position: relative;
+}
+
 .profvis-control-panel {
   float: left;
   position: absolute;
