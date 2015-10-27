@@ -82,8 +82,12 @@ parse_rprof <- function(path = "Rprof.out", expr_source = NULL) {
 
   # Add filenames
   prof_data$filename <- labels$path[prof_data$filenum]
-  # Rename "" files to "<expr>"
+  # Rename "" files to "<expr>". Code executed from the console is labeled as
+  # a file named "".
   prof_data$filename[prof_data$filename == ""] <- "<expr>"
+  # Rename "<text>" to "<expr>". Code executed in knitr blocks is labeled as
+  # a file named "<text>"
+  prof_data$filename[prof_data$filename == "<text>"] <- "<expr>"
 
   # Get code file contents ---------------------------
   filenames <- unique(prof_data$filename)

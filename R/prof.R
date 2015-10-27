@@ -24,6 +24,10 @@ prof <- function(expr, interval = 0.01, prof_file = NULL) {
   # Keep original expression source code
   expr_source <- attr(substitute(expr), "wholeSrcref", exact = TRUE)
   expr_source <- attr(expr_source, "srcfile", exact = TRUE)$lines
+  # Usually, $lines is a single string, but sometimes it can be split up into a
+  # vector. Make sure it's a single string.
+  expr_source <- paste(expr_source, collapse = "\n")
+
 
   gc()
   Rprof(prof_file, interval = interval, line.profiling = TRUE,
