@@ -40,7 +40,7 @@ parse_rprof <- function(path = "Rprof.out", expr_source = NULL) {
 
   # Remove frames related to profvis itself. This removes the last instance of
   # "force", up to a "prof" at the end of the line.
-  prof_data <- sub(' +"force"(?!.*"force").*"prof"$', '', prof_data, perl = TRUE)
+  prof_data <- sub(' +"force"(?!.*"force").*"prof".*$', '', prof_data, perl = TRUE)
 
   prof_data <- str_split(prof_data, fixed(" "))
 

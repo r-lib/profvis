@@ -10,7 +10,7 @@
   height: 82px;
   width: 748px;
   border: 1px solid #ddd;
-  border-radius: 5px;
+  border-radius: 4px;
   background-color: #f8f8f8;
   font-family: Open Sans,Helvetica,Arial,sans-serif;
   font-size: 12pt;
@@ -29,7 +29,7 @@
   overflow-y: scroll;
   width: 748px;
   border: 1px solid #ddd;
-  border-radius: 5px;
+  border-radius: 4px;
 }
 
 .profvis-splitbar {
@@ -53,7 +53,7 @@
   left: 770px;
   overflow: hidden;
   border: 1px solid #ddd;
-  border-radius: 5px;
+  border-radius: 4px;
 }
 
 table.profvis-table {
@@ -202,13 +202,15 @@ table.profvis-table .timebar-cell > .timebar {
   position: absolute;
   left: 770px;
   top: 10px;
-  opacity: 0.85;
-  border-radius: 3px;
-  background-color: #f4f4f4;
+  opacity: 0.8;
+  border-radius: 4px;
+  color: #f8f8f8;
+  background-color: #333;
   padding: 5px 10px;
   font-family: Open Sans,Helvetica,Arial,sans-serif;
   font-size: 12px;
   pointer-events: none;
+  min-width: 280px;
 }
 
 .profvis-infobox .infobox-title {
