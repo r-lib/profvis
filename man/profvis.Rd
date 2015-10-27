@@ -2,11 +2,40 @@
 % Please edit documentation in R/profvis.R
 \name{profvis}
 \alias{profvis}
-\title{<Add Title>}
+\title{Profile an R expression and visualize profiling data}
 \usage{
-profvis(message, width = NULL, height = NULL)
+profvis(expr = NULL, interval = 0.01, prof_output = NULL,
+  prof_input = NULL, width = NULL, height = NULL)
+}
+\arguments{
+\item{expr}{Code to profile. Not compatible with \code{prof_input}.}
+
+\item{interval}{Interval for profiling samples, in seconds. Values less than
+0.005 (5 ms) will probably not result in accurate timings}
+
+\item{prof_output}{Name of an Rprof output file in which to save profiling
+data. If \code{NULL} (the default), a temporary file will be used and
+automatically removed when the function exits.}
+
+\item{prof_input}{The path to an \code{\link{Rprof}} data file.  Not
+compatible with \code{expr} or \code{prof_output}.}
+
+\item{width}{Width of the htmlwidget.}
+
+\item{height}{Height of the htmlwidget}
 }
 \description{
-<Add Description>
+This function will run an R expression with profiling, and then return an
+htmlwidget for interactively exploring the profiling data.
+}
+\details{
+An alternate way to use \code{profvis} is to separately capture the profiling
+data to a file using \code{\link{Rprof}()}, and then pass the path to the
+corresponding data file as the \code{prof_input} argument to
+\code{profvis()}.
+}
+\seealso{
+\code{\link{Rprof}} for more information about how the profiling
+  data is collected.
 }
 

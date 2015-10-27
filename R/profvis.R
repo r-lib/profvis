@@ -105,12 +105,19 @@ profvis <- function(expr = NULL, interval = 0.01, prof_output = NULL,
 
 #' Widget output function for use in Shiny
 #'
+#' @param outputId Output variable for profile visualization.
+#'
+#' @inheritParams profvis
 #' @export
 profvisOutput <- function(outputId, width = '100%', height = '600px'){
   shinyWidgetOutput(outputId, 'profvis', width, height, package = 'profvis')
 }
 
 #' Widget render function for use in Shiny
+#'
+#' @param expr An expression that returns a profvis object.
+#' @param env The environment in which to evaluate \code{expr}.
+#' @param quoted Is \code{expr} a quoted expression (with \code{\link{quote}()})?
 #'
 #' @export
 renderProfvis <- function(expr, env = parent.frame(), quoted = FALSE) {

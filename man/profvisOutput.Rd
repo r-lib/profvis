@@ -4,7 +4,14 @@
 \alias{profvisOutput}
 \title{Widget output function for use in Shiny}
 \usage{
-profvisOutput(outputId, width = "100\%", height = "400px")
+profvisOutput(outputId, width = "100\%", height = "600px")
+}
+\arguments{
+\item{outputId}{Output variable for profile visualization.}
+
+\item{width}{Width of the htmlwidget.}
+
+\item{height}{Height of the htmlwidget}
 }
 \description{
 Widget output function for use in Shiny

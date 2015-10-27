@@ -13,24 +13,29 @@ devtools::install_github("rstudio/profvis")
 
 ## Example
 
-To run code with profiling, wrap the expression in `prof()`, and store the output, like so:
+To run code with profiling, wrap the expression in `profvis()`. By default, this will result in the interactive profile visualizer opening in a web browser:
 
 ```R
 library(profvis)
 library(ggplot2)  # We'll profile a ggplot graphic
 
-p <- prof({
+profvis({
   g <- ggplot(diamonds, aes(carat, price)) + geom_point(size = 1, alpha = 0.2)
   print(g)
 })
 ```
 
-After running the profiler, use `profvis()` to create the interactive web page. Note that you will need a wide browser window to view it properly.
+
+The `profvis()` call returns an [htmlwidget](http://www.htmlwidgets.org/), which by default when printed opens a web browser. If you wish to save the object, it won't open the browser at first, but you can view it later by typing the variable name at the console, or calling `print()` on it.
 
 ```R
-# Temporary workaround to make sure it displays in a new browser window instead
-# of the RStudio viewer pane.
-options(viewer = function(url, ...) browseURL(url))
+p <- profvis({
+  g <- ggplot(diamonds, aes(carat, price)) + geom_point(size = 1, alpha = 0.2)
+  print(g)
+})
 
-profvis(p)
+
+# View it with:
+p
+# or print(p)
 ```

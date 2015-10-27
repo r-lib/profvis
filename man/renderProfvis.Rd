@@ -6,6 +6,13 @@
 \usage{
 renderProfvis(expr, env = parent.frame(), quoted = FALSE)
 }
+\arguments{
+\item{expr}{An expression that returns a profvis object.}
+
+\item{env}{The environment in which to evaluate \code{expr}.}
+
+\item{quoted}{Is \code{expr} a quoted expression (with \code{\link{quote}()})?}
+}
 \description{
 Widget render function for use in Shiny
 }
