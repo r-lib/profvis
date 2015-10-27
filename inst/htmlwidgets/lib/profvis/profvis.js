@@ -186,12 +186,10 @@ profvis = (function() {
 
       rows.append("td")
         .attr("class", "linenum")
-        .append("code")
         .text(function(d) { return d.linenum; });
 
       rows.append("td")
         .attr("class", "code")
-        .append("code")
         .text(function(d) { return d.content; });
 
       rows.append("td")

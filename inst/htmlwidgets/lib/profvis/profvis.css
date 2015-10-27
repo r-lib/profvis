@@ -52,6 +52,8 @@
   bottom: 10px;
   left: 770px;
   overflow: hidden;
+  border: 1px solid #ddd;
+  border-radius: 5px;
 }
 
 table.profvis-table {
