@@ -1355,7 +1355,8 @@ profvis = (function() {
           } else if (leaf.startTime !== lastLeaf.endTime ||
                      leaf.label !== startLeaf.label ||
                      leaf.filename !== startLeaf.filename ||
-                     leaf.linenum !== startLeaf.linenum)
+                     leaf.linenum !== startLeaf.linenum ||
+                     leaf.depthCollapsed !== startLeaf.depthCollapsed)
           {
             newLeaf = $.extend({}, startLeaf);
             newLeaf.endTime = lastLeaf.endTime;
