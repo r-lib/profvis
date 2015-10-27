@@ -599,8 +599,7 @@ profvis = (function() {
               );
             }
           })
-          .attr("y", function(d) { return yScale(depth(d) - 0.8); })
-          .call(updateLabelVisibility);
+          .attr("y", function(d) { return yScale(depth(d) - 0.8); });
 
         return cells;
       }
@@ -615,11 +614,19 @@ profvis = (function() {
           .call(addLockHighlightSelection, highlighter.currentLock())
           .call(addActiveHighlightSelection, highlighter.currentActive());
         cells.call(positionItems, scales);
+        cells.select('text')
+          .call(updateLabelVisibility);
         svg.select(".x.axis").call(xAxis);
       }
 
       // Redraw for double-click zooming, where there's a transition
       function redrawZoom(duration) {
+        // Figure out if we're zooming in or out. This will determine when we
+        // recalculate the label visibility: before or after the transition.
+        var prevExtent = prevScales.x.domain()[1] - prevScales.x.domain()[0];
+        var curExtent = scales.x.domain()[1] - scales.x.domain()[0];
+        var zoomIn = curExtent < prevExtent;
+
         cells = selectActiveCells(scales);
 
         // Phase 1
@@ -629,6 +636,14 @@ profvis = (function() {
           .call(addLockHighlightSelection, highlighter.currentLock())
           .call(addActiveHighlightSelection, highlighter.currentActive())
           .call(positionItems, prevScales);
+
+        // If zooming out, update label visibility. This will hide some labels
+        // now, before the transition, ensuring that they will never be larger
+        // than the box.
+        if (!zoomIn) {
+          cells.select('text')
+            .call(updateLabelVisibility);
+        }
 
         // Phase 2
         // Position the update (and enter) items using the new scales
@@ -647,6 +662,15 @@ profvis = (function() {
             .call(xAxis);
 
         // Phase 3
+        // If zooming in, update label visibility. This will hide some labels
+        // now, after the transition, ensuring that they will never be larger
+        // than the box.
+        if (zoomIn) {
+          cells.select('text')
+            .transition().delay(duration)
+            .call(updateLabelVisibility);
+        }
+
         // Remove the exit items
         cells.exit()
           .transition().delay(duration)
@@ -673,6 +697,9 @@ profvis = (function() {
           .call(addLockHighlightSelection, highlighter.currentLock())
           .call(addActiveHighlightSelection, highlighter.currentActive())
           .call(positionItems, prevScales);
+
+        cells.select('text')
+          .call(updateLabelVisibility);
 
         // Phase 2
         // Fade out the items that have a null depth
@@ -719,6 +746,9 @@ profvis = (function() {
           .call(addLockHighlightSelection, highlighter.currentLock())
           .call(addActiveHighlightSelection, highlighter.currentActive())
           .call(positionItems, prevScales);
+
+        cells.select('text')
+          .call(updateLabelVisibility);
 
         // Phase 2
         // Position the move-in, update, and exit items with a transition
