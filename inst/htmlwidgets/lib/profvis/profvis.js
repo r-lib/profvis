@@ -66,40 +66,63 @@ profvis = (function() {
       var $infoBox = $(infoBoxEl);
       var $splitBar = $(splitBarEl);
 
-      // Preserve the gap between the split bar and the objects to left and right
+      // Record the gap between the split bar and the objects to left and right
       var splitBarGap = {
-        left: $splitBar.offset().left - offsetRight($controlPanel),
+        left: $splitBar.offset().left - offsetRight($codeTable),
         right: $flameGraph.offset().left - offsetRight($splitBar)
       };
 
-      var sumPanelWidth = $controlPanel.outerWidth() + $flameGraph.outerWidth();
+      // Capture the initial distance from the left and right of container element
+      var margin = {
+        left: $codeTable.position().left,
+        right: $el.innerWidth() - positionRight($flameGraph)
+      };
 
-      // Size and position the elements
-      $controlPanel.outerWidth(sumPanelWidth/2);
-      $codeTable.outerWidth(sumPanelWidth/2);
-      $splitBar.offset({
-        left: offsetRight($controlPanel) + splitBarGap.left
-      });
-      $infoBox.offset({
-        left: offsetRight($splitBar) + splitBarGap.right
-      });
-      $flameGraph.offset({
-        left: offsetRight($splitBar) + splitBarGap.right
-      });
-      $flameGraph.outerWidth(sumPanelWidth/2);
+      // Resize the panels. splitPosition is a number from 0-1 representing the
+      // horizontal position of the split bar.
+      function resizePanels(splitPosition) {
+        // Width of the two panels together
+        var sumPanelWidth = $el.innerWidth() -
+          ($splitBar.outerWidth() + splitBarGap.left + splitBarGap.right) -
+          (margin.left + margin.right);
 
+        var codeTableProportion = splitPosition;
+        var flameGraphProportion = 1 - splitPosition;
 
-      // Make sure the flame graph resizes after the window is resized
-      // Capture the initial distance from the right
-      var flameGraphRightMargin = $el.innerWidth() - positionRight($flameGraph);
+        // Size and position the elements
+        $codeTable.outerWidth(sumPanelWidth * codeTableProportion);
+        $controlPanel.outerWidth(sumPanelWidth * codeTableProportion);
+
+        $splitBar.offset({
+          left: offsetRight($controlPanel) + splitBarGap.left
+        });
+        $infoBox.offset({
+          left: offsetRight($splitBar) + splitBarGap.right
+        });
+        $flameGraph.offset({
+          left: offsetRight($splitBar) + splitBarGap.right
+        });
+        $flameGraph.outerWidth(sumPanelWidth * flameGraphProportion);
+      }
+
+      // Initially, set widths to 50/50
+      // For the first sizing, we don't need to call vis.flameGraph.onResize()
+      // because this happens before the flame graph is generated.
+      resizePanels(0.5);
+
       $(window).resize(
         debounce(function() {
-          $flameGraph.outerWidth(
-            $el.innerWidth() - flameGraphRightMargin - $flameGraph.position().left
-          );
+          resizePanels(splitProportion());
           vis.flameGraph.onResize();
         }, 250)
       );
+
+      // Get current proportional position of split bar
+      function splitProportion() {
+        var splitCenter = $splitBar.position().left + $splitBar.outerWidth()/2;
+        var innerWidth = offsetRight($flameGraph) - $codeTable.offset().left;
+        return splitCenter / innerWidth;
+      }
 
       function positionRight($el) {
         return $el.position().left + $el.outerWidth();
@@ -1124,7 +1147,7 @@ profvis = (function() {
         dragging = true;
         pauseEvent(e);
 
-        el.style.opacity = "0.5";
+        el.style.opacity = "0.75";
 
         startDragX = e.pageX;
         startOffsetLeft = $el.offset().left;
