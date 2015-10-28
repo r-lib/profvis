@@ -1,9 +1,4 @@
 dependencies:
-  - name: profvis
-    version: 0.0.0.9000
-    src: "htmlwidgets/lib/profvis"
-    script: profvis.js
-    stylesheet: profvis.css
   - name: jquery
     version: 1.11.3
     src: "htmlwidgets/lib/jquery"
@@ -14,3 +9,8 @@ dependencies:
     src: "htmlwidgets/lib/d3"
     script:
       - d3.min.js
+  - name: profvis
+    version: 0.0.0.9000
+    src: "htmlwidgets/lib/profvis"
+    script: profvis.js
+    stylesheet: profvis.css
