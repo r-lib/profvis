@@ -172,9 +172,7 @@ profvis = (function() {
 
     // Generate the code table ----------------------------------------
     function generateCodeTable(el) {
-      el.innerHTML = '<div class="profvis-table-inner"></div>';
-
-      var content = d3.select(el).select("div.profvis-table-inner");
+      var content = d3.select(el);
 
       var totalTime = d3.max(prof, function(d) { return d.endTime; }) -
                       d3.min(prof, function(d) { return d.startTime; });
