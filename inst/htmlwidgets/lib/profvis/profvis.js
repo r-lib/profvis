@@ -1101,31 +1101,29 @@ profvis = (function() {
         right: $el.innerWidth() - positionRight($flameGraph)
       };
 
-      // Resize the panels. splitPosition is a number from 0-1 representing the
+      // Record the proportions from the previous call to resizePanels. This is
+      // needed when we resize the window to preserve the same proportions.
+      var lastSplitProportion;
+
+      // Resize the panels. splitProportion is a number from 0-1 representing the
       // horizontal position of the split bar.
-      function resizePanels(splitPosition) {
-        // Width of the two panels together
-        var sumPanelWidth = $el.innerWidth() -
-          ($splitBar.outerWidth() + splitBarGap.left + splitBarGap.right) -
-          (margin.left + margin.right);
-
-        var codeTableProportion = splitPosition;
-        var flameGraphProportion = 1 - splitPosition;
-
-        // Size and position the elements
-        $codeTable.outerWidth(sumPanelWidth * codeTableProportion);
-        $controlPanel.outerWidth(sumPanelWidth * codeTableProportion);
+      function resizePanels(splitProportion) {
+        var innerWidth = offsetRight($flameGraph) - $codeTable.offset().left;
 
         $splitBar.offset({
-          left: offsetRight($controlPanel) + splitBarGap.left
+          left: innerWidth * splitProportion - $splitBar.outerWidth()/2
         });
-        $infoBox.offset({
-          left: offsetRight($splitBar) + splitBarGap.right
-        });
-        $flameGraph.offset({
-          left: offsetRight($splitBar) + splitBarGap.right
-        });
-        $flameGraph.outerWidth(sumPanelWidth * flameGraphProportion);
+
+        // Size and position left and right-side elements
+        var leftPanelWidth = $splitBar.position().left - splitBarGap.left - margin.left;
+        $codeTable.outerWidth(leftPanelWidth);
+        $controlPanel.outerWidth(leftPanelWidth);
+
+        var rightPanelOffsetLeft = offsetRight($splitBar) + splitBarGap.right;
+        $infoBox.offset({ left: rightPanelOffsetLeft });
+        $flameGraph.offset({ left: rightPanelOffsetLeft });
+
+        lastSplitProportion = splitProportion;
       }
 
       // Initially, set widths to 50/50
@@ -1135,7 +1133,7 @@ profvis = (function() {
 
       $(window).resize(
         debounce(function() {
-          resizePanels(splitProportion());
+          resizePanels(lastSplitProportion);
           vis.flameGraph.onResize();
         }, 250)
       );
@@ -1172,16 +1170,8 @@ profvis = (function() {
           var dx = e.pageX - startDragX;
           if (dx === 0) return;
 
-          // Resize components
-          $controlPanel.width($controlPanel.width() + dx);
-
-          $codeTable.width($codeTable.width() + dx);
-
-          $flameGraph.width($flameGraph.width() - dx);
-          $flameGraph.offset({ left: $flameGraph.offset().left + dx });
+          resizePanels(splitProportion());
           vis.flameGraph.onResize();
-
-          $infoBox.offset({ left: $infoBox.offset().left + dx });
         };
 
         var startDrag = function(e) {
