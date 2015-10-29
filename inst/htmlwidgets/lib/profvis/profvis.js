@@ -20,7 +20,7 @@ profvis = (function() {
           vis.totalTime + 'ms</div>' +
         '<div class="info-block"><span class="info-label">Sample interval:</span> ' +
           vis.interval + 'ms</div>' +
-        '<span role="button" class="settings-button">Settings &#x25BE;</span>'
+        '<span role="button" class="settings-button">Settings &#x25BE;</span>';
 
       $("span.settings-button").on("click", function(e) {
         e.preventDefault();
@@ -42,10 +42,10 @@ profvis = (function() {
     function generateSettingsPanel(el) {
       el.innerHTML =
         '<div role="button" class="hide-internal">' +
-          '<span class="checkbox" data-checked="1">&#x2612;</span> Hide internal functions' +
+          '<span class="settings-checkbox" data-checked="1">&#x2612;</span> Hide internal functions' +
         '</div>' +
         '<div role="button" class="hide-zero-row">' +
-          '<span class="checkbox" data-checked="0">&#x2610;</span> Hide lines of code with zero time' +
+          '<span class="settings-checkbox" data-checked="0">&#x2610;</span> Hide lines of code with zero time' +
         '</div>';
 
       // Toggle the appearance of a checkbox and return the new checked state.
@@ -68,7 +68,7 @@ profvis = (function() {
         .on("click", function() {
           vis.flameGraph.savePrevScales();
 
-          var checked = toggleCheckbox($(this).find(".checkbox"));
+          var checked = toggleCheckbox($(this).find(".settings-checkbox"));
 
           if (checked) {
             vis.flameGraph.useCollapsedDepth();
@@ -81,7 +81,7 @@ profvis = (function() {
 
       $(".hide-zero-row")
         .on("click", function() {
-          var checked = toggleCheckbox($(this).find(".checkbox"));
+          var checked = toggleCheckbox($(this).find(".settings-checkbox"));
 
           if (checked) {
             vis.codeTable.hideZeroTimeRows();
