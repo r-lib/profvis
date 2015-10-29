@@ -165,7 +165,7 @@ table.profvis-table .timebar-cell > .timebar {
   stroke-width: 2px;
 }
 
-.profvis-flamegraph .cell .label {
+.profvis-flamegraph .cell .profvis-label {
   font-family: monospace;
   font-size: 11px;
   cursor: default;

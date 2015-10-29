@@ -586,7 +586,7 @@ profvis = (function() {
           .attr("class", "rect");
 
         cells.append("text")
-          .attr("class", "label")
+          .attr("class", "profvis-label")
           .text(function(d) { return d.label; });
 
         return cells;
@@ -829,10 +829,10 @@ profvis = (function() {
           // If the text isn't displayed, then we can't get its width. Make
           // sure it's visible, get the width, and then restore original
           // display state.
-          var oldDisplay = el.getAttribute("display");
-          el.setAttribute("display", "inline");
+          var oldDisplay = el.style.display;
+          el.style.display = "inline";
           labelWidthTable[nchar] = el.getBoundingClientRect().width;
-          el.setAttribute("display", oldDisplay);
+          el.style.display = oldDisplay;
         }
         return labelWidthTable[nchar];
       }
@@ -854,11 +854,11 @@ profvis = (function() {
         }
 
         // Now calculate text and rect width for each cell.
-        labels.attr("display", function(d) {
+        labels.style("display", function(d) {
           var labelWidth = getLabelWidth(this, d.label.length);
           var boxWidth = getRectWidth(d.endTime - d.startTime);
 
-          return (labelWidth <= boxWidth) ? "inherit" : "none";
+          return (labelWidth <= boxWidth) ? "" : "none";
         });
 
         return labels;
@@ -889,8 +889,8 @@ profvis = (function() {
             if (dragging) return;
 
             // If no label currently shown, display a tooltip
-            var label = this.querySelector(".label");
-            if (label.getAttribute("display") === "none") {
+            var label = this.querySelector(".profvis-label");
+            if (label.style.display === "none") {
               var box = this.getBBox();
               showTooltip(
                 d.label,
