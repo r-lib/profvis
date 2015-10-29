@@ -1080,9 +1080,7 @@ profvis = (function() {
         .on("mouseup", function(d) {
           dragging = false;
         })
-        .call(drag)
-        .call(zoom)
-        .on("dblclick.zoom", null); // Disable zoom's built-in double-click behavior
+        .call(drag);
 
       // Zoom out when background is double-clicked
       backgroundRect
@@ -1095,7 +1093,8 @@ profvis = (function() {
           redrawZoom(250);
         });
 
-      var zoomEnabled = true;
+
+      var zoomEnabled = false;
       function disableZoom() {
         if (zoomEnabled) {
           svg.on(".zoom", null);
@@ -1104,10 +1103,13 @@ profvis = (function() {
       }
       function enableZoom() {
         if (!zoomEnabled) {
-          svg.call(zoom);
+          svg
+            .call(zoom)
+            .on("dblclick.zoom", null); // Disable zoom's built-in double-click behavior
           zoomEnabled = true;
         }
       }
+      enableZoom();
 
       onResize();
 
