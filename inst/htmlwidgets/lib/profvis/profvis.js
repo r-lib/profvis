@@ -1010,81 +1010,6 @@ profvis = (function() {
     } // generateFlameGraph
 
 
-    // Enable dragging of the split bar ---------------------------------------
-    function enableSplitBarDrag(el) {
-      var $el = $(el);
-
-      var dragging = false;
-      var startDragX;
-      var startOffsetLeft;
-
-      var stopDrag = function(e) {
-        if (!dragging) return;
-        dragging = false;
-
-        document.removeEventListener("mousemove", drag);
-        document.removeEventListener("mouseup", stopDrag);
-
-        el.style.opacity = "";
-
-        var dx = e.pageX - startDragX;
-        if (dx === 0) return;
-
-        // Resize components
-        var $controlPanel = $(vis.controlPanel.el);
-        $controlPanel.width($controlPanel.width() + dx);
-
-        var $codeTable = $(vis.codeTable.el);
-        $codeTable.width($codeTable.width() + dx);
-
-        var $flameGraph = $(vis.flameGraph.el);
-        $flameGraph.width($flameGraph.width() - dx);
-        $flameGraph.offset({ left: $flameGraph.offset().left + dx });
-        vis.flameGraph.onResize();
-
-        var $infoBox = $(vis.infoBox.el);
-        $infoBox.offset({ left: $infoBox.offset().left + dx });
-      };
-
-      var startDrag = function(e) {
-        // Don't start another drag if we're already in one.
-        if (dragging) return;
-        dragging = true;
-        pauseEvent(e);
-
-        el.style.opacity = "0.75";
-
-        startDragX = e.pageX;
-        startOffsetLeft = $el.offset().left;
-
-        document.addEventListener("mousemove", drag);
-        document.addEventListener("mouseup", stopDrag);
-      };
-
-      var drag = function(e) {
-        if (!dragging) return;
-        pauseEvent(e);
-
-        var dx = e.pageX - startDragX;
-        if (dx === 0) return;
-
-        // Move the split bar
-        $el.offset({ left: startOffsetLeft + dx });
-      };
-
-      // Stop propogation so that we don't select text while dragging
-      function pauseEvent(e){
-        if(e.stopPropagation) e.stopPropagation();
-        if(e.preventDefault) e.preventDefault();
-        e.cancelBubble = true;
-        e.returnValue = false;
-        return false;
-      }
-
-      el.addEventListener("mousedown", startDrag);
-    }
-
-
     function initInfoBox(el) {
 
       function show(d) {
@@ -1153,6 +1078,7 @@ profvis = (function() {
       disableScroll: disableScroll
     };
 
+    // Set up resizing --------------------------------------------------------
     // Resize left and right sides to 50% of available space and add callback
     // for window resizing.
     function initResizing() {
@@ -1227,6 +1153,75 @@ profvis = (function() {
       function offsetRight($el) {
         return $el.offset().left + $el.outerWidth();
       }
+
+      // Enable dragging of the split bar ---------------------------------------
+      (function() {
+        var dragging = false;
+        var startDragX;
+        var startOffsetLeft;
+
+        var stopDrag = function(e) {
+          if (!dragging) return;
+          dragging = false;
+
+          document.removeEventListener("mousemove", drag);
+          document.removeEventListener("mouseup", stopDrag);
+
+          $splitBar.css("opacity", "");
+
+          var dx = e.pageX - startDragX;
+          if (dx === 0) return;
+
+          // Resize components
+          $controlPanel.width($controlPanel.width() + dx);
+
+          $codeTable.width($codeTable.width() + dx);
+
+          $flameGraph.width($flameGraph.width() - dx);
+          $flameGraph.offset({ left: $flameGraph.offset().left + dx });
+          vis.flameGraph.onResize();
+
+          $infoBox.offset({ left: $infoBox.offset().left + dx });
+        };
+
+        var startDrag = function(e) {
+          // Don't start another drag if we're already in one.
+          if (dragging) return;
+          dragging = true;
+          pauseEvent(e);
+
+          $splitBar.css("opacity", 0.75);
+
+          startDragX = e.pageX;
+          startOffsetLeft = $splitBar.offset().left;
+
+          document.addEventListener("mousemove", drag);
+          document.addEventListener("mouseup", stopDrag);
+        };
+
+        var drag = function(e) {
+          if (!dragging) return;
+          pauseEvent(e);
+
+          var dx = e.pageX - startDragX;
+          if (dx === 0) return;
+
+          // Move the split bar
+          $splitBar.offset({ left: startOffsetLeft + dx });
+        };
+
+        // Stop propogation so that we don't select text while dragging
+        function pauseEvent(e){
+          if(e.stopPropagation) e.stopPropagation();
+          if(e.preventDefault) e.preventDefault();
+          e.cancelBubble = true;
+          e.returnValue = false;
+          return false;
+        }
+
+        $splitBar[0].addEventListener("mousedown", startDrag);
+      })();
+
     }
 
 
@@ -1261,7 +1256,6 @@ profvis = (function() {
     vis.flameGraph = generateFlameGraph(flameGraphEl);
     vis.infoBox = initInfoBox(infoBoxEl);
 
-    enableSplitBarDrag(splitBarEl);
     // Start with scrolling disabled because of mousewheel scrolling issue
     disableScroll();
 
