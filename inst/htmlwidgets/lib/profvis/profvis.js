@@ -24,6 +24,7 @@ profvis = (function() {
 
       $("span.settings-button").on("click", function(e) {
         e.preventDefault();
+        e.stopPropagation();
 
         var $el = $(el);
         vis.settingsPanel.setOffset({
@@ -101,10 +102,23 @@ profvis = (function() {
 
       el.style.visibility = "hidden";
       function toggleVisibility(offset) {
-        if (el.style.visibility === "visible")
+        if (el.style.visibility === "visible") {
           el.style.visibility = "hidden"
-        else
+        } else {
           el.style.visibility = "visible";
+          $(document).on("click", hideOnClickOutside);
+        }
+      }
+
+      // Hide the panel when a click happens outside. This handler also removes
+      // itself after it fires.
+      function hideOnClickOutside(e) {
+        var $el = $(el);
+        if (!$el.is(e.target) && $el.has(e.target).length === 0) {
+          el.style.visibility = "hidden";
+          // Unregister this event listener
+          $(document).off("click", hideOnClickOutside);
+        }
       }
 
       return {
