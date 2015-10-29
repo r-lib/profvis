@@ -32,7 +32,11 @@ profvis = (function() {
       controlPanel: null,
       codeTable: null,
       flameGraph: null,
-      infoBox: null
+      infoBox: null,
+
+      // Functions to enable/disable responding to scrollwheel events
+      enableScroll: enableScroll,
+      disableScroll: disableScroll
     };
 
 
@@ -298,6 +302,13 @@ profvis = (function() {
           .classed({ active: false });
       }
 
+      function enableScroll() {
+        // TODO: implement this
+      }
+
+      function disableScroll() {
+      }
+
       return {
         el: el,
         hideZeroTimeRows: hideZeroTimeRows,
@@ -305,7 +316,9 @@ profvis = (function() {
         addLockHighlight: addLockHighlight,
         clearLockHighlight: clearLockHighlight,
         addActiveHighlight: addActiveHighlight,
-        clearActiveHighlight: clearActiveHighlight
+        clearActiveHighlight: clearActiveHighlight,
+        enableScroll: enableScroll,
+        disableScroll: disableScroll
       };
     }
 
@@ -1084,6 +1097,19 @@ profvis = (function() {
           redrawZoom(250);
         });
 
+      var zoomEnabled = true;
+      function disableZoom() {
+        if (zoomEnabled) {
+          svg.on(".zoom", null);
+          zoomEnabled = false;
+        }
+      }
+      function enableZoom() {
+        if (!zoomEnabled) {
+          svg.call(zoom);
+          zoomEnabled = true;
+        }
+      }
 
       onResize();
 
@@ -1100,7 +1126,9 @@ profvis = (function() {
         addLockHighlight: addLockHighlight,
         clearLockHighlight: clearLockHighlight,
         addActiveHighlight: addActiveHighlight,
-        clearActiveHighlight: clearActiveHighlight
+        clearActiveHighlight: clearActiveHighlight,
+        disableZoom: disableZoom,
+        enableZoom: enableZoom
       };
     } // generateFlameGraph
 
@@ -1213,6 +1241,15 @@ profvis = (function() {
       };
     }
 
+    function enableScroll() {
+      vis.codeTable.enableScroll();
+      vis.flameGraph.enableZoom();
+    }
+
+    function disableScroll() {
+      vis.codeTable.disableScroll();
+      vis.flameGraph.disableZoom();
+    }
 
     // Create the UI components
     vis.controlPanel = generateControlPanel(controlPanelEl);
@@ -1221,7 +1258,11 @@ profvis = (function() {
     vis.infoBox = initInfoBox(infoBoxEl);
 
     enableSplitBarDrag(splitBarEl);
+    // Start with scrolling disabled because of mousewheel scrolling issue
+    disableScroll();
 
+    // Make the vis object accessible via the DOM element
+    $(el).data("profvis", vis);
 
     return vis;
   };  // profvis.render()
@@ -1557,6 +1598,55 @@ profvis = (function() {
       }, delay);
     };
   }
+
+
+  (function() {
+    // Prevent unwanted scroll capturing. Based on the corresponding code in
+    // https://github.com/rstudio/leaflet
+
+    // The rough idea is that we disable scroll wheel zooming inside each
+    // profvis object, until the user moves the mouse cursor or clicks on the
+    // visualization. This is trickier than just listening for mousemove,
+    // because mousemove is fired when the page is scrolled, even if the user
+    // did not physically move the mouse. We handle this by examining the
+    // mousemove event's screenX and screenY properties; if they change, we know
+    // it's a "true" move.
+    //
+    // There's a complication to this: when the mouse wheel is scrolled quickly,
+    // on the step where the profvis DOM object overlaps the cursor, sometimes
+    // the mousemove event happens before the mousewheel event, and sometimes
+    // it's the reverse (at least on Chrome 46 on Linux). This means that we
+    // can't rely on the mousemove handler disabling the profvis object's zoom
+    // before a scroll event is triggered on the profvis object (cauzing
+    // zooming). In order to deal with this, we start each profvis object with
+    // zooming disabled, and also disable zooming when the cursor leaves the
+    // profvis div. That way, even if a mousewheel event gets triggered on the
+    // object before the mousemove, it won't cause zooming.
+
+    // lastScreen can never be null, but its x and y can.
+    var lastScreen = { x: null, y: null };
+
+    $(document)
+      .on("mousewheel DOMMouseScroll", function(e) {
+        // Any mousemove events at this screen position will be ignored.
+        lastScreen = { x: e.originalEvent.screenX, y: e.originalEvent.screenY };
+      })
+      .on("mousemove", ".profvis", function(e) {
+        // Did the mouse really move?
+        if (lastScreen.x !== null && e.screenX !== lastScreen.x || e.screenY !== lastScreen.y) {
+          $(this).data("profvis").flameGraph.enableZoom();
+          lastScreen = { x: null, y: null };
+        }
+      })
+      .on("mousedown", ".profvis", function(e) {
+        // Clicking always enables zooming.
+        $(this).data("profvis").flameGraph.enableZoom();
+        lastScreen = { x: null, y: null };
+      })
+      .on("mouseleave", ".profvis", function(e) {
+        $(this).data("profvis").flameGraph.disableZoom();
+      });
+  })();
 
 
   if (!Element.prototype.scrollIntoViewIfNeeded) {
