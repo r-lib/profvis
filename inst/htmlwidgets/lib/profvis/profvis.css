@@ -35,7 +35,7 @@
 }
 
 
-.profvis-control-panel {
+.profvis-settings-panel {
   float: left;
   position: absolute;
   left: 550px; /* Approximate position - will reposition in JS */
@@ -47,7 +47,7 @@
   font-size: 12px;
 }
 
-.profvis-control-panel label {
+.profvis-settings-panel label {
   vertical-align: middle;
 }
 

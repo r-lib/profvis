@@ -26,11 +26,11 @@ profvis = (function() {
         e.preventDefault();
 
         var $el = $(el);
-        vis.controlPanel.setOffset({
+        vis.settingsPanel.setOffset({
           top: $el.offset().top + $el.outerHeight() - 1,
           right: $el.offset().left + $el.outerWidth(),
         });
-        vis.controlPanel.toggleVisibility();
+        vis.settingsPanel.toggleVisibility();
       });
 
       return {
@@ -38,7 +38,7 @@ profvis = (function() {
       };
     }
 
-    function generateControlPanel(el) {
+    function generateSettingsPanel(el) {
       el.innerHTML =
         '<div><label><input class="hide-internal" type="checkbox" checked>Hide internal functions</label></div>' +
         '<div><label><input class="hide-zero-row" type="checkbox">Hide lines of code with zero time</label></div>';
@@ -1103,7 +1103,7 @@ profvis = (function() {
     function initResizing() {
       var $el = $(vis.el);
       var $statusBar = $(".profvis-status-bar");
-      var $controlPanel = $(".profvis-control-panel");
+      var $settingsPanel = $(".profvis-settings-panel");
       var $codeTable = $(".profvis-code");
       var $flameGraph = $(".profvis-flamegraph");
       var $infoBox = $(".profvis-infobox");
@@ -1141,8 +1141,8 @@ profvis = (function() {
 
         // Move the settings panel - only really needed when it's visible when
         // the resize happens.
-        $controlPanel.offset({
-          left: $splitBar.position().left - splitBarGap.left - $controlPanel.outerWidth()
+        $settingsPanel.offset({
+          left: $splitBar.position().left - splitBarGap.left - $settingsPanel.outerWidth()
         });
 
         var rightPanelOffsetLeft = offsetRight($splitBar) + splitBarGap.right;
@@ -1259,7 +1259,7 @@ profvis = (function() {
 
       // Objects representing each component
       statusBar: null,
-      controlPanel: null,
+      settingsPanel: null,
       codeTable: null,
       flameGraph: null,
       infoBox: null,
@@ -1278,9 +1278,9 @@ profvis = (function() {
     codeTableEl.className = "profvis-code";
     vis.el.appendChild(codeTableEl);
 
-    var controlPanelEl = document.createElement("div");
-    controlPanelEl.className = "profvis-control-panel";
-    vis.el.appendChild(controlPanelEl);
+    var settingsPanelEl = document.createElement("div");
+    settingsPanelEl.className = "profvis-settings-panel";
+    vis.el.appendChild(settingsPanelEl);
 
     var flameGraphEl = document.createElement("div");
     flameGraphEl.className = "profvis-flamegraph";
@@ -1300,7 +1300,7 @@ profvis = (function() {
 
     // Create the UI components
     vis.statusBar = generateStatusBar(statusBarEl);
-    vis.controlPanel = generateControlPanel(controlPanelEl);
+    vis.settingsPanel = generateSettingsPanel(settingsPanelEl);
     vis.codeTable = generateCodeTable(codeTableEl);
     vis.flameGraph = generateFlameGraph(flameGraphEl);
     vis.infoBox = initInfoBox(infoBoxEl);
