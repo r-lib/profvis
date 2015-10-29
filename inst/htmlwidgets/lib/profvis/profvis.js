@@ -1053,30 +1053,6 @@ profvis = (function() {
       vis.flameGraph.disableZoom();
     }
 
-    // Convert object-with-arrays format prof data to array-of-objects format
-    var prof = colToRows(message.prof);
-    applyInterval(prof, message.interval);
-    prof = addCollapsedDepth(prof, message.collapseItems);
-    prof = consolidateRuns(prof);
-
-    var vis = {
-      el: el,
-      prof: prof,
-      files: message.files,
-      collapseItems: message.collapseItems,
-      aggLabelTimes: getAggregatedLabelTimes(prof),
-      fileLineTimes: getFileLineTimes(prof, message.files, false),
-
-      // Objects representing each component
-      controlPanel: null,
-      codeTable: null,
-      flameGraph: null,
-      infoBox: null,
-
-      // Functions to enable/disable responding to scrollwheel events
-      enableScroll: enableScroll,
-      disableScroll: disableScroll
-    };
 
     // Set up resizing --------------------------------------------------------
     // Resize left and right sides to 50% of available space and add callback
@@ -1214,6 +1190,31 @@ profvis = (function() {
 
     }
 
+
+    // Convert object-with-arrays format prof data to array-of-objects format
+    var prof = colToRows(message.prof);
+    applyInterval(prof, message.interval);
+    prof = addCollapsedDepth(prof, message.collapseItems);
+    prof = consolidateRuns(prof);
+
+    var vis = {
+      el: el,
+      prof: prof,
+      files: message.files,
+      collapseItems: message.collapseItems,
+      aggLabelTimes: getAggregatedLabelTimes(prof),
+      fileLineTimes: getFileLineTimes(prof, message.files, false),
+
+      // Objects representing each component
+      controlPanel: null,
+      codeTable: null,
+      flameGraph: null,
+      infoBox: null,
+
+      // Functions to enable/disable responding to scrollwheel events
+      enableScroll: enableScroll,
+      disableScroll: disableScroll
+    };
 
     // Render the objects ---------------------------------------------
     var controlPanelEl = document.createElement("div");
