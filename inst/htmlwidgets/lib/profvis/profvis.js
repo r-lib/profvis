@@ -13,127 +13,6 @@ profvis = (function() {
   var profvis = {};
 
   profvis.render = function(el, message) {
-    // Convert object-with-arrays format prof data to array-of-objects format
-    var prof = colToRows(message.prof);
-    applyInterval(prof, message.interval);
-    prof = addCollapsedDepth(prof, message.collapseItems);
-    prof = consolidateRuns(prof);
-
-    var vis = {
-      el: el,
-      prof: prof,
-      files: message.files,
-      collapseItems: message.collapseItems,
-      aggLabelTimes: getAggregatedLabelTimes(prof),
-      fileLineTimes: getFileLineTimes(prof, message.files, false),
-
-      // Objects representing each component
-      controlPanel: null,
-      codeTable: null,
-      flameGraph: null,
-      infoBox: null,
-
-      // Functions to enable/disable responding to scrollwheel events
-      enableScroll: enableScroll,
-      disableScroll: disableScroll
-    };
-
-    // Render the objects ---------------------------------------------
-    var controlPanelEl = document.createElement("div");
-    controlPanelEl.className = "profvis-control-panel";
-    vis.el.appendChild(controlPanelEl);
-
-    var codeTableEl = document.createElement("div");
-    codeTableEl.className = "profvis-code";
-    vis.el.appendChild(codeTableEl);
-
-    var flameGraphEl = document.createElement("div");
-    flameGraphEl.className = "profvis-flamegraph";
-    vis.el.appendChild(flameGraphEl);
-
-    var infoBoxEl = document.createElement("div");
-    infoBoxEl.className = "profvis-infobox";
-    vis.el.appendChild(infoBoxEl);
-
-    var splitBarEl = document.createElement("div");
-    splitBarEl.className = "profvis-splitbar";
-    vis.el.appendChild(splitBarEl);
-
-    // Resize left and right sides to 50% of available space
-    (function() {
-      var $el = $(vis.el);
-      var $controlPanel = $(controlPanelEl);
-      var $codeTable = $(codeTableEl);
-      var $flameGraph = $(flameGraphEl);
-      var $infoBox = $(infoBoxEl);
-      var $splitBar = $(splitBarEl);
-
-      // Record the gap between the split bar and the objects to left and right
-      var splitBarGap = {
-        left: $splitBar.offset().left - offsetRight($codeTable),
-        right: $flameGraph.offset().left - offsetRight($splitBar)
-      };
-
-      // Capture the initial distance from the left and right of container element
-      var margin = {
-        left: $codeTable.position().left,
-        right: $el.innerWidth() - positionRight($flameGraph)
-      };
-
-      // Resize the panels. splitPosition is a number from 0-1 representing the
-      // horizontal position of the split bar.
-      function resizePanels(splitPosition) {
-        // Width of the two panels together
-        var sumPanelWidth = $el.innerWidth() -
-          ($splitBar.outerWidth() + splitBarGap.left + splitBarGap.right) -
-          (margin.left + margin.right);
-
-        var codeTableProportion = splitPosition;
-        var flameGraphProportion = 1 - splitPosition;
-
-        // Size and position the elements
-        $codeTable.outerWidth(sumPanelWidth * codeTableProportion);
-        $controlPanel.outerWidth(sumPanelWidth * codeTableProportion);
-
-        $splitBar.offset({
-          left: offsetRight($controlPanel) + splitBarGap.left
-        });
-        $infoBox.offset({
-          left: offsetRight($splitBar) + splitBarGap.right
-        });
-        $flameGraph.offset({
-          left: offsetRight($splitBar) + splitBarGap.right
-        });
-        $flameGraph.outerWidth(sumPanelWidth * flameGraphProportion);
-      }
-
-      // Initially, set widths to 50/50
-      // For the first sizing, we don't need to call vis.flameGraph.onResize()
-      // because this happens before the flame graph is generated.
-      resizePanels(0.5);
-
-      $(window).resize(
-        debounce(function() {
-          resizePanels(splitProportion());
-          vis.flameGraph.onResize();
-        }, 250)
-      );
-
-      // Get current proportional position of split bar
-      function splitProportion() {
-        var splitCenter = $splitBar.position().left + $splitBar.outerWidth()/2;
-        var innerWidth = offsetRight($flameGraph) - $codeTable.offset().left;
-        return splitCenter / innerWidth;
-      }
-
-      function positionRight($el) {
-        return $el.position().left + $el.outerWidth();
-      }
-      function offsetRight($el) {
-        return $el.offset().left + $el.outerWidth();
-      }
-    })();
-
 
     function generateControlPanel(el) {
       el.innerHTML =
@@ -1248,6 +1127,133 @@ profvis = (function() {
       vis.codeTable.disableScroll();
       vis.flameGraph.disableZoom();
     }
+
+    // Convert object-with-arrays format prof data to array-of-objects format
+    var prof = colToRows(message.prof);
+    applyInterval(prof, message.interval);
+    prof = addCollapsedDepth(prof, message.collapseItems);
+    prof = consolidateRuns(prof);
+
+    var vis = {
+      el: el,
+      prof: prof,
+      files: message.files,
+      collapseItems: message.collapseItems,
+      aggLabelTimes: getAggregatedLabelTimes(prof),
+      fileLineTimes: getFileLineTimes(prof, message.files, false),
+
+      // Objects representing each component
+      controlPanel: null,
+      codeTable: null,
+      flameGraph: null,
+      infoBox: null,
+
+      // Functions to enable/disable responding to scrollwheel events
+      enableScroll: enableScroll,
+      disableScroll: disableScroll
+    };
+
+    // Resize left and right sides to 50% of available space and add callback
+    // for window resizing.
+    function initResizing() {
+      var $el = $(vis.el);
+      var $controlPanel = $(controlPanelEl);
+      var $codeTable = $(codeTableEl);
+      var $flameGraph = $(flameGraphEl);
+      var $infoBox = $(infoBoxEl);
+      var $splitBar = $(splitBarEl);
+
+      // Record the gap between the split bar and the objects to left and right
+      var splitBarGap = {
+        left: $splitBar.offset().left - offsetRight($codeTable),
+        right: $flameGraph.offset().left - offsetRight($splitBar)
+      };
+
+      // Capture the initial distance from the left and right of container element
+      var margin = {
+        left: $codeTable.position().left,
+        right: $el.innerWidth() - positionRight($flameGraph)
+      };
+
+      // Resize the panels. splitPosition is a number from 0-1 representing the
+      // horizontal position of the split bar.
+      function resizePanels(splitPosition) {
+        // Width of the two panels together
+        var sumPanelWidth = $el.innerWidth() -
+          ($splitBar.outerWidth() + splitBarGap.left + splitBarGap.right) -
+          (margin.left + margin.right);
+
+        var codeTableProportion = splitPosition;
+        var flameGraphProportion = 1 - splitPosition;
+
+        // Size and position the elements
+        $codeTable.outerWidth(sumPanelWidth * codeTableProportion);
+        $controlPanel.outerWidth(sumPanelWidth * codeTableProportion);
+
+        $splitBar.offset({
+          left: offsetRight($controlPanel) + splitBarGap.left
+        });
+        $infoBox.offset({
+          left: offsetRight($splitBar) + splitBarGap.right
+        });
+        $flameGraph.offset({
+          left: offsetRight($splitBar) + splitBarGap.right
+        });
+        $flameGraph.outerWidth(sumPanelWidth * flameGraphProportion);
+      }
+
+      // Initially, set widths to 50/50
+      // For the first sizing, we don't need to call vis.flameGraph.onResize()
+      // because this happens before the flame graph is generated.
+      resizePanels(0.5);
+
+      $(window).resize(
+        debounce(function() {
+          resizePanels(splitProportion());
+          vis.flameGraph.onResize();
+        }, 250)
+      );
+
+      // Get current proportional position of split bar
+      function splitProportion() {
+        var splitCenter = $splitBar.position().left + $splitBar.outerWidth()/2;
+        var innerWidth = offsetRight($flameGraph) - $codeTable.offset().left;
+        return splitCenter / innerWidth;
+      }
+
+      function positionRight($el) {
+        return $el.position().left + $el.outerWidth();
+      }
+      function offsetRight($el) {
+        return $el.offset().left + $el.outerWidth();
+      }
+    }
+
+
+    // Render the objects ---------------------------------------------
+    var controlPanelEl = document.createElement("div");
+    controlPanelEl.className = "profvis-control-panel";
+    vis.el.appendChild(controlPanelEl);
+
+    var codeTableEl = document.createElement("div");
+    codeTableEl.className = "profvis-code";
+    vis.el.appendChild(codeTableEl);
+
+    var flameGraphEl = document.createElement("div");
+    flameGraphEl.className = "profvis-flamegraph";
+    vis.el.appendChild(flameGraphEl);
+
+    var infoBoxEl = document.createElement("div");
+    infoBoxEl.className = "profvis-infobox";
+    vis.el.appendChild(infoBoxEl);
+
+    var splitBarEl = document.createElement("div");
+    splitBarEl.className = "profvis-splitbar";
+    vis.el.appendChild(splitBarEl);
+
+    // Efficient to properly size panels before the code + flamegraph are
+    // rendered, so that we don't have to re-render.
+    initResizing();
 
     // Create the UI components
     vis.controlPanel = generateControlPanel(controlPanelEl);
