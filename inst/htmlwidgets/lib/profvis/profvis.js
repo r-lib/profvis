@@ -14,6 +14,30 @@ profvis = (function() {
 
   profvis.render = function(el, message) {
 
+    function generateStatusBar(el) {
+      el.innerHTML =
+        '<div class="info-block"><span class="info-label">Total time:</span> ' +
+          vis.totalTime + 'ms</div>' +
+        '<div class="info-block"><span class="info-label">Sample interval:</span> ' +
+          vis.interval + 'ms</div>' +
+        '<span role="button" style="cursor: pointer;" class="settings-button">Settings &#x25BE;</span>'
+
+      $("span.settings-button").on("click", function(e) {
+        e.preventDefault();
+
+        var $el = $(el);
+        vis.controlPanel.setOffset({
+          top: $el.offset().top + $el.outerHeight() - 1,
+          right: $el.offset().left + $el.outerWidth(),
+        });
+        vis.controlPanel.toggleVisibility();
+      });
+
+      return {
+        el: el
+      };
+    }
+
     function generateControlPanel(el) {
       el.innerHTML =
         '<div><label><input class="hide-internal" type="checkbox" checked>Hide internal functions</label></div>' +
@@ -44,15 +68,34 @@ profvis = (function() {
           }
         });
 
-      return { el: el };
+
+      // Position the div, given the top-right offset
+      function setOffset(offset) {
+        var $el = $(el);
+        $el.offset({
+          top: offset.top,
+          left: offset.right - $el.outerWidth()
+        });
+      }
+
+      el.style.visibility = "hidden";
+      function toggleVisibility(offset) {
+        if (el.style.visibility === "visible")
+          el.style.visibility = "hidden"
+        else
+          el.style.visibility = "visible";
+      }
+
+      return {
+        el: el,
+        setOffset: setOffset,
+        toggleVisibility: toggleVisibility
+      };
     }
 
     // Generate the code table ----------------------------------------
     function generateCodeTable(el) {
       var content = d3.select(el);
-
-      var totalTime = d3.max(vis.prof, function(d) { return d.endTime; }) -
-                      d3.min(vis.prof, function(d) { return d.startTime; });
 
       // One table for each file
       var tables = content.selectAll("table")
@@ -100,7 +143,7 @@ profvis = (function() {
 
       rows.append("td")
         .attr("class", "percent")
-        .text(function(d) { return Math.round(d.sumTime/totalTime * 100); });
+        .text(function(d) { return Math.round(d.sumTime/vis.totalTime * 100); });
 
       rows.append("td")
         .attr("class", "timebar-cell")
@@ -1059,11 +1102,12 @@ profvis = (function() {
     // for window resizing.
     function initResizing() {
       var $el = $(vis.el);
-      var $controlPanel = $(controlPanelEl);
-      var $codeTable = $(codeTableEl);
-      var $flameGraph = $(flameGraphEl);
-      var $infoBox = $(infoBoxEl);
-      var $splitBar = $(splitBarEl);
+      var $statusBar = $(".profvis-status-bar");
+      var $controlPanel = $(".profvis-control-panel");
+      var $codeTable = $(".profvis-code");
+      var $flameGraph = $(".profvis-flamegraph");
+      var $infoBox = $(".profvis-infobox");
+      var $splitBar = $(".profvis-splitbar");
 
       // Record the gap between the split bar and the objects to left and right
       var splitBarGap = {
@@ -1093,7 +1137,13 @@ profvis = (function() {
         // Size and position left and right-side elements
         var leftPanelWidth = $splitBar.position().left - splitBarGap.left - margin.left;
         $codeTable.outerWidth(leftPanelWidth);
-        $controlPanel.outerWidth(leftPanelWidth);
+        $statusBar.outerWidth(leftPanelWidth);
+
+        // Move the settings panel - only really needed when it's visible when
+        // the resize happens.
+        $controlPanel.offset({
+          left: $splitBar.position().left - splitBarGap.left - $controlPanel.outerWidth()
+        });
 
         var rightPanelOffsetLeft = offsetRight($splitBar) + splitBarGap.right;
         $infoBox.offset({ left: rightPanelOffsetLeft });
@@ -1200,12 +1250,15 @@ profvis = (function() {
     var vis = {
       el: el,
       prof: prof,
+      interval: message.interval,
+      totalTime: getTotalTime(prof),
       files: message.files,
       collapseItems: message.collapseItems,
       aggLabelTimes: getAggregatedLabelTimes(prof),
       fileLineTimes: getFileLineTimes(prof, message.files, false),
 
       // Objects representing each component
+      statusBar: null,
       controlPanel: null,
       codeTable: null,
       flameGraph: null,
@@ -1217,13 +1270,17 @@ profvis = (function() {
     };
 
     // Render the objects ---------------------------------------------
-    var controlPanelEl = document.createElement("div");
-    controlPanelEl.className = "profvis-control-panel";
-    vis.el.appendChild(controlPanelEl);
+    var statusBarEl = document.createElement("div");
+    statusBarEl.className = "profvis-status-bar";
+    vis.el.appendChild(statusBarEl);
 
     var codeTableEl = document.createElement("div");
     codeTableEl.className = "profvis-code";
     vis.el.appendChild(codeTableEl);
+
+    var controlPanelEl = document.createElement("div");
+    controlPanelEl.className = "profvis-control-panel";
+    vis.el.appendChild(controlPanelEl);
 
     var flameGraphEl = document.createElement("div");
     flameGraphEl.className = "profvis-flamegraph";
@@ -1242,6 +1299,7 @@ profvis = (function() {
     initResizing();
 
     // Create the UI components
+    vis.statusBar = generateStatusBar(statusBarEl);
     vis.controlPanel = generateControlPanel(controlPanelEl);
     vis.codeTable = generateCodeTable(codeTableEl);
     vis.flameGraph = generateFlameGraph(flameGraphEl);
@@ -1360,6 +1418,11 @@ profvis = (function() {
     return prof;
   }
 
+  // Find the total time spanned in the data
+  function getTotalTime(prof) {
+    return d3.max(prof, function(d) { return d.endTime; }) -
+           d3.min(prof, function(d) { return d.startTime; });
+  }
 
   // Calculate the total amount of time spent in each function label
   function getAggregatedLabelTimes(prof) {

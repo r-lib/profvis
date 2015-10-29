@@ -2,18 +2,49 @@
   position: relative;
 }
 
-.profvis-control-panel {
+.profvis-status-bar {
   float: left;
   position: absolute;
   left: 10px;
   top: 10px;
-  height: 82px;
-  width: 748px;
+  padding: 0 8px;
+  height: 20px;
+  line-height: 20px;
+  width: 732px;
   border: 1px solid #ddd;
   border-radius: 4px;
-  background-color: #f8f8f8;
+  background-color: #f4f4f4;
+  color: #444;
   font-family: Open Sans,Helvetica,Arial,sans-serif;
-  font-size: 12pt;
+  font-size: 12px;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+.profvis-status-bar .info-block {
+  display: inline-block;
+  width: 120px;
+}
+
+.profvis-status-bar .settings-button {
+  float: right;
+  color: #444;
+  text-decoration: none;
+}
+
+
+.profvis-control-panel {
+  float: left;
+  position: absolute;
+  left: 550px; /* Approximate position - will reposition in JS */
+  top: 31px;
+  padding: 3px 6px;
+  border: 1px solid #999;
+  background-color: #fff;
+  font-family: Open Sans,Helvetica,Arial,sans-serif;
+  font-size: 12px;
 }
 
 .profvis-control-panel label {
@@ -24,7 +55,7 @@
   float: left;
   position: absolute;
   left: 10px;
-  top: 100px;
+  top: 34px;
   bottom: 10px;
   overflow-y: scroll;
   width: 748px;
@@ -66,7 +97,7 @@ table.profvis-table {
 }
 
 table.profvis-table th {
-  background-color: #ddd;
+  background-color: #f4f4f4;
 }
 
 table.profvis-table th.filename {
