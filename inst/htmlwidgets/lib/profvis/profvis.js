@@ -21,8 +21,7 @@ profvis = (function() {
 
     var vis = {
       el: el,
-      sourceProf: prof,    // Original profiling data (after a little massaging)
-      curProf: prof,       // Current profiling data used in flame graph
+      prof: prof,
       files: message.files,
       collapseItems: message.collapseItems,
       aggLabelTimes: getAggregatedLabelTimes(prof),
@@ -38,7 +37,6 @@ profvis = (function() {
       enableScroll: enableScroll,
       disableScroll: disableScroll
     };
-
 
     // Render the objects ---------------------------------------------
     var controlPanelEl = document.createElement("div");
@@ -174,8 +172,8 @@ profvis = (function() {
     function generateCodeTable(el) {
       var content = d3.select(el);
 
-      var totalTime = d3.max(prof, function(d) { return d.endTime; }) -
-                      d3.min(prof, function(d) { return d.startTime; });
+      var totalTime = d3.max(vis.prof, function(d) { return d.endTime; }) -
+                      d3.min(vis.prof, function(d) { return d.startTime; });
 
       // One table for each file
       var tables = content.selectAll("table")
@@ -406,12 +404,12 @@ profvis = (function() {
       dims.height = el.clientHeight - dims.margin.top - dims.margin.bottom;
 
       var xDomain = [
-        d3.min(prof, function(d) { return d.startTime; }),
-        d3.max(prof, function(d) { return d.endTime; })
+        d3.min(vis.prof, function(d) { return d.startTime; }),
+        d3.max(vis.prof, function(d) { return d.endTime; })
       ];
       var yDomain = [
-        d3.min(prof, function(d) { return d.depth; }) - 1,
-        d3.max(prof, function(d) { return d.depth; })
+        d3.min(vis.prof, function(d) { return d.depth; }) - 1,
+        d3.max(vis.prof, function(d) { return d.depth; })
       ];
 
       // Scales ---------------------------------------------------------------
@@ -544,7 +542,7 @@ profvis = (function() {
         var width = dims.width;
         var height = dims.height;
 
-        var data = prof.filter(function(d) {
+        var data = vis.prof.filter(function(d) {
           var depthVal = depth(d);
           return !(xScale(d.endTime)    < 0      ||
                    xScale(d.startTime)  > width  ||
