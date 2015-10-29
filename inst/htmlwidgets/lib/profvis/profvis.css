@@ -32,6 +32,7 @@
   float: right;
   color: #444;
   text-decoration: none;
+  cursor: pointer;
 }
 
 
@@ -45,10 +46,12 @@
   background-color: #fff;
   font-family: Open Sans,Helvetica,Arial,sans-serif;
   font-size: 12px;
-}
-
-.profvis-settings-panel label {
-  vertical-align: middle;
+  line-height: 170%;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  cursor: pointer;
 }
 
 .profvis-code {

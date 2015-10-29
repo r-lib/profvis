@@ -20,7 +20,7 @@ profvis = (function() {
           vis.totalTime + 'ms</div>' +
         '<div class="info-block"><span class="info-label">Sample interval:</span> ' +
           vis.interval + 'ms</div>' +
-        '<span role="button" style="cursor: pointer;" class="settings-button">Settings &#x25BE;</span>'
+        '<span role="button" class="settings-button">Settings &#x25BE;</span>'
 
       $("span.settings-button").on("click", function(e) {
         e.preventDefault();
@@ -40,17 +40,36 @@ profvis = (function() {
 
     function generateSettingsPanel(el) {
       el.innerHTML =
-        '<div><label><input class="hide-internal" type="checkbox" checked>Hide internal functions</label></div>' +
-        '<div><label><input class="hide-zero-row" type="checkbox">Hide lines of code with zero time</label></div>';
+        '<div role="button" class="hide-internal">' +
+          '<span class="checkbox" data-checked="1">&#x2612;</span> Hide internal functions' +
+        '</div>' +
+        '<div role="button" class="hide-zero-row">' +
+          '<span class="checkbox" data-checked="0">&#x2610;</span> Hide lines of code with zero time' +
+        '</div>';
 
-      var hideInternalCheckbox = d3.select(el).select("input.hide-internal");
-      var hideZeroCheckbox = d3.select(el).select("input.hide-zero-row");
+      // Toggle the appearance of a checkbox and return the new checked state.
+      function toggleCheckbox($checkbox) {
+        var checked = $checkbox.data("checked");
 
-      hideInternalCheckbox
-        .on("change", function() {
+        if (checked === "0") {
+          $checkbox.data("checked", "1");
+          $checkbox.html("&#x2612;");
+          return true;
+
+        } else {
+          $checkbox.data("checked", "0");
+          $checkbox.html("&#x2610;");
+          return false;
+        }
+      }
+
+      $(".hide-internal")
+        .on("click", function() {
           vis.flameGraph.savePrevScales();
 
-          if (this.checked) {
+          var checked = toggleCheckbox($(this).find(".checkbox"));
+
+          if (checked) {
             vis.flameGraph.useCollapsedDepth();
             vis.flameGraph.redrawCollapse(400, 400);
           } else {
@@ -59,9 +78,11 @@ profvis = (function() {
           }
         });
 
-      hideZeroCheckbox
-        .on("change", function() {
-          if (this.checked) {
+      $(".hide-zero-row")
+        .on("click", function() {
+          var checked = toggleCheckbox($(this).find(".checkbox"));
+
+          if (checked) {
             vis.codeTable.hideZeroTimeRows();
           } else {
             vis.codeTable.showZeroTimeRows();
