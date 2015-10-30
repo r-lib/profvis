@@ -1163,22 +1163,17 @@ profvis = (function() {
       // Resize the panels. splitProportion is a number from 0-1 representing the
       // horizontal position of the split bar.
       function resizePanels(splitProportion) {
+        var elOffsetLeft = $el.offset().left;
         var innerWidth = offsetRight($flameGraph) - $codeTable.offset().left;
 
         $splitBar.offset({
-          left: innerWidth * splitProportion - $splitBar.outerWidth()/2
+          left: elOffsetLeft + innerWidth * splitProportion - $splitBar.outerWidth()/2
         });
 
         // Size and position left and right-side elements
         var leftPanelWidth = $splitBar.position().left - splitBarGap.left - margin.left;
         $codeTable.outerWidth(leftPanelWidth);
         $statusBar.outerWidth(leftPanelWidth);
-
-        // Move the settings panel - only really needed when it's visible when
-        // the resize happens.
-        $settingsPanel.offset({
-          left: $splitBar.position().left - splitBarGap.left - $settingsPanel.outerWidth()
-        });
 
         var rightPanelOffsetLeft = offsetRight($splitBar) + splitBarGap.right;
         $infoBox.offset({ left: rightPanelOffsetLeft });
