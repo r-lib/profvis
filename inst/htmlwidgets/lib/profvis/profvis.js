@@ -103,7 +103,7 @@ profvis = (function() {
       el.style.visibility = "hidden";
       function toggleVisibility(offset) {
         if (el.style.visibility === "visible") {
-          el.style.visibility = "hidden"
+          el.style.visibility = "hidden";
         } else {
           el.style.visibility = "visible";
           $(document).on("click", hideOnClickOutside);
@@ -1096,7 +1096,7 @@ profvis = (function() {
           (d.filename + "#" + d.linenum) :
           "(source unavailable)";
 
-        el.style.display = "";
+        el.style.visibility = "";
 
         el.innerHTML =
           "<table>" +
@@ -1109,7 +1109,7 @@ profvis = (function() {
       }
 
       function hide() {
-        el.style.display = "none";
+        el.style.visibility = "hidden";
       }
 
       hide();
@@ -1156,6 +1156,9 @@ profvis = (function() {
         right: $el.innerWidth() - positionRight($flameGraph)
       };
 
+      // Capture infoBox inset from left of flameGraph
+      var infoboxInset = $infoBox.offset().left - $flameGraph.offset().left;
+
       // Record the proportions from the previous call to resizePanels. This is
       // needed when we resize the window to preserve the same proportions.
       var lastSplitProportion;
@@ -1176,7 +1179,7 @@ profvis = (function() {
         $statusBar.outerWidth(leftPanelWidth);
 
         var rightPanelOffsetLeft = offsetRight($splitBar) + splitBarGap.right;
-        $infoBox.offset({ left: rightPanelOffsetLeft });
+        $infoBox.offset({ left: rightPanelOffsetLeft + infoboxInset });
         $flameGraph.offset({ left: rightPanelOffsetLeft });
 
         lastSplitProportion = splitProportion;

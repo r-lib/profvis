@@ -242,15 +242,16 @@ table.profvis-table .timebar-cell > .timebar {
 
 .profvis-infobox {
   position: absolute;
-  left: 770px;
-  top: 10px;
+  left: 779px;
+  top: 18px;
   opacity: 0.8;
-  border-radius: 4px;
+  border-radius: 3px;
   color: #f8f8f8;
   background-color: #333;
   padding: 5px 10px;
   font-family: Open Sans,Helvetica,Arial,sans-serif;
   font-size: 12px;
+  line-height: 100%;
   pointer-events: none;
   min-width: 280px;
 }
