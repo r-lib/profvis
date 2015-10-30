@@ -2,6 +2,14 @@
   position: relative;
 }
 
+.profvis * {
+  /* Need to disable box-sizing:border-box if enabled from other CSS (like
+     Bootstrap) */
+  -webkit-box-sizing: content-box;
+  -moz-box-sizing: content-box;
+   box-sizing: content-box;
+}
+
 .profvis-status-bar {
   float: left;
   position: absolute;
@@ -10,7 +18,7 @@
   padding: 0 8px;
   height: 20px;
   line-height: 20px;
-  width: 732px;
+  width: 731px;
   border: 1px solid #ddd;
   border-radius: 4px;
   background-color: #f4f4f4;
@@ -25,7 +33,7 @@
 
 .profvis-status-bar .info-block {
   display: inline-block;
-  width: 120px;
+  width: 140px;
 }
 
 .profvis-status-bar .settings-button {
@@ -58,10 +66,10 @@
   float: left;
   position: absolute;
   left: 10px;
-  top: 34px;
+  top: 35px;
   bottom: 10px;
   overflow-y: scroll;
-  width: 748px;
+  width: 747px;
   border: 1px solid #ddd;
   border-radius: 4px;
 }
@@ -84,7 +92,7 @@
   right: 10px;
   top: 10px;
   bottom: 10px;
-  left: 770px;
+  left: 771px;
   overflow: hidden;
   border: 1px solid #ddd;
   border-radius: 4px;
