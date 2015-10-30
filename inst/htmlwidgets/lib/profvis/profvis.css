@@ -127,7 +127,7 @@ table.profvis-table tr.locked {
 }
 
 table.profvis-table tr.active {
-  background-color: #fc8;
+  background-color: #fdb;
 }
 
 table.profvis-table .linenum {
@@ -184,11 +184,11 @@ table.profvis-table .timebar-cell > .timebar {
 }
 
 .profvis-flamegraph .cell.highlighted .rect {
-  fill: #ffb;
+  fill: #ffc;
 }
 
 .profvis-flamegraph .cell.highlighted.active .rect {
-  fill: #fc8;
+  fill: #fdb;
 }
 
 .profvis-flamegraph .cell.shaded .rect {
