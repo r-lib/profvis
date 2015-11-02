@@ -6,8 +6,14 @@ Authors@R: c(
     person(family = "RStudio", role = "cph")
     )
 Description: Interactive profiling data visualizations.
-Depends: R (>= 3.0)
+Depends:
+    R (>= 3.0)
 Imports:
     htmlwidgets (>= 0.3.2),
     stringr
 License: GPL-2
+Suggests:
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr
+RoxygenNote: 5.0.0

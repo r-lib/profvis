@@ -3,3 +3,4 @@
 .RData
 *.sublime-project
 *.sublime-workspace
+inst/doc
