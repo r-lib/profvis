@@ -196,7 +196,7 @@ table.profvis-table .timebar-cell > .timebar {
 }
 
 .profvis-flamegraph .cell.gc .rect {
-  fill: #ddd;
+  fill: #ccc;
 }
 
 .profvis-flamegraph .cell.locked {
