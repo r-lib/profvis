@@ -15,6 +15,8 @@ profvis = (function() {
   profvis.render = function(el, message) {
 
     function generateStatusBar(el) {
+      var $el = $(el);
+
       el.innerHTML =
         '<div class="info-block"><span class="info-label">Total time:</span> ' +
           vis.totalTime + 'ms</div>' +
@@ -22,11 +24,10 @@ profvis = (function() {
           vis.interval + 'ms</div>' +
         '<span role="button" class="settings-button">Settings &#x25BE;</span>';
 
-      $("span.settings-button").on("click", function(e) {
+      $el.find("span.settings-button").on("click", function(e) {
         e.preventDefault();
         e.stopPropagation();
 
-        var $el = $(el);
         vis.settingsPanel.setOffset({
           top: $el.offset().top + $el.outerHeight() - 1,
           right: $el.offset().left + $el.outerWidth(),
@@ -40,6 +41,8 @@ profvis = (function() {
     }
 
     function generateSettingsPanel(el) {
+      var $el = $(el);
+
       el.innerHTML =
         '<div role="button" class="hide-internal">' +
           '<span class="settings-checkbox" data-checked="1">&#x2612;</span> Hide internal functions' +
@@ -64,7 +67,7 @@ profvis = (function() {
         }
       }
 
-      $(".hide-internal")
+      $el.find(".hide-internal")
         .on("click", function() {
           vis.flameGraph.savePrevScales();
 
@@ -79,7 +82,7 @@ profvis = (function() {
           }
         });
 
-      $(".hide-zero-row")
+      $el.find(".hide-zero-row")
         .on("click", function() {
           var checked = toggleCheckbox($(this).find(".settings-checkbox"));
 
@@ -408,7 +411,7 @@ profvis = (function() {
 
       var container = svg.append('g')
         .attr("transform", "translate(" + dims.margin.left + "," + dims.margin.top + ")")
-        .attr("clip-path", "url(" + urlNoHash() + "#clip)");
+        .attr("clip-path", "url(" + urlNoHash() + "#clip-" + vis.el.id + ")");
 
       // Add a background rect so we have something to grab for zooming/panning
       var backgroundRect = container.append("rect")
@@ -1137,12 +1140,12 @@ profvis = (function() {
     // for window resizing.
     function initResizing() {
       var $el = $(vis.el);
-      var $statusBar = $(".profvis-status-bar");
-      var $settingsPanel = $(".profvis-settings-panel");
-      var $codeTable = $(".profvis-code");
-      var $flameGraph = $(".profvis-flamegraph");
-      var $infoBox = $(".profvis-infobox");
-      var $splitBar = $(".profvis-splitbar");
+      var $statusBar = $el.children(".profvis-status-bar");
+      var $settingsPanel = $el.children(".profvis-settings-panel");
+      var $codeTable = $el.children(".profvis-code");
+      var $flameGraph = $el.children(".profvis-flamegraph");
+      var $infoBox = $el.children(".profvis-infobox");
+      var $splitBar = $el.children(".profvis-splitbar");
 
       // Record the gap between the split bar and the objects to left and right
       var splitBarGap = {
