@@ -840,7 +840,8 @@ profvis = (function() {
             if (dragging) return;
 
             // If it wasn't a drag, treat it as a click
-            vis.infoBox.show(d);
+            var mousePos = {x: d3.event.pageX, y: d3.event.pageY};
+            vis.infoBox.show(d, mousePos, svg.node());
             highlighter.click(d);
           })
           .on("mouseover", function(d) {
@@ -858,8 +859,15 @@ profvis = (function() {
             }
 
             if (!highlighter.isLocked()) {
-              vis.infoBox.show(d);
+              var mousePos = {x: d3.event.pageX, y: d3.event.pageY};
+              vis.infoBox.show(d, mousePos, svg.node());
               highlighter.hover(d);
+            }
+          })
+          .on("mousemove", function(d) {
+            if (!highlighter.isLocked()) {
+              var mousePos = {x: d3.event.pageX, y: d3.event.pageY};
+              vis.infoBox.move(mousePos, svg.node());
             }
           })
           .on("mouseout", function(d) {
@@ -1093,13 +1101,13 @@ profvis = (function() {
 
     function initInfoBox(el) {
 
-      function show(d) {
+      function show(d, pos, container) {
         var label = d.label ? d.label : "";
         var ref = (d.filename && d.linenum) ?
           (d.filename + "#" + d.linenum) :
           "(source unavailable)";
 
-        el.style.visibility = "";
+        el.style.display = "block";
 
         el.innerHTML =
           "<table>" +
@@ -1109,10 +1117,48 @@ profvis = (function() {
           "<tr><td class='infobox-title'>Agg. total time</td><td>" + vis.aggLabelTimes[label] + "ms</td></tr>" +
           "<tr><td class='infobox-title'>Call stack depth</td><td>" + d.depth + "</td></tr>" +
           "</table>";
+
+        move(pos, container);
+      }
+
+      // pos - {x, y} containing document-relative coordinates of mouse position
+      //   where infobox should be shown
+      // container - raw DOM element that we should attempt to keep the infobox
+      //   inside of
+      function move(pos, container) {
+        // Amount of x/y spacing between the cursor and the infobox
+        var PADDING_X = 10;
+        var PADDING_Y = 10;
+
+        // Calculate the page-relative top/left/right/bottom, plus width/height
+        var containerExtent = $.extend($(container).offset(), {
+          width: container.offsetWidth,
+          height: container.offsetHeight
+        });
+        containerExtent.right = containerExtent.left + containerExtent.width;
+        containerExtent.bottom = containerExtent.top + containerExtent.height;
+
+        // The size of the infobox
+        var elSize = {width: el.offsetWidth, height: el.offsetHeight};
+
+        // Default strategy is to put the infobox down and to the right
+        var left = pos.x + PADDING_X;
+        var top = pos.y + PADDING_Y;
+        // If it won't fit towards the right, move it towards the left
+        if (left + elSize.width > containerExtent.right) {
+          left = pos.x - PADDING_X - elSize.width;
+        }
+        // If it won't fit towards the bottom, move it towards the top
+        if (top + elSize.height > containerExtent.bottom) {
+          top = pos.y - PADDING_Y - elSize.height;
+        }
+
+        // Set the position using jQuery's offset(), which is document-relative
+        $(el).offset({top: top, left: left});
       }
 
       function hide() {
-        el.style.visibility = "hidden";
+        el.style.display = "none";
       }
 
       hide();
@@ -1120,7 +1166,8 @@ profvis = (function() {
       return {
         el: el,
         show: show,
-        hide: hide
+        hide: hide,
+        move: move
       };
     }
 
@@ -1322,13 +1369,13 @@ profvis = (function() {
     flameGraphEl.className = "profvis-flamegraph";
     vis.el.appendChild(flameGraphEl);
 
-    var infoBoxEl = document.createElement("div");
-    infoBoxEl.className = "profvis-infobox";
-    vis.el.appendChild(infoBoxEl);
-
     var splitBarEl = document.createElement("div");
     splitBarEl.className = "profvis-splitbar";
     vis.el.appendChild(splitBarEl);
+
+    var infoBoxEl = document.createElement("div");
+    infoBoxEl.className = "profvis-infobox";
+    vis.el.appendChild(infoBoxEl);
 
     // Efficient to properly size panels before the code + flamegraph are
     // rendered, so that we don't have to re-render.
