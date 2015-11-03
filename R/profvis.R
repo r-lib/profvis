@@ -73,7 +73,7 @@ profvis <- function(expr = NULL, interval = 0.01, prof_output = NULL,
 
   } else {
     # If we got here, we were provided a prof_input file instead of expr
-    expr_source <- character(0)
+    expr_source <- NULL
     prof_output <- prof_input
   }
 
