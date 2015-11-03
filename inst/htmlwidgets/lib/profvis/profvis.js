@@ -406,7 +406,7 @@ profvis = (function() {
       var svg = wrapper.append('svg');
 
       var clipRect = svg.append("clipPath")
-          .attr("id", "clip")
+          .attr("id", "clip-" + vis.el.id)
         .append("rect");
 
       var container = svg.append('g')
