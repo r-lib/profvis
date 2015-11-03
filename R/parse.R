@@ -39,9 +39,16 @@ parse_rprof <- function(path = "Rprof.out", expr_source = NULL) {
   prof_data <- gsub('" (\\d+#\\d+)', '",\\1', prof_data)
 
   # Remove frames related to profvis itself, and all frames below it on the stack.
-  prof_data <- sub(' +"force"(?!.*"force").*"profvis".*$', '', prof_data, perl = TRUE)
+  prof_data <- sub(' *"force"(?!.*"force").*"profvis".*$', '', prof_data, perl = TRUE)
 
   prof_data <- str_split(prof_data, fixed(" "))
+
+  # Replace empty strings with character(0); otherwise causes incorrect output
+  # later.
+  prof_data <- lapply(prof_data, function(s) {
+    if (identical(s, "")) character(0)
+    else s
+  })
 
   # Parse each line into a separate data frame
   prof_data <- mapply(prof_data, seq_along(prof_data), FUN = function(sample, time) {
@@ -67,9 +74,12 @@ parse_rprof <- function(path = "Rprof.out", expr_source = NULL) {
     filenum <- as.integer(sub('#.*', '', refs))
     linenum <- as.integer(sub('.*#', '', refs))
 
+    # Flag for special case of zero entries on this row
+    nonzero <- length(sample) != 0
+
     data.frame(
-      time = time,
-      depth = seq(length(sample), 1),
+      time = if (nonzero) time else numeric(0),
+      depth = if (nonzero) seq(length(sample), 1) else integer(0),
       label = labels,
       filenum = filenum,
       linenum = linenum,
