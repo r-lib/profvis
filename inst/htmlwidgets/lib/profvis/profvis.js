@@ -300,9 +300,9 @@ profvis = (function() {
       // This is called when a flamegraph cell or a line of code is clicked on.
       // Clicks also should trigger hover events.
       function click(d) {
-        // If locked, and this click is on the currently locked selection,
-        // just unlock and return.
-        if (lockItem && d === lockItem) {
+        // If d is null (background is clicked), or if locked and this click
+        // is on the currently locked selection, just unlock and return.
+        if (d === null || (lockItem && d === lockItem)) {
           lockItem = null;
           vis.flameGraph.clearLockHighlight();
           vis.codeTable.clearLockHighlight();
@@ -1040,8 +1040,16 @@ profvis = (function() {
         })
         .call(drag);
 
-      // Zoom out when background is double-clicked
+      // Unlock selection when background is clicked, and zoom out when
+      // background is double-clicked.
       backgroundRect
+        .on("mouseup", function(d) {
+          if (dragging) return;
+
+          // If it wasn't a drag, hide info box and unlock.
+          vis.infoBox.hide();
+          highlighter.click(null);
+        })
         .on("dblclick.zoombackground", function() {
           savePrevScales();
 
