@@ -887,7 +887,7 @@ profvis = (function() {
 
       // Tooltip --------------------------------------------------------
       function showTooltip(label, x, y) {
-        var tooltip = container.append("g").attr("class", "tooltip");
+        var tooltip = container.append("g").attr("class", "profvis-tooltip");
         var tooltipRect = tooltip.append("rect");
         var tooltipLabel = tooltip.append("text")
           .text(label)
@@ -908,7 +908,7 @@ profvis = (function() {
       }
 
       function hideTooltip() {
-        container.select("g.tooltip").remove();
+        container.select("g.profvis-tooltip").remove();
       }
 
 

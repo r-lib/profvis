@@ -226,7 +226,7 @@ table.profvis-table .timebar-cell > .timebar {
 }
 
 
-.profvis-flamegraph .tooltip rect {
+.profvis-flamegraph .profvis-tooltip rect {
   fill: #eee;
   stroke: #000;
   opacity: 0.75;
@@ -234,7 +234,7 @@ table.profvis-table .timebar-cell > .timebar {
   stroke-width: 0.5;
 }
 
-.profvis-flamegraph .tooltip text {
+.profvis-flamegraph .profvis-tooltip text {
   text-anchor: middle;
   font-family: monospace;
   font-size: 11px;
