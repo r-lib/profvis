@@ -37,6 +37,12 @@ parse_rprof <- function(path = "Rprof.out", expr_source = NULL) {
   # to
   #  "foo",2#8
   prof_data <- gsub('" (\\d+#\\d+)', '",\\1', prof_data)
+  # But if the line starts with <GC>, it shouldn't be joined like that.
+  # Convert:
+  #  <GC>,1#7 "foo"
+  # back to
+  #  <GC> 1#7 "foo"
+  prof_data <- gsub('^"<GC>",', '"<GC>" ', prof_data)
 
   # Remove frames related to profvis itself, and all frames below it on the stack.
   prof_data <- sub(' *"force"(?!.*"force").*"profvis".*$', '', prof_data, perl = TRUE)
@@ -57,16 +63,15 @@ parse_rprof <- function(path = "Rprof.out", expr_source = NULL) {
     labels <- sub('",\\d+#\\d+$', '"', labels)
     labels <- sub('^"', '', labels)
     labels <- sub('"$', '', labels)
-    # If the first thing is a srcref, it doesn't actually refer to a function
-    # call on the call stack -- instead, it seems that it refers to the code
-    # that's currently being eval'ed.
+    # If it's just a bare srcref without label, it doesn't actually refer to
+    # a function call on the call stack -- instead, it just means that the
+    # line of code is being evaluated.
     # Note how the first lineprof() call differs from the ones in the loop:
     # https://github.com/wch/r-source/blob/be7197f/src/main/eval.c#L228-L244
-    # In this case, we'll use NA as the label, and later insert the line of
-    # source code.
-    if (grepl("^\\d+#\\d+$", sample[1])) {
-      labels[1] <- NA
-    }
+    # In this case, we'll use NA as the label for new, and later insert the
+    # line of source code.
+    idx <- grepl("^\\d+#\\d+$", sample)
+    labels[idx] <- NA
 
     refs <- sample
     refs <- sub('^".*"[,]?', '', refs)
