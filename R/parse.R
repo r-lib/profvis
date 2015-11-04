@@ -108,32 +108,8 @@ parse_rprof <- function(path = "Rprof.out", expr_source = NULL) {
   # Drop NA
   filenames <- filenames[!is.na(filenames)]
 
-  # Get file contents
-  names(filenames) <- filenames
-  file_contents <- lapply(filenames, function(filename) {
-    if (filename == "<expr>") {
-      return(expr_source)
 
-    } else if (filename == "<text>") {
-      return(NULL)
-
-    } else {
-      filehandle <- tryCatch(
-        file(filename, 'rb'),
-        error = function(e) NULL,
-        warning = function(e) NULL
-      )
-      # If we can't read file, return NULL
-      if (is.null(filehandle)) {
-        return(NULL)
-      }
-      on.exit( close(filehandle) )
-
-      return(readChar(filename, 1e6))
-    }
-  })
-
-  file_contents <- drop_nulls(file_contents)
+  file_contents <- get_file_contents(filenames, expr_source)
 
   # Trim filenames to make output a bit easier to interpret
   prof_data$filename <- trim_filenames(prof_data$filename)
