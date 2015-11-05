@@ -256,6 +256,16 @@ table.profvis-table .timebar-cell > .timebar {
   min-width: 280px;
 }
 
+.profvis-infobox table {
+  border-collapse: separate;
+  border-spacing: 2px;
+}
+
+
+.profvis-infobox table td {
+  padding: 1px;
+}
+
 .profvis-infobox .infobox-title {
   font-weight: bold;
 }
