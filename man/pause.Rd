@@ -7,8 +7,7 @@
 pause(seconds)
 }
 \arguments{
-\item{seconds}{Number of seconds to pause. Note that \code{pause} only has
-1-second precision.}
+\item{seconds}{Number of seconds to pause.}
 }
 \description{
 This function pauses an R process for some amount of time. It differs from

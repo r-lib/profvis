@@ -1,15 +1,36 @@
 #include <R.h>
 #include <Rdefines.h>
-#include <time.h>
+
+#ifdef _WIN32
+#include <windows.h>
+#else
+#include <sys/time.h>
+#endif
+
+double get_time_ms() {
+#ifdef _WIN32
+  LARGE_INTEGER time_var, frequency;
+  QueryPerformanceCounter(&time_var);
+  QueryPerformanceFrequency(&frequency);
+
+  return (double)time_var.QuadPart / (double)frequency.QuadPart;
+
+#else
+  struct timeval tv;
+
+  gettimeofday(&tv, NULL);
+  return (double)tv.tv_sec + (double)tv.tv_usec / 1000000;
+#endif
+}
 
 SEXP C_pause (SEXP seconds) {
   if (TYPEOF(seconds) != REALSXP)
     error("`seconds` must be a numeric");
 
-  time_t start = time(NULL);
+  double start = get_time_ms();
   double sec = asReal(seconds);
 
-  while(difftime(time(NULL), start) < sec) {
+  while(get_time_ms() - start < sec) {
     R_CheckUserInterrupt();
   }
 
