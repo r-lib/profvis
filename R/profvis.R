@@ -19,6 +19,7 @@
 #' @param width Width of the htmlwidget.
 #' @param height Height of the htmlwidget
 #'
+#' @seealso \code{\link{print.profvis}} for printing options.
 #' @seealso \code{\link{Rprof}} for more information about how the profiling
 #'   data is collected.
 #'
@@ -102,6 +103,19 @@ profvis <- function(expr = NULL, interval = 0.01, prof_output = NULL,
   )
 }
 
+#' Print a profvis object
+#'
+#' @param viewer If \code{FALSE} (the default), display in an external web
+#'   browser. If \code{TRUE}, attempt to display in the RStudio viewer pane.
+#'   This can be useful for publishing profvis visualizations.
+#' @export
+print.profvis <- function(x, ...,  viewer = FALSE) {
+  if (viewer) {
+    getS3method("print", "htmlwidget")(x)
+  } else {
+    NextMethod()
+  }
+}
 
 #' Widget output function for use in Shiny
 #'

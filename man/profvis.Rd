@@ -35,6 +35,8 @@ corresponding data file as the \code{prof_input} argument to
 \code{profvis()}.
 }
 \seealso{
+\code{\link{print.profvis}} for printing options.
+
 \code{\link{Rprof}} for more information about how the profiling
   data is collected.
 }
