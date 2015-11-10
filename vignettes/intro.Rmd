@@ -483,3 +483,9 @@ profvis({
 ```
 
 For code that contains multi-line expressions like these, using curly braces will allow the profiler to identify the correct line where code is running.
+
+## What are some other resources for profiling R code?
+
+Base R comes with the `Rprof` function (it's what `profvis` calls to collect profiling data) as well as the `summaryRprof` function for getting a human-readable summary of the profiling data collected by `Rprof`.
+
+Luke Tierney and Riad Jarjour have authored the [proftools](https://cran.r-project.org/web/packages/proftools/index.html) package, which provides many more tools for summarizing profiling data, including hot paths, call summaries, and call graphs. Proftools can also be used to generate a number of visualizations, including call graphs, flame graphs, and callee tree maps.
