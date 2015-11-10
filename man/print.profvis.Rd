@@ -7,6 +7,10 @@
 \method{print}{profvis}(x, ..., viewer = FALSE)
 }
 \arguments{
+\item{x}{The object to print.}
+
+\item{...}{Further arguments to passed on to other print methods.}
+
 \item{viewer}{If \code{FALSE} (the default), display in an external web
 browser. If \code{TRUE}, attempt to display in the RStudio viewer pane.
 This can be useful for publishing profvis visualizations.}

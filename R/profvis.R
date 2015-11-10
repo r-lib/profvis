@@ -105,9 +105,11 @@ profvis <- function(expr = NULL, interval = 0.01, prof_output = NULL,
 
 #' Print a profvis object
 #'
+#' @param x The object to print.
 #' @param viewer If \code{FALSE} (the default), display in an external web
 #'   browser. If \code{TRUE}, attempt to display in the RStudio viewer pane.
 #'   This can be useful for publishing profvis visualizations.
+#' @param ... Further arguments to passed on to other print methods.
 #' @export
 print.profvis <- function(x, ...,  viewer = FALSE) {
   if (viewer) {
