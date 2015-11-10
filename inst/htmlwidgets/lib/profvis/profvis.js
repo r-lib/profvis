@@ -1633,18 +1633,6 @@ profvis = (function() {
   }
 
 
-  // Given a selector string, a start node, and (optionally) an end node which
-  // is an ancestor of `start`, search for an ancestor node between the start
-  // and end which matches the selector.
-  function selectAncestor(selector, start, end) {
-    if (start.matches(selector))
-      return start;
-    if (start === end || start === document)
-      return null;
-
-    return selectAncestor(selector, start.parentNode, end);
-  }
-
   // Transform column-oriented data (an object with arrays) to row-oriented data
   // (an array of objects).
   function colToRows(x) {

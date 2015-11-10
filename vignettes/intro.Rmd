@@ -66,24 +66,24 @@ profvis({
 }, height = "250px")
 ```
 
-In the profvis interface, on the left is the code, and on the right is a flame graph. In the flame graph, the horizontal direction represents time in milliseconds, and the vertical direction represents the call stack. For example, we called function `plot`, which is at the bottom of the stack; the `plot` function, in turn, called `plot.formula`, which called `do.call`, and so on. Going up a few more levels, we can see that `plot.default` called a number of functions: first `deparse`, and later, `plot.xy`.
+In the profvis interface, on the left is the code, and on the right is a flame graph. If the panels are too narrow, using a wider browser window will help. In the flame graph, the horizontal direction represents time in milliseconds, and the vertical direction represents the call stack. Looking at the bottom-most items on the stack, most of the time, about 2 seconds, is spent in `plot`, and then a much smaller amount of time is spent in `lm`, and almost no time at all is spent in `abline` -- it doesn't even show up on the flame graph.
 
-After `plot`, the next top-level function called was `lm`, which takes much less time. Finally, `abline` is called, but it runs so quickly that it doesn't even show up in the profiler data.
+Traveling up the stack, `plot` called `plot.formula`, which called `do.call`, and so on. Going up a few more levels, we can see that `plot.default` called a number of functions: first `deparse`, and later, `plot.xy`. Similarly, `lm` calls a number of different functions.
 
+On the left, we can see the amount of time spent on each line of code. This tells us, unsurprisingly, that most of the time is spent on the line with `plot`, and a little bit is spent on the line with `lm`.
 
 ### Navigating profvis
 
 Profvis is interactive. You can try the following:
 
 * As you mouse over the flame graph, information about each block will show in the info box.
-* Yellow flame graph blocks have corresponding lines of code on the left. (White blocks represent code where profvis doesn't have the source code -- for example, in base R and in R packages. [NOTE but see section below]) If you mouse over a yellow block, the corresponding line of code will be highlighted. Note that the highlighted line of code is where the yellow function is called *from*, not the content of that function.
+* Yellow flame graph blocks have corresponding lines of code on the left. (White blocks represent code where profvis doesn't have the source code -- for example, in base R and in R packages. But see [this FAQ](#how-do-i-get-code-from-an-r-package-to-show-in-the-code-panel) if you want package code to show up in the code panel.) If you mouse over a yellow block, the corresponding line of code will be highlighted. Note that the highlighted line of code is where the yellow function is called *from*, not the content of that function.
 * If you mouse over a line of code, all flame graph blocks that were called from that line will be highlighted.
 * Click on a block or line of code to lock the current highlighting. Click on the background, or again on that same item to unlock the highlighting. Click on another item to lock on that item.
 * Use the mouse scroll wheel or trackpad's scroll gesture to zoom in or out in the x direction.
 * Click and drag on the flame graph to pan up, down, left, right.
 * Double-click on the background to zoom the x axis to its original extent.
 * Double-click on a flamegraph block to zoom the x axis the width of that block.
-
 
 Each *block* in the flame graph represents a call to a function, or possibly multiple calls to the same function. The width of the block is proportional to the amount of time spent in that function. When a function calls another function, another block is added on top of it in the flame graph.
 
@@ -112,7 +112,7 @@ data <- as.data.frame(x = matrix(rnorm(times * cols, mean = 5), ncol = cols))
 data <- cbind(id = paste0("g", seq_len(times)), data)
 
 profvis({
-  data1 <- data   # Make a copy of the data for this run
+  data1 <- data   # Store in another variable for this run
 
   # Get column means
   means <- apply(data1[, names(data1) != "id"], 2, mean)
@@ -128,7 +128,7 @@ Most of the time is spent in the `apply` call, so that's the best candidate for 
 
 We could try to speed this up in a number of ways. One possibility is that we could simply leave the data in matrix form (instead of putting it in a data frame in line 4). That would remove for the `as.matrix` call, but it would still need `aperm` to transpose the data. It would also lose the connection of each row to the `id` column, which is undesirable. In any case, using `apply` over columns looks like it will be expensive because of the call to `aperm`.
 
-An obvious alternative is to use the `colMeans` function. But there's also another possibility. Data frames are implemented as lists of vectors, where each column is one vector, so we could use `lapply` or `vapply` to apply the `mean` function over each column. Let's compare the speed of these four different ways of getting column means.
+An obvious alternative is to use the `colMeans` function. But there's also another possibility. Data frames are implemented as lists of vectors, where each column is one vector, so we could use `lapply` or `vapply` to apply the `mean` function over each column. Let's compare the speed of these four different ways of getting column means. 
 
 ```{r}
 profvis({
@@ -141,23 +141,24 @@ profvis({
 }, height = "300px")
 ```
 
-`colMeans` is about 3x faster than using `apply` with `mean`, but it looks like it's still using `as.matrix`, which takes a significant amount of time. `lapply`/`vapply`are faster yet -- about 10x faster than `apply`. `lapply` returns the values in a list, while `vapply` returns the values in a numeric vector, which is the form that we want, so it looks like `vapply` is the way to go for this part.
+`colMeans` is about 6x faster than using `apply` with `mean`, but it looks like it's still using `as.matrix`, which takes a significant amount of time. `lapply`/`vapply`are faster yet -- about 10x faster than `apply`. `lapply` returns the values in a list, while `vapply` returns the values in a numeric vector, which is the form that we want, so it looks like `vapply` is the way to go for this part.
 
-We'll take the original code and replace `apply` with `vapply`.
+(If you want finer-grained comparisons of code performance, you can use the [microbenchmark](https://cran.r-project.org/web/packages/microbenchmark/index.html) package. There's more information about microbenchmark in the  [profiling](http://adv-r.had.co.nz/Profiling.html#code-organisation) chapter of Hadley Wickham's book, Advanced R.)
+
+Let's take the original code and replace `apply` with `vapply`:
 
 ```{r}
-# The whole procedure, with vapply instead of apply
 profvis({
   data1 <- data
   means <- vapply(data1[, names(data1) != "id"], mean, numeric(1))
-  
+
   for (i in seq_along(means)) {
     data1[, names(data1) != "id"][, i] <- data1[, names(data1) != "id"][, i] - means[i]
   }
 }, height = "300px")
 ```
 
-Now our code is about 3x faster than the original version, and most of the time is spent on line 7, the majority of that in the `[<-` function. This function is usually called with syntax `x[i, j] <- y`, which is equivalent to `` `[<-`(x, i, j, y)``. In addition to being slow, the code is ugly: on each side of the assignment operator we're indexing into `data1` twice with `[`.
+Now our code is about 3x faster than the original version. Most of the time is spent on line 7, the majority of that in the `[<-` function. This function is usually called with syntax `x[i, j] <- y`, which is equivalent to `` `[<-`(x, i, j, y)``. In addition to being slow, the code is ugly: on each side of the assignment operator we're indexing into `data1` twice with `[`.
 
 In this case, it's useful to take a step back and think about the broader problem. We want to normalize each column. Couldn't we we apply a function over the columns that does both steps, taking the mean and subtracting it? Because a data frame is a list, and we want to assign a list of values into the data frame, we'll need to use `lapply`.
 
@@ -165,20 +166,24 @@ In this case, it's useful to take a step back and think about the broader proble
 profvis({
   data1 <- data
 
-  # For each column, apply a function that normalizes values, and assign the
-  # columns back into data1.
-  data1[, names(data1) != "id"] <- lapply(data1[, names(data1) != "id"], function(col) {
+  # Given a column, normalize values and return them
+  col_norm <- function(col) {
     col - mean(col)
-  })
-}, height = "300px")
+  }
+
+  # Apply the normalizer function over all columns except id
+  data1[, names(data1) != "id"] <- lapply(data1[, names(data1) != "id"], col_norm)
+}, height = "350px")
 ```
 
-Now we have code that's not only about 8x faster than our original -- it's shorter and more elegant as well. Not bad! Profvis helped us to identify performance bottlenecks, and understanding of the underlying data structures allowed us to approach the problem in a more efficient way. 
+Now we have code that's not only about 8x faster than our original -- it's shorter and more elegant as well. Not bad! The profiler data helped us to identify performance bottlenecks, and understanding of the underlying data structures allowed us to approach the problem in a more efficient way.
+
+Could we further optimize the code? It seems unlikely, given that all the time is spent in functions that are implemented in C (`mean` and `-`). That doesn't necessarily mean that there's no room for improvement, but this is a good place to move on to the next example.
 
 
 ### Example 2
 
-This example addresses some more advanced issues. In this example, it's hard to directly see the causes of slowness, but we will be able to see some of their side-effects.
+This example addresses some more advanced issues. This time, it will be hard to directly see the causes of slowness, but we will be able to see some of their side-effects, most notably the side-effects from large amounts of memory allocation.
 
 Suppose you have a data frame that contains a column for which you'd like to take a cumulative sum (and you don't know about R's built-in `cumsum` function). Here's one way to do it:
 
@@ -213,6 +218,8 @@ This profiling data tells us that much of the time is spent in `$` and `$<-`. Ma
 ```{r}
 profvis({
   csum <- function(x) {
+    if (length(x) < 2) return(x)
+
     sum <- x[1]
     for (i in seq(2, length(x))) {
       sum[i] <- sum[i-1] + x[i]
@@ -220,7 +227,7 @@ profvis({
     sum
   }
   data$sum <- csum(data$value)
-}, height = "300px")
+}, height = "320px")
 ```
 
 Using this `csum` function, it takes just over half a second, which is about 4x as fast as before. 
@@ -239,7 +246,9 @@ To avoid all that memory allocation, copying, and garbage collection, we can pre
 ```{r}
 profvis({
   csum2 <- function(x) {
-    sum <- numeric(length(x))
+    if (length(x) < 2) return(x)
+
+    sum <- numeric(length(x))  # Preallocate
     sum[1] <- x[1]
     for (i in seq(2, length(x))) {
       sum[i] <- sum[i-1] + x[i]
@@ -276,7 +285,7 @@ p <- profvis({
 print(p, viewer = TRUE)
 ```
 
-Once it shows up in the viewer pane, click on the **Publish** button to send it to RPubs. If you don't already have an account, you'll need to set one up.
+Once it shows up in the viewer pane, click on the **Publish** button to send it to RPubs. You can see an example [here](http://rpubs.com/wch/124655). If you don't already have an account on RPubs, you'll need to set one up.
 
 ![Publishing to RPubs](profvis-rpubs.png)
 
@@ -313,13 +322,11 @@ profvis({
 }, height = "350px")
 ```
 
-Similarly, functions that are accessed with `::` or `$` will also appear as `<Anonymous>`. The form `package::function()` is a common way to explicitly use a namespace to find a function. Similarly, the form `x$fun()` is a common way to access functions that are contained in a list, environment, reference class, or R6 object.
+Similarly, functions that are accessed with `::` or `$` will also appear as `<Anonymous>`. The form `package::function()` is a common way to explicitly use a namespace to find a function. Similarly, the form `x$fun()` is a common way to call functions that are contained in a list, environment, reference class, or R6 object.
 
-Those are equivalent to `` `::`(package, function)`` and `` `$`(x, "fun")``, respectively. These calls return anonymous functions, and so R's internal profiling code labels these as `<Anonymous>`.
+Those are equivalent to `` `::`(package, function)`` and `` `$`(x, "fun")``, respectively. These calls return anonymous functions, and so R's internal profiling code labels these as `<Anonymous>`. If you want labels in the profiler to have a different label, you can assign the value to a temporary variable (like `adder2` above), and then invoke that.
 
-If you want labels in the profiler to have a different label, you can assign the value to a temporary variable (like `adder2` above), and then invoke that.
-
-Finally, f a function is passed to `lapply`, it will be show up as `FUN` in the flame graph. If we inspect the source code for `lapply`, it's clear why: when a function is passed to `lapply`, the name used for the function inside of `lapply` is `FUN`.
+Finally, if a function is passed to `lapply`, it will be show up as `FUN` in the flame graph. If we inspect the source code for `lapply`, it's clear why: when a function is passed to `lapply`, the name used for the function inside of `lapply` is `FUN`.
 
 ```{r}
 lapply
