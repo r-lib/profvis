@@ -1210,7 +1210,8 @@ profvis = (function() {
 
       // Get current proportional position of split bar
       function splitProportion() {
-        var splitCenter = $splitBar.position().left + $splitBar.outerWidth()/2;
+        var splitCenter = $splitBar.offset().left - $codeTable.offset().left +
+                          $splitBar.outerWidth()/2;
         var innerWidth = offsetRight($flameGraph) - $codeTable.offset().left;
         return splitCenter / innerWidth;
       }
