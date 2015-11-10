@@ -12,7 +12,6 @@ vignette: >
 ---
 
 ```{r echo = FALSE}
-library(pryr)
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 ```
 

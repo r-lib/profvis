@@ -18,6 +18,7 @@ Imports:
 License: GPL-3 | file LICENSE
 Suggests:
     knitr,
+    ggplot2,
     rmarkdown
 VignetteBuilder: knitr
 RoxygenNote: 5.0.0
