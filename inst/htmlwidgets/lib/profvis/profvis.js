@@ -1301,11 +1301,7 @@ profvis = (function() {
     }
 
 
-    // Convert object-with-arrays format prof data to array-of-objects format
-    var prof = colToRows(message.prof);
-    applyInterval(prof, message.interval);
-    prof = addCollapsedDepth(prof, message.collapseItems);
-    prof = consolidateRuns(prof);
+    var prof = prepareProfData(message.prof, message.interval, message.collapseItems);
 
     var vis = {
       el: el,
@@ -1463,6 +1459,16 @@ profvis = (function() {
     });
 
     return fileLineTimes;
+  }
+
+  function prepareProfData(prof, interval, collapseItems) {
+    // Convert object-with-arrays format prof data to array-of-objects format
+    var data = colToRows(prof);
+    applyInterval(data, interval);
+    data = addCollapsedDepth(data, collapseItems);
+    data = consolidateRuns(data);
+
+    return data;
   }
 
   // Given the raw profiling data, convert `time` field to `startTime` and
