@@ -402,10 +402,7 @@ profvis = (function() {
 
 
       // SVG container objects ------------------------------------------------
-      var wrapper = d3.select(el).append('div')
-        .attr('class', 'profvis-flamegraph-inner');
-
-      var svg = wrapper.append('svg');
+      var svg = d3.select(el).append('svg');
 
       var clipRect = svg.append("clipPath")
           .attr("id", "clip-" + vis.el.id)
