@@ -353,6 +353,7 @@ profvis = (function() {
       el.innerHTML = "";
 
       var stackHeight = 15;   // Height of each layer on the stack, in pixels
+      var zoomMargin = 0.02;  // Extra margin on sides when zooming to fit
 
       // Dimensions -----------------------------------------------------------
 
@@ -367,7 +368,6 @@ profvis = (function() {
         d3.min(vis.prof, function(d) { return d.startTime; }),
         d3.max(vis.prof, function(d) { return d.endTime; })
       ];
-      xDomain = expandRange(xDomain, 0.02);
 
       var yDomain = [
         d3.min(vis.prof, function(d) { return d.depth; }) - 1,
@@ -377,7 +377,7 @@ profvis = (function() {
       // Scales ---------------------------------------------------------------
       var scales = {
         x: d3.scale.linear()
-            .domain(xDomain)
+            .domain(expandRange(xDomain, zoomMargin))
             .range([0, dims.width]),
 
         y: d3.scale.linear()
@@ -875,7 +875,7 @@ profvis = (function() {
             // When a cell is double-clicked, zoom x to that cell's width.
             savePrevScales();
 
-            scales.x.domain([d.startTime, d.endTime]);
+            scales.x.domain(expandRange([d.startTime, d.endTime], zoomMargin));
             zoom.x(scales.x);
 
             redrawZoom(250);
@@ -1052,7 +1052,7 @@ profvis = (function() {
         .on("dblclick.zoombackground", function() {
           savePrevScales();
 
-          scales.x.domain(xDomain);
+          scales.x.domain(expandRange(xDomain, zoomMargin));
           zoom.x(scales.x);
 
           redrawZoom(250);
