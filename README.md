@@ -10,6 +10,9 @@ profvis is a tool for visualizing code profiling data from R. It creates an web 
 devtools::install_github("rstudio/profvis")
 ```
 
+## Documentation
+
+See the [introduction vignette](http://rpubs.com/wch/123888).
 
 ## Example
 
