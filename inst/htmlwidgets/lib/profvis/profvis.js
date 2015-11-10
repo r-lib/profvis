@@ -1180,7 +1180,8 @@ profvis = (function() {
         var innerWidth = offsetRight($flameGraph) - $codeTable.offset().left;
 
         $splitBar.offset({
-          left: elOffsetLeft + innerWidth * splitProportion - $splitBar.outerWidth()/2
+          left: $codeTable.offset().left + innerWidth * splitProportion -
+                $splitBar.outerWidth()/2
         });
 
         // Size and position left and right-side elements
