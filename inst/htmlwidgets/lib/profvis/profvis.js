@@ -367,6 +367,8 @@ profvis = (function() {
         d3.min(vis.prof, function(d) { return d.startTime; }),
         d3.max(vis.prof, function(d) { return d.endTime; })
       ];
+      xDomain = expandRange(xDomain, 0.02);
+
       var yDomain = [
         d3.min(vis.prof, function(d) { return d.depth; }) - 1,
         d3.max(vis.prof, function(d) { return d.depth; })
@@ -1651,6 +1653,16 @@ profvis = (function() {
     }
 
     return newdata;
+  }
+
+  // Given an array with two values (a min and max), return an array with the
+  // range expanded by `amount`.
+  function expandRange(range, amount) {
+    var adjust = amount * (range[1] - range[0]);
+    return [
+      range[0] - adjust,
+      range[1] + adjust
+    ];
   }
 
 
