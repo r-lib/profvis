@@ -1464,21 +1464,23 @@ profvis = (function() {
   function prepareProfData(prof, interval, collapseItems) {
     // Convert object-with-arrays format prof data to array-of-objects format
     var data = colToRows(prof);
-    applyInterval(data, interval);
     data = addCollapsedDepth(data, collapseItems);
+    data = addParentChildLinks(data);
     data = consolidateRuns(data);
+    data = applyInterval(data, interval);
 
     return data;
   }
 
-  // Given the raw profiling data, convert `time` field to `startTime` and
-  // `endTime`, and use the supplied interval.
-  // Modifies data in place.
+  // Given the raw profiling data, convert `time` and `lastTime` fields to
+  // `startTime` and `endTime`, and use the supplied interval. Modifies data
+  // in place.
   function applyInterval(prof, interval) {
-    prof.map(function(d) {
+    prof.forEach(function(d) {
       d.startTime = interval * (d.time - 1);
-      d.endTime = interval * (d.time);
+      d.endTime = interval * (d.lastTime);
       delete d.time;
+      delete d.lastTime;
     });
 
     return prof;
@@ -1508,7 +1510,7 @@ profvis = (function() {
   // that contain those labels.
   function addCollapsedDepth(prof, collapseItems) {
     var data = d3.nest()
-      .key(function(d) { return d.startTime; })
+      .key(function(d) { return d.time; })
       .rollup(function(leaves) {
         leaves = leaves.sort(function(a, b) { return a.depth - b.depth; });
 
@@ -1544,114 +1546,118 @@ profvis = (function() {
   }
 
 
-  // Given profiling data, consolidate consecutive blocks for a flamegraph.
-  function consolidateRuns(prof) {
+  // Given profiling data, add parent and child links to indicate stack
+  // relationships.
+  function addParentChildLinks(prof) {
     var data = d3.nest()
-      .key(function(d) { return d.depth; })
+      .key(function(d) { return d.time; })
       .rollup(function(leaves) {
-        leaves = leaves.sort(function(a, b) { return a.startTime - b.startTime; });
+        leaves = leaves.sort(function(a, b) { return a.depth - b.depth; });
 
-        // Collapse consecutive leaves with the same fun
-        var startLeaf = null;  // leaf starting this run
-        var lastLeaf = null;   // The last leaf we've looked at
-        var newLeaves = [];
-        var newLeaf;
-        for (var i=0; i<leaves.length; i++) {
-          var leaf = leaves[i];
+        leaves[0].parent = null;
+        leaves[0].children = [];
 
-          if (i === 0) {
-            startLeaf = leaf;
-
-          } else if (leaf.startTime !== lastLeaf.endTime ||
-                     leaf.label !== startLeaf.label ||
-                     leaf.filename !== startLeaf.filename ||
-                     leaf.linenum !== startLeaf.linenum ||
-                     leaf.depthCollapsed !== startLeaf.depthCollapsed)
-          {
-            newLeaf = $.extend({}, startLeaf);
-            newLeaf.endTime = lastLeaf.endTime;
-            newLeaves.push(newLeaf);
-
-            startLeaf = leaf;
-          }
-
-          lastLeaf = leaf;
+        for (var i=1; i<leaves.length; i++) {
+          leaves[i-1].children.push(leaves[i]);
+          leaves[i].parent = leaves[i-1];
+          leaves[i].children = [];
         }
 
-        // Add the last one
-        newLeaf = $.extend({}, startLeaf);
-        newLeaf.endTime = lastLeaf.endTime;
-        newLeaves.push(newLeaf);
-
-        return newLeaves;
+        return leaves;
       })
       .map(prof);
 
-    // Convert from object of arrays to array of arrays
+    // Convert data from object of arrays to array of arrays
     data = d3.map(data).values();
-    // Make sure that blocks are always the same or smaller than the one below.
-    // In other words, no block can rest on more than one other block.
-    // We'll do this by loop over rows, going from bottom to top. Along the way:
-    // * Store the start and end times of each block in a set `breaks`.
-    // * If a block contains any breaks between its start and end times, split
-    //   it up along those breaks.
-    var breaks = d3.set();
-    for (var i=0; i<data.length; i++) {
-      var row = data[i];
-      var newRow = [];
+    // Flatten data
+    return d3.merge(data);
+  }
 
-      // Convert breaks from d3.set to array of numbers
-      var breaksNum = breaks.values()
-        .map(function(val) { return parseInt(val); });
 
-      row.map(function(block) {
-        var internalBreaks = containsBreaks(block.startTime, block.endTime, breaksNum);
-        var newBlocks = splitBlock(block, internalBreaks);
-        newRow = newRow.concat(newBlocks);
+  // Given profiling data, consolidate consecutive blocks for a flamegraph.
+  // This function also assigns correct parent-child relationships to form a
+  // tree of data objects, with a hidden root node at depth 0.
+  function consolidateRuns(prof) {
+    // Create a special top-level leaf whose only purpose is to point to its
+    // children, the items at depth 1.
+    var topLeaf = {
+      depth: 0,
+      parent: null,
+      children: prof.filter(function(d) { return d.depth === 1; })
+    };
 
-        // Make sure the start and end times are added to the set of breaks.
-        breaks.add(block.startTime);
-        breaks.add(block.endTime);
-      });
+    var tree = consolidateTree(topLeaf);
+    var data = treeToArray(tree);
+    // Remove the root node from the flattened data
+    data = data.filter(function(d) { return d.depth !== 0; });
+    return data;
 
-      // Replace old row with new one
-      data[i] = newRow;
-    }
+    function consolidateTree(tree) {
+      var leaves = tree.children;
+      leaves = leaves.sort(function(a, b) { return a.time - b.time; });
 
-    // Given a start and end value, and an array of break values, return an
-    // array of breaks that are between the start and end (not inclusive).
-    function containsBreaks(start, end, breaks) {
-      return breaks.filter(function(b) {
-        return b > start && b < end;
-      });
-    }
+      // Collapse consecutive leaves, with some conditions
+      var startLeaf = null;  // leaf starting this run
+      var lastLeaf = null;   // The last leaf we've looked at
+      var newLeaves = [];
+      var collectedChildren = [];
 
-    // Given a block and an array of breaks, split up that block along the
-    // breaks. Returns an array of blocks with new startTime and endTime
-    // values.
-    function splitBlock(block, breaks) {
-      if (breaks.length === 0) return [block];
+      // This takes the start leaf, end leaf, and the set of children for the
+      // new leaf, and creates a new leaf which copies all its properties from
+      // the startLeaf, except lastTime and children.
+      function addNewLeaf(startLeaf, endLeaf, newLeafChildren) {
+        var newLeaf = $.extend({}, startLeaf);
+        newLeaf.lastTime = endLeaf.time;
+        newLeaf.parent = tree;
+        newLeaf.children = newLeafChildren;
 
-      breaks.sort(function(a, b) { return a-b; });
-      var newBlocks = [];
-      var tmp;
-      for (var i=-1; i<breaks.length; i++) {
-        tmp = $.extend({}, block);
-        if (i >= 0)
-          tmp.startTime = breaks[i];
-        if (i < breaks.length-1)
-          tmp.endTime = breaks[i+1];
-
-        newBlocks.push(tmp);
+        // Recurse into children
+        newLeaf = consolidateTree(newLeaf);
+        newLeaves.push(newLeaf);
       }
 
-      return newBlocks;
+      for (var i=0; i<leaves.length; i++) {
+        var leaf = leaves[i];
+
+        if (i === 0) {
+          startLeaf = leaf;
+
+        } else if (leaf.label !== startLeaf.label ||
+                   leaf.filename !== startLeaf.filename ||
+                   leaf.linenum !== startLeaf.linenum ||
+                   leaf.depth !== startLeaf.depth)
+        {
+          addNewLeaf(startLeaf, lastLeaf, collectedChildren);
+
+          collectedChildren = [];
+          startLeaf = leaf;
+        }
+
+        collectedChildren = collectedChildren.concat(leaf.children);
+        lastLeaf = leaf;
+      }
+
+      // Add the last one, if there were any at all
+      if (i !== 0) {
+        addNewLeaf(startLeaf, lastLeaf, collectedChildren);
+      }
+
+      tree.children = newLeaves;
+      return tree;
     }
 
-    // Un-nest (flatten) the data
-    data = d3.merge(data);
+    // Given a tree, pull out all the leaves and put them in a flat array
+    function treeToArray(tree) {
+      var allLeaves = [];
 
-    return data;
+      function pushLeaves(leaf) {
+        allLeaves.push(leaf);
+        leaf.children.forEach(pushLeaves);
+      }
+
+      pushLeaves(tree);
+      return allLeaves;
+    }
   }
 
 
