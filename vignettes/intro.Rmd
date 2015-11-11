@@ -43,7 +43,7 @@ pre {
 
 As R users, many, perhaps most, of us have had times where we've wanted our code to run faster. However, it's not always clear how to accomplish this. A common approach is to rely on our intuitions, and on wisdom from the broader R community about speeding up R code. One drawback to this is it can lead to a focus on optimizing things that actually take a small proportion of the overall running time. Suppose you make a loop run 5 times faster. That sounds like a huge improvement, but if that loop only takes 10% of the total time, it's still only a 8% speedup overall. Another drawback is that, although many of the commonly-held beliefs are true (for example, preallocating memory can speed things up), some are not (e.g., that `*apply` functions are inherently faster than `for` loops). This can lead us to spend time doing "optimizations" that don't really help. To make slow code faster, we need accurate information about what is making our code slow.
 
-[Profvis](https://github.com/rstudio/profvis) is a tool for helping you to understand how R is spending its time. It provides a interactive graphical interface for visualizing data from `Rprof`, R's built-in tool for collecting profiling data. In this document, we'll see how to use profvis, and walk though two examples where we use it to help diagnose and fix performance problems.
+[Profvis](https://github.com/rstudio/profvis) is a tool for helping you to understand how R spends its time. It provides a interactive graphical interface for visualizing data from `Rprof`, R's built-in tool for collecting profiling data. In this document, we'll see how to use profvis, and walk though two examples where we use it to help diagnose and fix performance problems.
 
 
 ## Getting started
@@ -89,7 +89,7 @@ Profvis is interactive. You can try the following:
 
 Each *block* in the flame graph represents a call to a function, or possibly multiple calls to the same function. The width of the block is proportional to the amount of time spent in that function. When a function calls another function, another block is added on top of it in the flame graph.
 
-The profiling data has some limitations: some internal R functions don't show up in the flame graph, and it offers no insight into the code that's implemented in languages other than R (e.g. C, C++, or Fortran).
+The profiling data has some limitations: some internal R functions don't show up in the flame graph, and it offers no insight into code that's implemented in languages other than R (e.g. C, C++, or Fortran).
 
 
 ### How profiling data is collected
@@ -128,7 +128,7 @@ profvis({
 
 Most of the time is spent in the `apply` call, so that's the best candidate for a first pass at optimization. `apply` calls `as.matrix` and `aperm`. These two functions convert the data frame to a matrix and transpose it -- so even before we've done any useful computations, we've spent a large amount of time transforming the data.
 
-We could try to speed this up in a number of ways. One possibility is that we could simply leave the data in matrix form (instead of putting it in a data frame in line 4). That would remove for the `as.matrix` call, but it would still need `aperm` to transpose the data. It would also lose the connection of each row to the `id` column, which is undesirable. In any case, using `apply` over columns looks like it will be expensive because of the call to `aperm`.
+We could try to speed this up in a number of ways. One possibility is that we could simply leave the data in matrix form (instead of putting it in a data frame in line 4). That would remove the need for the `as.matrix` call, but it would still require `aperm` to transpose the data. It would also lose the connection of each row to the `id` column, which is undesirable. In any case, using `apply` over columns looks like it will be expensive because of the call to `aperm`.
 
 An obvious alternative is to use the `colMeans` function. But there's also another possibility. Data frames are implemented as lists of vectors, where each column is one vector, so we could use `lapply` or `vapply` to apply the `mean` function over each column. Let's compare the speed of these four different ways of getting column means. 
 
@@ -145,7 +145,7 @@ profvis({
 
 `colMeans` is about 6x faster than using `apply` with `mean`, but it looks like it's still using `as.matrix`, which takes a significant amount of time. `lapply`/`vapply`are faster yet -- about 10x faster than `apply`. `lapply` returns the values in a list, while `vapply` returns the values in a numeric vector, which is the form that we want, so it looks like `vapply` is the way to go for this part.
 
-(If you want finer-grained comparisons of code performance, you can use the [microbenchmark](https://cran.r-project.org/web/packages/microbenchmark/index.html) package. There's more information about microbenchmark in the  [profiling](http://adv-r.had.co.nz/Profiling.html#code-organisation) chapter of Hadley Wickham's book, Advanced R.)
+(If you want finer-grained comparisons of code performance, you can use the [microbenchmark](https://cran.r-project.org/web/packages/microbenchmark/index.html) package. There's more information about microbenchmark in the  [profiling](http://adv-r.had.co.nz/Profiling.html#code-organisation) chapter of Hadley Wickham's book, *Advanced R*.)
 
 Let's take the original code and replace `apply` with `vapply`:
 
@@ -160,7 +160,7 @@ profvis({
 }, height = "300px")
 ```
 
-Now our code is about 3x faster than the original version. Most of the time is spent on line 6, the majority of that in the `[<-` function. This function is usually called with syntax `x[i, j] <- y`, which is equivalent to `` `[<-`(x, i, j, y)``. In addition to being slow, the code is ugly: on each side of the assignment operator we're indexing into `data1` twice with `[`.
+Our code is about 3x faster than the original version. Most of the time is now spent on line 6, and the majority of that is in the `[<-` function. This is usually called with syntax `x[i, j] <- y`, which is equivalent to `` `[<-`(x, i, j, y)``. In addition to being slow, the code is ugly: on each side of the assignment operator we're indexing into `data1` twice with `[`.
 
 In this case, it's useful to take a step back and think about the broader problem. We want to normalize each column. Couldn't we we apply a function over the columns that does both steps, taking the mean and subtracting it? Because a data frame is a list, and we want to assign a list of values into the data frame, we'll need to use `lapply`.
 
