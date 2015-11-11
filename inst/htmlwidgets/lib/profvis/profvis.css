@@ -116,14 +116,21 @@ table.profvis-table th.filename {
 }
 
 table.profvis-table tr {
-  border-width: 1px 0;
+  border-top: 1px solid transparent;
+  border-bottom: 1px solid transparent;
   vertical-align: top;
 }
 
-table.profvis-table tr.locked {
-  border-width: 1px 0;
-  border-style: solid;
-  border-color: black;
+/* Need to use td for locked cells, so that the border color overrides the
+   border color from the row above. */
+table.profvis-table tr.locked > td {
+  border-top: 1px solid black;
+  border-bottom: 1px solid black;
+}
+
+table.profvis-table tr > td {
+  padding-top: 0;
+  padding-bottom: 0;
 }
 
 table.profvis-table tr.active {
