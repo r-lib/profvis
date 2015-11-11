@@ -1306,6 +1306,7 @@ profvis = (function() {
     var vis = {
       el: el,
       prof: prof,
+      profTree: getProfTree(prof),
       interval: message.interval,
       totalTime: getTotalTime(prof),
       files: message.files,
@@ -1658,6 +1659,20 @@ profvis = (function() {
       pushLeaves(tree);
       return allLeaves;
     }
+  }
+
+
+  // Given profiling data with parent-child information, get the root node.
+  function getProfTree(prof) {
+    if (prof.length === 0)
+      return null;
+
+    // Climb up to the top of the tree
+    var node = prof[0];
+    while (node.parent) {
+      node = node.parent;
+    }
+    return node;
   }
 
 
