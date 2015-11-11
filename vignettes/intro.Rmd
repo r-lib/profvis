@@ -20,6 +20,10 @@ img {
   box-shadow: 1px 2px 20px -5px;
 }
 
+pre {
+  background-color: inherit;
+}
+
 /* Sizing for knitr documents */
 .main-container {
  max-width: 100% !important;
@@ -419,7 +423,7 @@ profvis({
 
   # Does show in the flame graph
   pause(0.25)
-})
+}, height = "250px")
 ```
 
 Calls to external programs and libraries also may not show up in the profiling data. If you call functions from a package to fetch data from external sources, keep in mind that time spent in those functions may not show in the profiler.
@@ -483,7 +487,7 @@ profvis({
 
 For code that contains multi-line expressions like these, using curly braces will allow the profiler to identify the correct line where code is running.
 
-## What are some other resources for profiling R code?
+## Other resources for profiling R code
 
 Base R comes with the `Rprof` function (it's what `profvis` calls to collect profiling data) as well as the `summaryRprof` function for getting a human-readable summary of the profiling data collected by `Rprof`.
 

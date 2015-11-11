@@ -1,7 +1,7 @@
 Profvis
 =======
 
-Profvis is a tool for visualizing code profiling data from R. It creates a web page which provides a graphical interface for exploring the data. [Live demo](http://rpubs.com/wch/124655)
+Profvis is a tool for visualizing code profiling data from R. It creates a web page which provides a graphical interface for exploring the data. [Live demo](http://rpubs.com/wch/124655).
 
 
 ## Installation
