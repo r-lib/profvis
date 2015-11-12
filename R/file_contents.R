@@ -31,6 +31,12 @@ get_file_contents <- function(filenames, expr_source) {
 # `filename` will be something like:
 #   "/tmp/Rtmp6W0MLC/R.INSTALL1a531f3beb59/ggplot2/R/aes.r"
 extract_source_from_srcref <- function(filename) {
+  # Filename must have format "xxx/yyy/R/zzz.r", where the "xxx" part can be
+  # anything.
+  if (!grepl(".*/([^/]+)/R/[^/]+", filename)) {
+    return(NULL)
+  }
+
   # Name of package containing filename
   pkg <- sub(".*/([^/]+)/R/[^/]+", "\\1", filename)
 
