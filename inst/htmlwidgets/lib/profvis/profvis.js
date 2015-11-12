@@ -364,25 +364,28 @@ profvis = (function() {
       dims.width = el.clientWidth - dims.margin.left - dims.margin.right;
       dims.height = el.clientHeight - dims.margin.top - dims.margin.bottom;
 
-      var xDomain = [
-        d3.min(vis.prof, function(d) { return d.startTime; }),
-        d3.max(vis.prof, function(d) { return d.endTime; })
-      ];
-
-      var yDomain = [
-        d3.min(vis.prof, function(d) { return d.depth; }) - 1,
-        d3.max(vis.prof, function(d) { return d.depth; })
-      ];
+      var domains = {
+        x: [
+          d3.min(vis.prof, function(d) { return d.startTime; }),
+          d3.max(vis.prof, function(d) { return d.endTime; })
+        ],
+        y: [
+          d3.min(vis.prof, function(d) { return d.depth; }) - 1,
+          d3.max(vis.prof, function(d) { return d.depth; })
+        ]
+      };
+      // Slightly expand x domain
+      domains.x = expandRange(domains.x, zoomMargin);
 
       // Scales ---------------------------------------------------------------
       var scales = {
         x: d3.scale.linear()
-            .domain(expandRange(xDomain, zoomMargin))
+            .domain(domains.x)
             .range([0, dims.width]),
 
         y: d3.scale.linear()
-            .domain(yDomain)
-            .range([dims.height, dims.height - (yDomain[1] - yDomain[0]) * stackHeight]),
+            .domain(domains.y)
+            .range([dims.height, dims.height - (domains.y[1] - domains.y[0]) * stackHeight]),
 
         // This will be a function that, given a data point, returns the depth.
         // This function can change; sometimes it returns the original depth,
@@ -1015,20 +1018,32 @@ profvis = (function() {
       // For mousewheel zooming, we need to limit zoom amount. This is needed
       // because in Firefox, zoom increments are too big. To do this, we limit
       // scaleExtent before the first zoom event, and after each subsequent
-      // one. Then, at the end of the zooming, we can restore the extent to
-      // full range.
+      // one.
+      //
+      // When zooming out, there's an additional limit: never zoom out past
+      // the original zoom span. The reason it's necessary to calculate this
+      // each time, instead of simply setting the scaleExtent() so that the
+      // lower bound is 1, is because other zoom events (like
+      // dblclick.zoomcell) are able to change the domain of scales.x, without
+      // changing the value of zoom.scale(). This means that the relationship
+      // between the zoom.scale() does not have a fixed linear relationship to
+      // the span of scales.x, and we have to recalculate it.
       var maxZoomPerStep = 1.1;
+
+      function zoomOutLimit() {
+        var span = scales.x.domain()[1] - scales.x.domain()[0];
+        var startSpan = domains.x[1] - domains.x[0];
+        return Math.min(maxZoomPerStep, startSpan/span);
+      }
+
       var zoom = d3.behavior.zoom()
         .x(scales.x)
         .on("zoomstart", function() {
-          zoom.scaleExtent([zoom.scale() / maxZoomPerStep, zoom.scale() * maxZoomPerStep]);
+          zoom.scaleExtent([zoom.scale() / zoomOutLimit(), zoom.scale() * maxZoomPerStep]);
         })
         .on("zoom", function(e) {
           redrawImmediate();
-          zoom.scaleExtent([zoom.scale() / maxZoomPerStep, zoom.scale() * maxZoomPerStep]);
-        })
-        .on("zoomend", function() {
-          zoom.scaleExtent([0, Infinity]);
+          zoom.scaleExtent([zoom.scale() / zoomOutLimit(), zoom.scale() * maxZoomPerStep]);
         });
 
       // Register drag before zooming, because we need the drag to set the y
@@ -1052,7 +1067,7 @@ profvis = (function() {
         .on("dblclick.zoombackground", function() {
           savePrevScales();
 
-          scales.x.domain(expandRange(xDomain, zoomMargin));
+          scales.x.domain(domains.x);
           zoom.x(scales.x);
 
           redrawZoom(250);
