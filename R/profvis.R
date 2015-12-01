@@ -80,8 +80,6 @@ profvis <- function(expr = NULL, interval = 0.01, prof_output = NULL,
 
   message <- parse_rprof(prof_output, expr_source)
 
-  # Add sequences to collapse
-  message$collapseItems <- collapseItems()
   # Patterns to highlight on flamegraph
   message$highlight <- highlightPatterns()
 

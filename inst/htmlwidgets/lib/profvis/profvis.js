@@ -45,7 +45,7 @@ profvis = (function() {
 
       el.innerHTML =
         '<div role="button" class="hide-internal">' +
-          '<span class="settings-checkbox" data-checked="1">&#x2612;</span> Hide internal functions' +
+          '<span class="settings-checkbox" data-checked="1">&#x2612;</span> Hide internal functions for Shiny' +
         '</div>' +
         '<div role="button" class="hide-zero-row">' +
           '<span class="settings-checkbox" data-checked="0">&#x2610;</span> Hide lines of code with zero time' +
@@ -1301,7 +1301,7 @@ profvis = (function() {
     }
 
 
-    var prof = prepareProfData(message.prof, message.interval, message.collapseItems);
+    var prof = prepareProfData(message.prof, message.interval);
 
     var vis = {
       el: el,
@@ -1310,7 +1310,6 @@ profvis = (function() {
       interval: message.interval,
       totalTime: getTotalTime(prof),
       files: message.files,
-      collapseItems: message.collapseItems,
       aggLabelTimes: getAggregatedLabelTimes(prof),
       fileLineTimes: getFileLineTimes(prof, message.files, false),
 
@@ -1462,13 +1461,13 @@ profvis = (function() {
     return fileLineTimes;
   }
 
-  function prepareProfData(prof, interval, collapseItems) {
+  function prepareProfData(prof, interval) {
     // Convert object-with-arrays format prof data to array-of-objects format
     var data = colToRows(prof);
-    data = addCollapsedDepth(data, collapseItems);
     data = addParentChildLinks(data);
     data = consolidateRuns(data);
     data = applyInterval(data, interval);
+    data = findCollapsedDepths(data);
 
     return data;
   }
@@ -1505,45 +1504,6 @@ profvis = (function() {
     });
 
     return labelTimes;
-  }
-
-  // Given profiling data and an array of function labels, remove samples
-  // that contain those labels.
-  function addCollapsedDepth(prof, collapseItems) {
-    var data = d3.nest()
-      .key(function(d) { return d.time; })
-      .rollup(function(leaves) {
-        leaves = leaves.sort(function(a, b) { return a.depth - b.depth; });
-
-        // Remove any leaves that have a label that's found in collapseItems.
-        var curDepth = leaves[0].depth;
-        leaves = leaves.map(function(leaf) {
-          // If the leaf's label matches any of the collapse items, remove it.
-          var inCollapseList = collapseItems.some(function(collapseItem) {
-            return collapseItem === leaf.label;
-          });
-
-          // Add what the depth of the call is when in collapsed view. (null
-          // means this call is hidden.)
-          if (inCollapseList) {
-            leaf.depthCollapsed = null;
-          } else {
-            leaf.depthCollapsed = curDepth;
-            curDepth++;
-          }
-
-          return leaf;
-        });
-
-        return leaves;
-      })
-      .map(prof);
-
-    // Un-nest (flatten) the data
-    // Convert from object of arrays to array of arrays
-    data = d3.map(data).values();
-    data = d3.merge(data);
-    return data;
   }
 
 
@@ -1673,6 +1633,38 @@ profvis = (function() {
       node = node.parent;
     }
     return node;
+  }
+
+
+  // Given profiling data, find depth of items after hiding items between
+  // items with labels "..stacktraceoff.." and "..stacktraceon..". Modifies
+  // data in place.
+  function findCollapsedDepths(data) {
+    var tree = getProfTree(data);
+    calculateDepths(tree, tree.depth, 0);
+    return data;
+
+    function calculateDepths(node, curCollapsedDepth, stacktraceOffCount) {
+      if (node.label === "..stacktraceoff..") {
+        stacktraceOffCount++;
+      }
+
+      if (stacktraceOffCount > 0) {
+        node.depthCollapsed = null;
+      } else {
+        node.depthCollapsed = curCollapsedDepth;
+        curCollapsedDepth++;
+      }
+
+      if (node.label === "..stacktraceon..") {
+        stacktraceOffCount--;
+      }
+
+      // Recurse
+      node.children.forEach(function(x) {
+        calculateDepths(x, curCollapsedDepth, stacktraceOffCount);
+      });
+    }
   }
 
 
