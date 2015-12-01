@@ -10,7 +10,7 @@ dependencies:
     script:
       - d3.min.js
   - name: profvis
-    version: 0.1.0.9000
+    version: 0.1.0.9001
     src: "htmlwidgets/lib/profvis"
     script: profvis.js
     stylesheet: profvis.css
