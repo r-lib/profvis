@@ -82,6 +82,18 @@ profvis = (function() {
           }
         });
 
+      // Make the "hide internal" option available or unavailable to users
+      function enableHideInternal() {
+        $el.find(".hide-internal").css("display", "");
+      }
+      function disableHideInternal() {
+        $el.find(".hide-internal").css("display", "none");
+      }
+      // By default, start with it unavailable; it's only relevant for Shiny
+      // apps.
+      disableHideInternal();
+
+
       $el.find(".hide-zero-row")
         .on("click", function() {
           var checked = toggleCheckbox($(this).find(".settings-checkbox"));
@@ -127,7 +139,9 @@ profvis = (function() {
       return {
         el: el,
         setOffset: setOffset,
-        toggleVisibility: toggleVisibility
+        toggleVisibility: toggleVisibility,
+        enableHideInternal: enableHideInternal,
+        disableHideInternal: disableHideInternal
       };
     }
 
@@ -1360,6 +1374,11 @@ profvis = (function() {
     vis.codeTable = generateCodeTable(codeTableEl);
     vis.flameGraph = generateFlameGraph(flameGraphEl);
     vis.infoBox = initInfoBox(infoBoxEl);
+
+    // If any depth collapsing occured, enable the "hide internal" checkbox.
+    if (prof.some(function(d) { return d.depth !== d.depthCollapsed; })) {
+      vis.settingsPanel.enableHideInternal();
+    }
 
     // Start with scrolling disabled because of mousewheel scrolling issue
     disableScroll();
