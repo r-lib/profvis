@@ -390,26 +390,38 @@ profvis({
 ```
 
 
-### Why does the flame graph hide some function calls?
+### Why does the flame graph hide some function calls for Shiny apps?
 
-The flame graph will, by default, hide some function calls. They're hidden because they aren't particularly informative for optimizing code, and they add visual complexity. For example, `try`, `tryCatch`, and related functions are hidden by default.
+When profiling [Shiny](http://shiny.rstudio.com/) applications, the profvis flame graph will hide many function calls by default. They're hidden because they aren't particularly informative for optimizing code, and they add visual complexity. This feature requires Shiny 0.12.2.9006 or greater and profvis 0.1.0.9001 or greater.
 
-If you want to see these hidden blocks, uncheck **Settings** -> **Hide internal functions**:
+If you want to see these hidden blocks, uncheck **Settings** -> **Hide internal functions for Shiny**:
 
-```{r fig.show="hide"}
-profvis({
-  try_seq_len <- function(n) {
-    try({
-      seq_len(n)
-    }, silent = TRUE)
-  }
-  for (i in runif(1e4, min = -10, max = 100)) {
-    try_seq_len(i)
-  }
-}, height = "300px")
+```{r echo=FALSE, eval=FALSE}
+# This code block is what we actually run. It must be run manually each time
+# this is updated.
+# The next block is what we show to the readers.
+library(shiny)
+p <- profvis({
+  runExample("06_tabsets", display.mode = "normal")
+})
+saveRDS(p, "vignettes/shinyapp.rds")
 ```
 
-You can see the list of hidden items [here](https://github.com/rstudio/profvis/blob/master/R/collapse.R#L3-L20). This list may change in the near future.
+```{r eval=FALSE}
+library(shiny)
+profvis({
+  # After this app has started, interact with it a bit, then quit
+  runExample("06_tabsets", display.mode = "normal")
+})
+```
+
+```{r echo=FALSE}
+# This block loads the data from the first block and shows the correct output
+# for the readers.
+readRDS("shinyapp.rds")
+```
+
+To make the hiding work, Shiny has special functions called `..stacktraceon..` and  `..stacktraceoff..`. Profvis goes up the stack, and when it sees a `..stacktraceoff..`, it will hide all function calls until it sees a corresponding `..stacktraceon..`. If there are nukltiple `..stacktraceoff..` calls in the stack, it requires an equal number of `..stacktraceon..` calls before it starts displaying function calls again.
 
 
 ### Why does `Sys.sleep()` not show up in profiler data?
