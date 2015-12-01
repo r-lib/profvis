@@ -198,12 +198,19 @@ table.profvis-table .timebar-cell > .timebar {
   fill: #fdb;
 }
 
-.profvis-flamegraph .cell.shaded .rect {
+.profvis-flamegraph .cell.output .rect {
   fill: #eef;
 }
 
 .profvis-flamegraph .cell.gc .rect {
   fill: #ccc;
+}
+
+.profvis-flamegraph .cell.stacktrace .rect {
+  fill: #eee;
+}
+.profvis-flamegraph .cell.stacktrace .profvis-label {
+  fill: #666;
 }
 
 .profvis-flamegraph .cell.locked {

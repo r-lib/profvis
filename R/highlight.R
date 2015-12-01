@@ -3,7 +3,8 @@
 # of these names, there should be a corresponding CSS class in profvis.css.
 highlightPatterns <- function() {
   list(
-    shaded = list("^output\\$"),
-    gc = list("^<GC>$")
+    output = list("^output\\$"),
+    gc = list("^<GC>$"),
+    stacktrace = list("^\\.\\.stacktraceo(n|ff)\\.\\.$")
   )
 }
