@@ -1825,5 +1825,11 @@ profvis = (function() {
     };
   }
 
+  $(document).ready(function() {
+    $('td.code').each(function(i, block) {
+      hljs.highlightBlock(block);
+    });
+  });
+
   return profvis;
 })();
