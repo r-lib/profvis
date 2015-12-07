@@ -1827,6 +1827,7 @@ profvis = (function() {
 
   $(document).ready(function() {
     $('td.code').each(function(i, block) {
+      $(this).addClass("r");
       hljs.highlightBlock(block);
     });
   });
