@@ -7,7 +7,7 @@
   curly:false,
   indent:2
 */
-/*global profvis:true, d3 */
+/*global profvis:true, d3, hljs */
 
 profvis = (function() {
   var profvis = {};
@@ -186,8 +186,9 @@ profvis = (function() {
         .text(function(d) { return d.linenum; });
 
       rows.append("td")
-        .attr("class", "code")
-        .text(function(d) { return d.content; });
+        .attr("class", "code r")
+        .text(function(d) { return d.content; })
+        .each(function() { hljs.highlightBlock(this); });
 
       rows.append("td")
         .attr("class", "time")

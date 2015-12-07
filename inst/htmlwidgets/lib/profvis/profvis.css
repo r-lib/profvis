@@ -151,6 +151,7 @@ table.profvis-table .code {
   width: 640px;
   max-width: 640px;
   font-family: monospace;
+  background: transparent;
 }
 
 

@@ -14,3 +14,8 @@ dependencies:
     src: "htmlwidgets/lib/profvis"
     script: profvis.js
     stylesheet: profvis.css
+  - name: highlight
+    version: 6.2.0
+    src: "htmlwidgets/lib/highlight"
+    script: highlight.js
+    stylesheet: textmate.css
