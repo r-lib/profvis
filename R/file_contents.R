@@ -20,7 +20,7 @@ get_file_contents <- function(filenames, expr_source) {
     }
     on.exit( close(filehandle) )
 
-    readChar(filename, 1e6)
+    readChar(filename, file.info(filename)$size, useBytes = TRUE)
   })
 
   drop_nulls(file_contents)
