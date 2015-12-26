@@ -415,7 +415,7 @@ profvis({
 })
 ```
 
-```{r echo=FALSE}
+```{r echo=FALSE, eval = FALSE}
 # This block loads the data from the first block and shows the correct output
 # for the readers.
 readRDS("shinyapp.rds")
