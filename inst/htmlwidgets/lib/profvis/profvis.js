@@ -181,9 +181,11 @@ profvis = (function() {
           .append("tr")
           .attr("class", "code-row");
 
+      // Use pseudo-content and CSS content rule to make text unselectable and
+      // uncopyable. See https://danoc.me/blog/css-prevent-copy/
       rows.append("td")
         .attr("class", "linenum")
-        .text(function(d) { return d.linenum; });
+        .attr("data-pseudo-content", function(d) { return d.linenum; });
 
       rows.append("td")
         .attr("class", "code r")
@@ -192,11 +194,13 @@ profvis = (function() {
 
       rows.append("td")
         .attr("class", "time")
-        .text(function(d) { return (Math.round(d.sumTime * 100) / 100); });
+        .attr("data-pseudo-content",
+              function(d) { return (Math.round(d.sumTime * 100) / 100); });
 
       rows.append("td")
         .attr("class", "percent")
-        .text(function(d) { return Math.round(d.sumTime/vis.totalTime * 100); });
+        .attr("data-pseudo-content",
+              function(d) { return Math.round(d.sumTime/vis.totalTime * 100); });
 
       rows.append("td")
         .attr("class", "timebar-cell")
@@ -205,7 +209,8 @@ profvis = (function() {
           .style("width", function(d) {
             return Math.round(d.propTime * 100) + "%";
           })
-          .html("&nbsp;");
+          // Add the equivalent of &nbsp; to be added with CSS content
+          .attr("data-pseudo-content", "\u00a0");
 
       rows
         .on("click", function(d) {

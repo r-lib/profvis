@@ -143,6 +143,11 @@ table.profvis-table .linenum {
   font-family: monospace;
 }
 
+/* For unselectable and uncopyable text elements in table */
+table.profvis-table [data-pseudo-content]::before {
+  content: attr(data-pseudo-content);
+}
+
 table.profvis-table .code {
   white-space: pre-wrap;
   margin: 0;
