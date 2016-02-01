@@ -115,7 +115,7 @@ parse_rprof <- function(path = "Rprof.out", expr_source = NULL) {
   prof_data$filename <- trim_filenames(prof_data$filename)
   names(file_contents) <- trim_filenames(names(file_contents))
 
-  # Remove srcref info from the prof_data in casens where no file is present.
+  # Remove srcref info from the prof_data in cases where no file is present.
   no_file_idx <- !(prof_data$filename %in% names(file_contents))
   prof_data$filename[no_file_idx] <- NA
   prof_data$filenum[no_file_idx] <- NA
@@ -128,10 +128,13 @@ parse_rprof <- function(path = "Rprof.out", expr_source = NULL) {
   # don't have any useful information about them.
   prof_data <- prof_data[!(is.na(prof_data$label) & no_file_idx), ]
 
-
   # Add labels for where there's a srcref but no function on the call stack.
   # This can happen for frames at the top level.
   prof_data <- insert_code_line_labels(prof_data, file_contents)
+
+  # Remove references to <expr> when the source for a given exprression was
+  # outside of the profvis({}) call.
+  prof_data <- prune_expr_mismatch(prof_data, file_contents[["<expr>"]])
 
   # Convert file_contents to a format suitable for client
   file_contents <- mapply(names(file_contents), file_contents,
@@ -182,4 +185,38 @@ trim_filenames <- function(filenames) {
   filenames <- sub("^.*?([^/]+/(R|inst)/.*\\.R$)", "\\1", filenames, ignore.case = TRUE)
 
   filenames
+}
+
+# Some rows of data will have <expr> as the source ref, but the source they
+# refer to was actually outside of the profvis({}) call, so we don't have
+# access to the source. We'll filter out those rows by using this heuristic: if
+# the label on that row is not found in the line of <expr> text, then we don't
+# have the expr for it. This isn't perfect, but it should be right in the vast
+# majority of cases, and it's probably the best we can do.
+# https://github.com/rstudio/profvis/issues/15
+prune_expr_mismatch <- function(prof_data, expr_source) {
+  if (is.null(expr_source)) {
+    expr_source <- ""
+  }
+  expr <- strsplit(expr_source, "\n")[[1]]
+
+  # Only look at entries from <expr>, pull out relevant columns, and
+  # deduplicate.
+  p <- prof_data[!is.na(prof_data$filename) & prof_data$filename == "<expr>",
+                 c("label", "linenum", "filename")]
+  p <- unique(p)
+
+  # Now make sure that each entry actually matches text in expr
+  p$match <- NA
+  for (i in seq_len(nrow(p))) {
+    label <- p$label[i]
+    expr_line <- expr[p$linenum[i]]
+    p$match[i] <- grepl(label, expr_line, fixed = TRUE)
+  }
+
+  # Merge back with original data. The match column now tells us which rows we
+  # we don't actually have source references for.
+  p <- merge(prof_data, p, all.x = TRUE, sort = FALSE)
+  p[!is.na(p$match) & p$match == FALSE, c("linenum", "filename", "filenum")] <- NA
+  p
 }
