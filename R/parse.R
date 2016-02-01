@@ -45,7 +45,8 @@ parse_rprof <- function(path = "Rprof.out", expr_source = NULL) {
   prof_data <- gsub('^"<GC>",', '"<GC>" ', prof_data)
 
   # Remove frames related to profvis itself, and all frames below it on the stack.
-  prof_data <- sub(' *"force"(?!.*"force").*"profvis".*$', '', prof_data, perl = TRUE)
+  prof_data <- sub(' *"force"(?!.*"force").*"(profvis::)?profvis".*$', '',
+                   prof_data, perl = TRUE)
 
   prof_data <- str_split(prof_data, fixed(" "))
 
