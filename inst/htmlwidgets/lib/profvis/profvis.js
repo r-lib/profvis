@@ -1520,15 +1520,40 @@ profvis = (function() {
   // Calculate the total amount of time spent in each function label
   function getAggregatedLabelTimes(prof) {
     var labelTimes = {};
-    prof.map(function(d) {
-      var label = d.label;
-      if (labelTimes[label] === undefined)
-        labelTimes[label] = 0;
-
-      labelTimes[label] += d.endTime - d.startTime;
-    });
+    var tree = getProfTree(prof);
+    calcLabelTimes(tree);
 
     return labelTimes;
+
+    // Traverse the tree with the following strategy:
+    // * Check if current label is used in an ancestor.
+    //   * If yes, don't add to times for that label.
+    //   * If no, do add to times for that label.
+    // * Recurse into children.
+    function calcLabelTimes(node) {
+      var label = node.label;
+      if (!ancestorHasLabel(label, node.parent)) {
+        if (labelTimes[label] === undefined)
+          labelTimes[label] = 0;
+
+        labelTimes[label] += node.endTime - node.startTime;
+      }
+
+      node.children.forEach(calcLabelTimes);
+    }
+
+    // Returns true if the given node or one of its ancestors has the given
+    // label; false otherwise.
+    function ancestorHasLabel(label, node) {
+      if (node) {
+        if (node.label === label) {
+          return true;
+        }
+        return ancestorHasLabel(label, node.parent);
+      } else {
+        return false;
+      }
+    }
   }
 
 
