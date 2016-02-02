@@ -1430,8 +1430,15 @@ profvis = (function() {
       .key(function(d) { return d.linenum; })
       .rollup(function(leaves) {
         var sumTime = leaves.reduce(function(sum, d) {
-            return sum + d.endTime - d.startTime;
-          }, 0);
+          // Add this node's time only if no ancestor node has the same
+          // filename and linenum. This is to avoid double-counting times for
+          // a line.
+          var incTime = 0;
+          if (!ancestorHasFilenameLinenum(d.filename, d.linenum, d.parent)) {
+            incTime = d.endTime - d.startTime;
+          }
+          return sum + incTime;
+        }, 0);
 
         return {
           filename: leaves[0].filename,
@@ -1470,6 +1477,18 @@ profvis = (function() {
     });
 
     return fileLineTimes;
+
+    // Returns true if the given node or one of its ancestors has the given
+    // filename and linenum; false otherwise.
+    function ancestorHasFilenameLinenum(filename, linenum, node) {
+      if (!node) {
+        return false;
+      }
+      if (node.filename === filename && node.linenum === linenum) {
+        return true;
+      }
+      return ancestorHasFilenameLinenum(filename, linenum, node.parent);
+    }
   }
 
   function prepareProfData(prof, interval) {
