@@ -1331,7 +1331,7 @@ profvis = (function() {
       totalTime: getTotalTime(prof),
       files: message.files,
       aggLabelTimes: getAggregatedLabelTimes(prof),
-      fileLineTimes: getFileLineTimes(prof, message.files, false),
+      fileLineTimes: getFileLineTimes(prof, message.files),
 
       // Objects representing each component
       statusBar: null,
@@ -1397,10 +1397,7 @@ profvis = (function() {
 
   // Calculate amount of time spent on each line of code. Returns nested objects
   // grouped by file, and then by line number.
-  // If dropZero is true, drop the lines that have zero time.
-  function getFileLineTimes(prof, files, dropZero) {
-    dropZero = (dropZero === undefined ? false : dropZero);
-
+  function getFileLineTimes(prof, files) {
     // Drop entries with null or "" filename
     prof = prof.filter(function(row) {
       return row.filename !== null && row.filename !== "";
@@ -1456,17 +1453,6 @@ profvis = (function() {
         fileLineData[lineInfo.linenum - 1].sumTime = lineInfo.sumTime;
       });
     });
-
-
-    if (dropZero) {
-      fileLineTimes = fileLineTimes.map(function(lines) {
-        lines.lineData = lines.lineData.filter(function(line) {
-          return line.sumTime > 0;
-        });
-
-        return lines;
-      });
-    }
 
     // Calculate proportional times, relative to the longest time in the data
     // set. Modifies data in place.
