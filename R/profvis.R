@@ -11,9 +11,11 @@
 #' @param expr Code to profile. Not compatible with \code{prof_input}.
 #' @param interval Interval for profiling samples, in seconds. Values less than
 #'   0.005 (5 ms) will probably not result in accurate timings
-#' @param prof_output Name of an Rprof output file in which to save profiling
-#'   data. If \code{NULL} (the default), a temporary file will be used and
-#'   automatically removed when the function exits.
+#' @param prof_output Name of an Rprof output file or directory in which to save
+#'   profiling data. If \code{NULL} (the default), a temporary file will be used
+#'   and automatically removed when the function exits. For a directory, a
+#'   random filename is used.
+#'
 #' @param prof_input The path to an \code{\link{Rprof}} data file.  Not
 #'   compatible with \code{expr} or \code{prof_output}.
 #' @param width Width of the htmlwidget.
@@ -48,10 +50,17 @@ profvis <- function(expr = NULL, interval = 0.01, prof_output = NULL,
     # vector. Make sure it's a single string.
     expr_source <- paste(expr_source, collapse = "\n")
 
+    if (is.null(prof_output) && !is.null(getOption("profvis.prof_output")))
+      prof_output <- getOption("profvis.prof_output")
+
     remove_on_exit <- FALSE
     if (is.null(prof_output)) {
       prof_output <- tempfile(fileext = ".prof")
       remove_on_exit <- TRUE
+    }
+    else {
+      if (dir.exists(prof_output))
+        prof_output <- tempfile(fileext = ".prof", tmpdir = prof_output)
     }
 
     gc()
@@ -79,6 +88,7 @@ profvis <- function(expr = NULL, interval = 0.01, prof_output = NULL,
   }
 
   message <- parse_rprof(prof_output, expr_source)
+  message$prof_output <- prof_output
 
   # Patterns to highlight on flamegraph
   message$highlight <- highlightPatterns()

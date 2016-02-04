@@ -207,6 +207,11 @@ prune_expr_mismatch <- function(prof_data, expr_source) {
                  c("label", "linenum", "filename")]
   p <- unique(p)
 
+  # Allow profiles with no sources and no <exprs> to be parsed
+  if (nrow(p) == 0) {
+    return (prof_data)
+  }
+
   # Now make sure that each entry actually matches text in expr
   p$match <- NA
   for (i in seq_len(nrow(p))) {
