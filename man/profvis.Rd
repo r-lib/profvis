@@ -13,9 +13,10 @@ profvis(expr = NULL, interval = 0.01, prof_output = NULL,
 \item{interval}{Interval for profiling samples, in seconds. Values less than
 0.005 (5 ms) will probably not result in accurate timings}
 
-\item{prof_output}{Name of an Rprof output file in which to save profiling
-data. If \code{NULL} (the default), a temporary file will be used and
-automatically removed when the function exits.}
+\item{prof_output}{Name of an Rprof output file or directory in which to save
+profiling data. If \code{NULL} (the default), a temporary file will be used
+and automatically removed when the function exits. For a directory, a
+random filename is used.}
 
 \item{prof_input}{The path to an \code{\link{Rprof}} data file.  Not
 compatible with \code{expr} or \code{prof_output}.}
