@@ -153,7 +153,7 @@ profvis = (function() {
           file: d.filename,
           line: d.linenum,
           details: ""
-        }, "*");
+        }, window.location.origin);
       }
     }
 
