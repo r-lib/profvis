@@ -145,6 +145,18 @@ profvis = (function() {
       };
     }
 
+    function notifySourceFileMessage(d) {
+      if (window.parent.postMessage) {
+        window.parent.postMessage({
+          source: "profvis",
+          message: "sourcefile",
+          file: d.filename,
+          line: d.linenum,
+          details: ""
+        }, window.location.origin);
+      }
+    }
+
     // Generate the code table ----------------------------------------
     function generateCodeTable(el) {
       var content = d3.select(el);
@@ -229,6 +241,9 @@ profvis = (function() {
           if (highlighter.isLocked()) return;
 
           highlighter.hover(null);
+        })
+        .on("dblclick", function(d) {
+          notifySourceFileMessage(d);
         });
 
       function hideZeroTimeRows() {
@@ -902,6 +917,8 @@ profvis = (function() {
             zoom.x(scales.x);
 
             redrawZoom(250);
+
+            notifySourceFileMessage(d);
           });
 
         return cells;
