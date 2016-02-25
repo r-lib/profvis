@@ -34,12 +34,37 @@
 
 .profvis-panel2-vertical {
   top: 10px;
-  left: 520px;
+  left: 522px;
 }
 
 .profvis-panel2-horizontal {
   left: 10px;
   top: 422px;
+}
+
+.profvis-splitbar {
+  position: absolute;
+  background: #eee;
+  border-color: #ddd;
+  border-style: solid;
+}
+
+.profvis-splitbar-vertical {
+  cursor: col-resize;
+  left: 513px;
+  width: 4px;
+  top: 10px;
+  bottom: 10px;
+  border-width: 0 1px;
+}
+
+.profvis-splitbar-horizontal {
+  cursor: row-resize;
+  top: 413px;
+  height: 4px;
+  left: 10px;
+  right: 10px;
+  border-width: 1px 0;
 }
 
 .profvis-status-bar {
@@ -102,31 +127,6 @@
   overflow-y: scroll;
   border: 1px solid #ddd;
   border-radius: 4px;
-}
-
-.profvis-splitbar {
-  position: absolute;
-  background: #eee;
-  border-color: #ddd;
-  border-style: solid;
-}
-
-.profvis-splitbar-vertical {
-  cursor: col-resize;
-  left: 512px;
-  width: 4px;
-  top: 10px;
-  bottom: 10px;
-  border-width: 0 1px;
-}
-
-.profvis-splitbar-horizontal {
-  cursor: row-resize;
-  top: 412px;
-  height: 4px;
-  left: 10px;
-  right: 10px;
-  border-width: 1px 0;
 }
 
 .profvis-flamegraph {

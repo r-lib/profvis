@@ -1196,42 +1196,72 @@ profvis = (function() {
     // Set up resizing --------------------------------------------------------
     // Resize left and right sides to 50% of available space and add callback
     // for window resizing.
-    function initResizing() {
+    function initResizing(splitDir) {
       var $el = $(vis.el);
       var $panel1 = $el.children(".profvis-panel1");
       var $panel2 = $el.children(".profvis-panel2");
       var $splitBar = $el.children(".profvis-splitbar");
 
-      // Record the gap between the split bar and the objects to left and right
-      var splitBarGap = {
-        left: $splitBar.offset().left - offsetRight($panel1),
-        right: $panel2.offset().left - offsetRight($splitBar)
-      };
-
-      // Capture the initial distance from the left and right of container element
-      var margin = {
-        left: $panel1.position().left,
-        right: $el.innerWidth() - positionRight($panel2)
-      };
-
+      var splitBarGap;
+      var margin;
       // Record the proportions from the previous call to resizePanels. This is
       // needed when we resize the window to preserve the same proportions.
       var lastSplitProportion;
 
+      if (splitDir === "v") {
+        // Record the gap between the split bar and the objects to left and right
+        splitBarGap = {
+          left: $splitBar.offset().left - offsetRight($panel1),
+          right: $panel2.offset().left - offsetRight($splitBar)
+        };
+
+        // Capture the initial distance from the left and right of container element
+        margin = {
+          left: $panel1.position().left,
+          right: $el.innerWidth() - positionRight($panel2)
+        };
+
+      } else if (splitDir === "h") {
+        splitBarGap = {
+          top: $splitBar.offset().top - offsetBottom($panel1),
+          bottom: $panel2.offset().top - offsetBottom($splitBar)
+        };
+
+        margin = {
+          top: $panel1.position().top,
+          bottom: $el.innerWidth() - positionBottom($panel2)
+        };
+      }
+
       // Resize the panels. splitProportion is a number from 0-1 representing the
       // horizontal position of the split bar.
       function resizePanels(splitProportion) {
-        var innerWidth = offsetRight($panel2) - $panel1.offset().left;
+        if (splitDir === "v") {
+          var innerWidth = offsetRight($panel2) - $panel1.offset().left;
 
-        $splitBar.offset({
-          left: $panel1.offset().left + innerWidth * splitProportion -
-                $splitBar.outerWidth()/2
-        });
+          $splitBar.offset({
+            left: $panel1.offset().left + innerWidth * splitProportion -
+                  $splitBar.outerWidth()/2
+          });
 
-        // Size and position the panels
-        $panel1.outerWidth($splitBar.position().left - splitBarGap.left -
-                           margin.left);
-        $panel2.offset({ left: offsetRight($splitBar) + splitBarGap.right });
+          // Size and position the panels
+          $panel1.outerWidth($splitBar.position().left - splitBarGap.left -
+                             margin.left);
+          $panel2.offset({ left: offsetRight($splitBar) + splitBarGap.right });
+
+        } else if (splitDir === "h") {
+          var innerHeight = offsetBottom($panel2) - $panel1.offset().top;
+
+          $splitBar.offset({
+            top: $panel1.offset().top + innerHeight * splitProportion -
+                 $splitBar.outerHeight()/2
+          });
+
+          // Size and position the panels
+          $panel1.outerHeight($splitBar.position().top - splitBarGap.top -
+                             margin.top);
+          $panel2.offset({ top: offsetBottom($splitBar) + splitBarGap.bottom });
+        }
 
         lastSplitProportion = splitProportion;
       }
@@ -1250,10 +1280,20 @@ profvis = (function() {
 
       // Get current proportional position of split bar
       function splitProportion() {
-        var splitCenter = $splitBar.offset().left - $panel1.offset().left +
-                          $splitBar.outerWidth()/2;
-        var innerWidth = offsetRight($panel2) - $panel1.offset().left;
-        return splitCenter / innerWidth;
+        var splitCenter;
+
+        if (splitDir === "v") {
+          splitCenter = $splitBar.offset().left - $panel1.offset().left +
+                            $splitBar.outerWidth()/2;
+          var innerWidth = offsetRight($panel2) - $panel1.offset().left;
+          return splitCenter / innerWidth;
+
+        } else if (splitDir === "h") {
+          splitCenter = $splitBar.offset().top - $panel1.offset().top +
+                            $splitBar.outerHeight()/2;
+          var innerHeight = offsetBottom($panel2) - $panel1.offset().top;
+          return splitCenter / innerHeight;
+        }
       }
 
       function positionRight($el) {
@@ -1262,12 +1302,22 @@ profvis = (function() {
       function offsetRight($el) {
         return $el.offset().left + $el.outerWidth();
       }
+      function positionBottom($el) {
+        return $el.position().top + $el.outerHeight();
+      }
+      function offsetBottom($el) {
+        return $el.offset().top + $el.outerHeight();
+      }
 
       // Enable dragging of the split bar ---------------------------------------
       (function() {
         var dragging = false;
+        // For vertical split (left-right dragging)
         var startDragX;
         var startOffsetLeft;
+        // For horizontal split (up-down dragging)
+        var startDragY;
+        var startOffsetTop;
 
         var stopDrag = function(e) {
           if (!dragging) return;
@@ -1278,8 +1328,10 @@ profvis = (function() {
 
           $splitBar.css("opacity", "");
 
-          var dx = e.pageX - startDragX;
-          if (dx === 0) return;
+          if ((splitDir === "v" && e.pageX - startDragX === 0) ||
+              (splitDir === "h" && e.pageY - startDragY === 0)) {
+            return;
+          }
 
           resizePanels(splitProportion());
           vis.flameGraph.onResize();
@@ -1293,8 +1345,13 @@ profvis = (function() {
 
           $splitBar.css("opacity", 0.75);
 
-          startDragX = e.pageX;
-          startOffsetLeft = $splitBar.offset().left;
+          if (splitDir === "v") {
+            startDragX = e.pageX;
+            startOffsetLeft = $splitBar.offset().left;
+          } else {
+            startDragY = e.pageY;
+            startOffsetTop = $splitBar.offset().top;
+          }
 
           document.addEventListener("mousemove", drag);
           document.addEventListener("mouseup", stopDrag);
@@ -1304,11 +1361,22 @@ profvis = (function() {
           if (!dragging) return;
           pauseEvent(e);
 
-          var dx = e.pageX - startDragX;
-          if (dx === 0) return;
+          if (splitDir === "v") {
+            var dx = e.pageX - startDragX;
+            if (dx === 0)
+              return;
 
-          // Move the split bar
-          $splitBar.offset({ left: startOffsetLeft + dx });
+            // Move the split bar
+            $splitBar.offset({ left: startOffsetLeft + dx });
+
+          } else if (splitDir === "h") {
+            var dy = e.pageY - startDragY;
+            if (dy === 0)
+              return;
+
+            // Move the split bar
+            $splitBar.offset({ top: startOffsetTop + dy });
+          }
         };
 
         // Stop propogation so that we don't select text while dragging
@@ -1398,7 +1466,7 @@ profvis = (function() {
 
     // Efficient to properly size panels before the code + flamegraph are
     // rendered, so that we don't have to re-render.
-    initResizing();
+    initResizing(message.split);
 
     // Create the UI components
     vis.statusBar = generateStatusBar(statusBarEl);
