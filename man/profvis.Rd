@@ -5,7 +5,7 @@
 \title{Profile an R expression and visualize profiling data}
 \usage{
 profvis(expr = NULL, interval = 0.01, prof_output = NULL,
-  prof_input = NULL, width = NULL, height = NULL)
+  prof_input = NULL, width = NULL, height = NULL, split = c("v", "h"))
 }
 \arguments{
 \item{expr}{Code to profile. Not compatible with \code{prof_input}.}
@@ -24,6 +24,10 @@ compatible with \code{expr} or \code{prof_output}.}
 \item{width}{Width of the htmlwidget.}
 
 \item{height}{Height of the htmlwidget}
+
+\item{split}{Direction of split. Either \code{"v"} (the default) for
+vertical, or \code{"h"} for horizontal. This is the orientation of the
+split bar.}
 }
 \description{
 This function will run an R expression with profiling, and then return an

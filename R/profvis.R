@@ -20,6 +20,9 @@
 #'   compatible with \code{expr} or \code{prof_output}.
 #' @param width Width of the htmlwidget.
 #' @param height Height of the htmlwidget
+#' @param split Direction of split. Either \code{"v"} (the default) for
+#'   vertical, or \code{"h"} for horizontal. This is the orientation of the
+#'   split bar.
 #'
 #' @seealso \code{\link{print.profvis}} for printing options.
 #' @seealso \code{\link{Rprof}} for more information about how the profiling
@@ -28,8 +31,10 @@
 #' @import htmlwidgets
 #' @export
 profvis <- function(expr = NULL, interval = 0.01, prof_output = NULL,
-                    prof_input = NULL, width = NULL, height = NULL)
+                    prof_input = NULL, width = NULL, height = NULL,
+                    split = c("v", "h"))
 {
+  split <- match.arg(split)
   expr_q <- substitute(expr)
 
   if (is.null(prof_input) && is.null(expr_q)) {
@@ -93,6 +98,7 @@ profvis <- function(expr = NULL, interval = 0.01, prof_output = NULL,
   # Patterns to highlight on flamegraph
   message$highlight <- highlightPatterns()
 
+  message$split <- split
 
   htmlwidgets::createWidget(
     name = 'profvis',
@@ -113,13 +119,20 @@ profvis <- function(expr = NULL, interval = 0.01, prof_output = NULL,
 
 #' Print a profvis object
 #'
+#' @inheritParams profvis
 #' @param x The object to print.
 #' @param viewer If \code{FALSE} (the default), display in an external web
 #'   browser. If \code{TRUE}, attempt to display in the RStudio viewer pane.
 #'   This can be useful for publishing profvis visualizations.
 #' @param ... Further arguments to passed on to other print methods.
 #' @export
-print.profvis <- function(x, ...,  viewer = FALSE) {
+print.profvis <- function(x, ..., split = NULL, viewer = FALSE) {
+
+  if (!is.null(split)) {
+    split <- match.arg(split, c("h", "v"))
+    x$x$message$split <- split
+  }
+
   if (viewer) {
     getS3method("print", "htmlwidget")(x)
   } else {

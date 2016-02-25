@@ -954,7 +954,6 @@ profvis = (function() {
       // Highlighting ---------------------------------------------------------
 
       function addLockHighlight(d) {
-        var target = d;
         addLockHighlightSelection(cells, d);
       }
 
@@ -1199,27 +1198,21 @@ profvis = (function() {
     // for window resizing.
     function initResizing() {
       var $el = $(vis.el);
-      var $statusBar = $el.children(".profvis-status-bar");
-      var $settingsPanel = $el.children(".profvis-settings-panel");
-      var $codeTable = $el.children(".profvis-code");
-      var $flameGraph = $el.children(".profvis-flamegraph");
-      var $infoBox = $el.children(".profvis-infobox");
+      var $panel1 = $el.children(".profvis-panel1");
+      var $panel2 = $el.children(".profvis-panel2");
       var $splitBar = $el.children(".profvis-splitbar");
 
       // Record the gap between the split bar and the objects to left and right
       var splitBarGap = {
-        left: $splitBar.offset().left - offsetRight($codeTable),
-        right: $flameGraph.offset().left - offsetRight($splitBar)
+        left: $splitBar.offset().left - offsetRight($panel1),
+        right: $panel2.offset().left - offsetRight($splitBar)
       };
 
       // Capture the initial distance from the left and right of container element
       var margin = {
-        left: $codeTable.position().left,
-        right: $el.innerWidth() - positionRight($flameGraph)
+        left: $panel1.position().left,
+        right: $el.innerWidth() - positionRight($panel2)
       };
-
-      // Capture infoBox inset from left of flameGraph
-      var infoboxInset = $infoBox.offset().left - $flameGraph.offset().left;
 
       // Record the proportions from the previous call to resizePanels. This is
       // needed when we resize the window to preserve the same proportions.
@@ -1228,22 +1221,17 @@ profvis = (function() {
       // Resize the panels. splitProportion is a number from 0-1 representing the
       // horizontal position of the split bar.
       function resizePanels(splitProportion) {
-        var elOffsetLeft = $el.offset().left;
-        var innerWidth = offsetRight($flameGraph) - $codeTable.offset().left;
+        var innerWidth = offsetRight($panel2) - $panel1.offset().left;
 
         $splitBar.offset({
-          left: $codeTable.offset().left + innerWidth * splitProportion -
+          left: $panel1.offset().left + innerWidth * splitProportion -
                 $splitBar.outerWidth()/2
         });
 
-        // Size and position left and right-side elements
-        var leftPanelWidth = $splitBar.position().left - splitBarGap.left - margin.left;
-        $codeTable.outerWidth(leftPanelWidth);
-        $statusBar.outerWidth(leftPanelWidth);
-
-        var rightPanelOffsetLeft = offsetRight($splitBar) + splitBarGap.right;
-        $infoBox.offset({ left: rightPanelOffsetLeft + infoboxInset });
-        $flameGraph.offset({ left: rightPanelOffsetLeft });
+        // Size and position the panels
+        $panel1.outerWidth($splitBar.position().left - splitBarGap.left -
+                           margin.left);
+        $panel2.offset({ left: offsetRight($splitBar) + splitBarGap.right });
 
         lastSplitProportion = splitProportion;
       }
@@ -1262,9 +1250,9 @@ profvis = (function() {
 
       // Get current proportional position of split bar
       function splitProportion() {
-        var splitCenter = $splitBar.offset().left - $codeTable.offset().left +
+        var splitCenter = $splitBar.offset().left - $panel1.offset().left +
                           $splitBar.outerWidth()/2;
-        var innerWidth = offsetRight($flameGraph) - $codeTable.offset().left;
+        var innerWidth = offsetRight($panel2) - $panel1.offset().left;
         return splitCenter / innerWidth;
       }
 
@@ -1362,30 +1350,51 @@ profvis = (function() {
       disableScroll: disableScroll
     };
 
+
+    // CSS class suffix for split direction
+    var splitClass;
+    if (message.split === "h")
+      splitClass = "horizontal";
+    else
+      splitClass = "vertical";
+
+
     // Render the objects ---------------------------------------------
+
+    // Container panels - top/bottom or left/right
+    var panel1 = document.createElement("div");
+    panel1.className = "profvis-panel1 profvis-panel1-" + splitClass;
+    vis.el.appendChild(panel1);
+
+    var panel2 = document.createElement("div");
+    panel2.className = "profvis-panel2 profvis-panel2-" + splitClass;
+    vis.el.appendChild(panel2);
+
+    var splitBarEl = document.createElement("div");
+    splitBarEl.className = "profvis-splitbar profvis-splitbar-" + splitClass;
+    vis.el.appendChild(splitBarEl);
+
+    // Items in the panels
     var statusBarEl = document.createElement("div");
     statusBarEl.className = "profvis-status-bar";
-    vis.el.appendChild(statusBarEl);
+    panel1.appendChild(statusBarEl);
 
     var codeTableEl = document.createElement("div");
     codeTableEl.className = "profvis-code";
-    vis.el.appendChild(codeTableEl);
+    panel1.appendChild(codeTableEl);
 
     var settingsPanelEl = document.createElement("div");
     settingsPanelEl.className = "profvis-settings-panel";
-    vis.el.appendChild(settingsPanelEl);
+    panel1.appendChild(settingsPanelEl);
 
     var flameGraphEl = document.createElement("div");
     flameGraphEl.className = "profvis-flamegraph";
-    vis.el.appendChild(flameGraphEl);
+    panel2.appendChild(flameGraphEl);
 
     var infoBoxEl = document.createElement("div");
     infoBoxEl.className = "profvis-infobox";
-    vis.el.appendChild(infoBoxEl);
+    panel2.appendChild(infoBoxEl);
 
-    var splitBarEl = document.createElement("div");
-    splitBarEl.className = "profvis-splitbar";
-    vis.el.appendChild(splitBarEl);
 
     // Efficient to properly size panels before the code + flamegraph are
     // rendered, so that we don't have to re-render.
