@@ -126,12 +126,16 @@ profvis <- function(expr = NULL, interval = 0.01, prof_output = NULL,
 #'   This can be useful for publishing profvis visualizations.
 #' @param ... Further arguments to passed on to other print methods.
 #' @export
-print.profvis <- function(x, ..., split = NULL, viewer = FALSE) {
+print.profvis <- function(x, ..., width = NULL, height = NULL,
+                          split = NULL, viewer = FALSE)
+{
 
   if (!is.null(split)) {
     split <- match.arg(split, c("h", "v"))
     x$x$message$split <- split
   }
+  if (!is.null(width)) x$width <- width
+  if (!is.null(height)) x$height <- height
 
   if (viewer) {
     getS3method("print", "htmlwidget")(x)

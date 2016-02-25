@@ -4,12 +4,17 @@
 \alias{print.profvis}
 \title{Print a profvis object}
 \usage{
-\method{print}{profvis}(x, ..., split = NULL, viewer = FALSE)
+\method{print}{profvis}(x, ..., width = NULL, height = NULL, split = NULL,
+  viewer = FALSE)
 }
 \arguments{
 \item{x}{The object to print.}
 
 \item{...}{Further arguments to passed on to other print methods.}
+
+\item{width}{Width of the htmlwidget.}
+
+\item{height}{Height of the htmlwidget}
 
 \item{split}{Direction of split. Either \code{"v"} (the default) for
 vertical, or \code{"h"} for horizontal. This is the orientation of the
