@@ -865,6 +865,13 @@ profvis = (function() {
 
         scales.x.range([0, dims.width]);
         zoom.x(scales.x);
+
+        // Preserve distance from bottom, instead of from top (which is the
+        // default behavior).
+        scales.y.range([
+          dims.height,
+          dims.height - (domains.y[1] - domains.y[0]) * stackHeight
+        ]);
         redrawImmediate();
       }
 
