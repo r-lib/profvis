@@ -144,7 +144,7 @@ print.profvis <- function(x, ..., width = NULL, height = NULL,
   } else {
     f <- getOption("profvis.print")
     if (is.function(f)) {
-      f(x)
+      f(x, ...)
     }
     else {
       NextMethod()
