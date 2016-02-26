@@ -138,7 +138,7 @@ print.profvis <- function(x, ..., width = NULL, height = NULL,
   if (!is.null(height)) x$height <- height
 
   if (viewer) {
-    getS3method("print", "htmlwidget")(x)
+    getS3method("print", "htmlwidget")(x, ...)
   } else {
     NextMethod()
   }
