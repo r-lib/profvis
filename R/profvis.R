@@ -55,8 +55,7 @@ profvis <- function(expr = NULL, interval = 0.01, prof_output = NULL,
     # vector. Make sure it's a single string.
     expr_source <- paste(expr_source, collapse = "\n")
 
-    opt_extension <- getOption("profvis.prof_extension")
-    prof_extension <- if (!identical(opt_extension, NULL)) opt_extension else ".prof"
+    prof_extension <- getOption("profvis.prof_extension", default = ".prof")
 
     if (is.null(prof_output) && !is.null(getOption("profvis.prof_output")))
       prof_output <- getOption("profvis.prof_output")
