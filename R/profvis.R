@@ -55,17 +55,19 @@ profvis <- function(expr = NULL, interval = 0.01, prof_output = NULL,
     # vector. Make sure it's a single string.
     expr_source <- paste(expr_source, collapse = "\n")
 
+    prof_extension <- getOption("profvis.prof_extension", default = ".prof")
+
     if (is.null(prof_output) && !is.null(getOption("profvis.prof_output")))
       prof_output <- getOption("profvis.prof_output")
 
     remove_on_exit <- FALSE
     if (is.null(prof_output)) {
-      prof_output <- tempfile(fileext = ".prof")
+      prof_output <- tempfile(fileext = prof_extension)
       remove_on_exit <- TRUE
     }
     else {
       if (dir.exists(prof_output))
-        prof_output <- tempfile(fileext = ".prof", tmpdir = prof_output)
+        prof_output <- tempfile(fileext = prof_extension, tmpdir = prof_output)
     }
 
     gc()
@@ -140,7 +142,13 @@ print.profvis <- function(x, ..., width = NULL, height = NULL,
   if (viewer) {
     getS3method("print", "htmlwidget")(x, ...)
   } else {
-    NextMethod()
+    f <- getOption("profvis.print")
+    if (is.function(f)) {
+      f(x, ...)
+    }
+    else {
+      NextMethod()
+    }
   }
 }
 
