@@ -44,9 +44,15 @@ parse_rprof <- function(path = "Rprof.out", expr_source = NULL) {
   #  <GC> 1#7 "foo"
   prof_data <- gsub('^"<GC>",', '"<GC>" ', prof_data)
 
-  # Remove frames related to profvis itself, and all frames below it on the stack.
-  prof_data <- sub(' *"force"(?!.*"force").*"(profvis::)?profvis".*$', '',
-                   prof_data, perl = TRUE)
+  # Remove frames related to profvis itself, and all frames below it on the
+  # stack. Right now the bottom item can be `profvis`, `profvis::profvis`, or
+  # `<Anonymous>`, but once R 3.3 is widespread, the <Anonymous> part can be
+  # removed and the regex can be simplified to:
+  # ' *"force"(?!.*"force").*"(profvis::)?profvis".*$'
+  prof_data <- sub(
+    ' *"force" "doTryCatch"(?!.*"force").*"((profvis::)?profvis|<Anonymous>)".*$',
+    '', prof_data, perl = TRUE
+  )
 
   prof_data <- str_split(prof_data, fixed(" "))
 
