@@ -162,7 +162,7 @@ profvis = (function() {
 
       headerRows.append("th")
         .attr("class", "time")
-        .text("Total (ms)");
+        .text("Total");
 
       headerRows.append("th")
         .attr("class", "percent")
