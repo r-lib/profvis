@@ -22,17 +22,17 @@ profvis = (function() {
           vis.totalTime + 'ms</div>' +
         '<div class="info-block"><span class="info-label">Sample interval:</span> ' +
           vis.interval + 'ms</div>' +
-        '<span role="button" class="settings-button">Settings &#x25BE;</span>';
+        '<span role="button" class="options-button">Options &#x25BE;</span>';
 
-      $el.find("span.settings-button").on("click", function(e) {
+      $el.find("span.options-button").on("click", function(e) {
         e.preventDefault();
         e.stopPropagation();
 
-        vis.settingsPanel.setOffset({
+        vis.optionsPanel.setOffset({
           top: $el.offset().top + $el.outerHeight() - 1,
           right: $el.offset().left + $el.outerWidth(),
         });
-        vis.settingsPanel.toggleVisibility();
+        vis.optionsPanel.toggleVisibility();
       });
 
       return {
@@ -40,15 +40,15 @@ profvis = (function() {
       };
     }
 
-    function generateSettingsPanel(el) {
+    function generateOptionsPanel(el) {
       var $el = $(el);
 
       el.innerHTML =
         '<div role="button" class="hide-internal">' +
-          '<span class="settings-checkbox" data-checked="1">&#x2612;</span> Hide internal functions for Shiny' +
+          '<span class="options-checkbox" data-checked="1">&#x2612;</span> Hide internal functions for Shiny' +
         '</div>' +
         '<div role="button" class="hide-zero-row">' +
-          '<span class="settings-checkbox" data-checked="0">&#x2610;</span> Hide lines of code with zero time' +
+          '<span class="options-checkbox" data-checked="0">&#x2610;</span> Hide lines of code with zero time' +
         '</div>';
 
       // Toggle the appearance of a checkbox and return the new checked state.
@@ -71,7 +71,7 @@ profvis = (function() {
         .on("click", function() {
           vis.flameGraph.savePrevScales();
 
-          var checked = toggleCheckbox($(this).find(".settings-checkbox"));
+          var checked = toggleCheckbox($(this).find(".options-checkbox"));
 
           if (checked) {
             vis.flameGraph.useCollapsedDepth();
@@ -96,7 +96,7 @@ profvis = (function() {
 
       $el.find(".hide-zero-row")
         .on("click", function() {
-          var checked = toggleCheckbox($(this).find(".settings-checkbox"));
+          var checked = toggleCheckbox($(this).find(".options-checkbox"));
 
           if (checked) {
             vis.codeTable.hideZeroTimeRows();
@@ -1415,7 +1415,7 @@ profvis = (function() {
 
       // Objects representing each component
       statusBar: null,
-      settingsPanel: null,
+      optionsPanel: null,
       codeTable: null,
       flameGraph: null,
       infoBox: null,
@@ -1458,9 +1458,9 @@ profvis = (function() {
     codeTableEl.className = "profvis-code";
     panel1.appendChild(codeTableEl);
 
-    var settingsPanelEl = document.createElement("div");
-    settingsPanelEl.className = "profvis-settings-panel";
-    panel1.appendChild(settingsPanelEl);
+    var optionsPanelEl = document.createElement("div");
+    optionsPanelEl.className = "profvis-options-panel";
+    panel1.appendChild(optionsPanelEl);
 
     var flameGraphEl = document.createElement("div");
     flameGraphEl.className = "profvis-flamegraph";
@@ -1477,14 +1477,14 @@ profvis = (function() {
 
     // Create the UI components
     vis.statusBar = generateStatusBar(statusBarEl);
-    vis.settingsPanel = generateSettingsPanel(settingsPanelEl);
+    vis.optionsPanel = generateOptionsPanel(optionsPanelEl);
     vis.codeTable = generateCodeTable(codeTableEl);
     vis.flameGraph = generateFlameGraph(flameGraphEl);
     vis.infoBox = initInfoBox(infoBoxEl);
 
     // If any depth collapsing occured, enable the "hide internal" checkbox.
     if (prof.some(function(d) { return d.depth !== d.depthCollapsed; })) {
-      vis.settingsPanel.enableHideInternal();
+      vis.optionsPanel.enableHideInternal();
     }
 
     // Start with scrolling disabled because of mousewheel scrolling issue

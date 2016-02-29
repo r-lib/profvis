@@ -92,7 +92,7 @@
   width: 140px;
 }
 
-.profvis-status-bar .settings-button {
+.profvis-status-bar .options-button {
   float: right;
   color: #444;
   text-decoration: none;
@@ -100,7 +100,7 @@
 }
 
 
-.profvis-settings-panel {
+.profvis-options-panel {
   float: left;
   position: absolute;
   right: 0;
