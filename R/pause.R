@@ -7,7 +7,9 @@
 #'
 #' @param seconds Number of seconds to pause.
 #' @export
-#' @useDynLib profvis C_pause
 pause <- function(seconds) {
-  .Call(C_pause, as.numeric(seconds))
+  # Coerce time to numeric so that we have a nicer stack trace in the profiler
+  end <- as.numeric(Sys.time() + seconds)
+  while (as.numeric(Sys.time()) < end) {
+  }
 }
