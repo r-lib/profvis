@@ -28,10 +28,6 @@ profvis = (function() {
         e.preventDefault();
         e.stopPropagation();
 
-        vis.optionsPanel.setOffset({
-          top: $el.offset().top + $el.outerHeight() - 1,
-          right: $el.offset().left + $el.outerWidth(),
-        });
         vis.optionsPanel.toggleVisibility();
       });
 
@@ -105,16 +101,6 @@ profvis = (function() {
           }
         });
 
-
-      // Position the div, given the top-right offset
-      function setOffset(offset) {
-        var $el = $(el);
-        $el.offset({
-          top: offset.top,
-          left: offset.right - $el.outerWidth()
-        });
-      }
-
       el.style.visibility = "hidden";
       function toggleVisibility(offset) {
         if (el.style.visibility === "visible") {
@@ -138,7 +124,6 @@ profvis = (function() {
 
       return {
         el: el,
-        setOffset: setOffset,
         toggleVisibility: toggleVisibility,
         enableHideInternal: enableHideInternal,
         disableHideInternal: disableHideInternal
