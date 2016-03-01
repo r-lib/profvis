@@ -8,8 +8,11 @@
 #' @param seconds Number of seconds to pause.
 #' @export
 pause <- function(seconds) {
-  # Coerce time to numeric so that we have a nicer stack trace in the profiler
-  end <- as.numeric(Sys.time() + seconds)
-  while (as.numeric(Sys.time()) < end) {
-  }
+  # Hide stuff inside of pause by default in flamegraph view
+  ..stacktraceoff..({
+    # Coerce time to numeric so that we have a nicer stack trace in the profiler
+    end <- as.numeric(Sys.time() + seconds)
+    while (as.numeric(Sys.time()) < end) {
+    }
+  })
 }
