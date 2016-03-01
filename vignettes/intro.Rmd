@@ -394,7 +394,7 @@ profvis({
 
 When profiling [Shiny](http://shiny.rstudio.com/) applications, the profvis flame graph will hide many function calls by default. They're hidden because they aren't particularly informative for optimizing code, and they add visual complexity. This feature requires Shiny 0.12.2.9006 or greater and profvis 0.1.0.9001 or greater.
 
-If you want to see these hidden blocks, uncheck **Settings** -> **Hide internal functions for Shiny**:
+If you want to see these hidden blocks, uncheck **Settings** -> **Hide internal function calls**:
 
 ```{r echo=FALSE, eval=FALSE}
 # This code block is what we actually run. It must be run manually each time

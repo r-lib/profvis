@@ -41,7 +41,7 @@ profvis = (function() {
 
       el.innerHTML =
         '<div role="button" class="hide-internal">' +
-          '<span class="options-checkbox" data-checked="1">&#x2612;</span> Hide internal functions for Shiny' +
+          '<span class="options-checkbox" data-checked="1">&#x2612;</span> Hide internal function calls' +
         '</div>' +
         '<div role="button" class="hide-zero-row">' +
           '<span class="options-checkbox" data-checked="0">&#x2610;</span> Hide lines of code with zero time' +
