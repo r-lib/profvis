@@ -1,6 +1,8 @@
 Profvis
 =======
 
+[![Travis-CI Build Status](https://travis-ci.org/rstudio/profvis.svg?branch=master)](https://travis-ci.org/rstudio/profvis)
+
 Profvis is a tool for visualizing code profiling data from R. It creates a web page which provides a graphical interface for exploring the data. [Live demo](http://rpubs.com/wch/124655).
 
 
