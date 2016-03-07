@@ -218,12 +218,32 @@ prune_expr_mismatch <- function(prof_data, expr_source) {
     return (prof_data)
   }
 
-  # Now make sure that each entry actually matches text in expr
+  # Now make sure that each entry actually matches text in expr. This isn't
+  # perfect - there can be false negatives, as in the times_10_lazy example
+  # in the vignette.
   p$match <- NA
   for (i in seq_len(nrow(p))) {
-    label <- p$label[i]
-    expr_line <- expr[p$linenum[i]]
-    p$match[i] <- grepl(label, expr_line, fixed = TRUE)
+
+    if (p$linenum[i] > length(expr)) {
+      # If the line number is outside of what expr contains, this is because
+      # it's code that the user ran outside of profvis({}).
+      p$match[i] <- FALSE
+
+    } else {
+      # If the label is "<Anonymous>", don't check for a string match in the
+      # code, because we don't know exactly how it was invoked; be lenient.
+      # Also be a little lenient and allow expr to be on next line - this can
+      # happen when flow control statements are used without curly braces, like:
+      # if (TRUE)
+      #   pause(0.1)
+      label <- p$label[i]
+      expr_line <- expr[p$linenum[i]]
+      next_line <- expr[p$linenum[i] + 1]
+
+      p$match[i] <- label == "<Anonymous>" ||
+                    grepl(label, expr_line, fixed = TRUE) ||
+                    grepl(label, next_line, fixed = TRUE)
+    }
   }
 
   # Merge back with original data. The match column now tells us which rows we
