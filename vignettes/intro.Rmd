@@ -291,7 +291,12 @@ Once it shows up in the viewer pane, click on the **Publish** button to send it 
 
 ![Publishing to RPubs](profvis-rpubs.png)
 
-Another way to publish a profvis visualization is to save the HTML output file and put that on any web hosting service.
+Another way to publish a profvis visualization is to save the HTML output file and put that on any web hosting service. You can save it from your web browser, or you can use `htmlwidgets::saveWidget`:
+
+
+```{r eval=FALSE}
+htmlwidgets::saveWidget(p, "profile.html")
+```
 
 It's also possible to put a profvis visualization in a knitr document. At this time, some CSS workarounds are needed needed for them to display properly. You can look at the source of [this document](https://github.com/rstudio/profvis/tree/master/vignettes/intro.Rmd) to see the workarounds.
 
@@ -498,6 +503,16 @@ profvis({
 ```
 
 For code that contains multi-line expressions like these, using curly braces will allow the profiler to identify the correct line where code is running.
+
+
+### How do I get source code to show with `Rscript`?
+
+If you run profvis from a script, the source code won't show in the source panel. This is because source refs are not recorded by default when R is run non-interactively. To make it work, use `options(keep.source=TRUE)`. For example:
+
+
+```
+Rscript -e "options(keep.source=TRUE); p <- profvis::profvis({ profvis::pause(0.2) }); htmlwidgets::saveWidget(p, 'test.html')"
+```
 
 ## Other resources for profiling R code
 
