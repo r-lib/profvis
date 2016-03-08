@@ -14,10 +14,22 @@ profvis = (function() {
 
   profvis.render = function(el, message) {
 
+    function generateStatusBarButton(caption) {
+      var spacerImage = `data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAAUCAYAAACnOeyiAAAAXklEQVR42mNgAIL///8zMYSGhjIDGYIMIiIMvECGMwMDN4M4kFEDUqIIZKwDMdSBjAsghj6Q8QPEMAAy/lOBoQekv4AYKkDGfgZeXl4RICOLQUtLiw3IUAJJMQIZ7AC2tU2tXJxOYgAAAABJRU5ErkJggg==`
+
+      var buttonHtml = 
+        '<div class="info-block result-block active"><span class="info-label">' + caption + '</span></div>' +
+        '<div class="separator-block"><img class="separator-image" src="' + spacerImage + '"></div>';
+
+      return buttonHtml;
+    }
+
     function generateStatusBar(el) {
       var $el = $(el);
 
       el.innerHTML =
+        generateStatusBarButton('Flame graph') +
+        '<div class="spacing-block"></div>' +
         '<div class="info-block"><span class="info-label">Total time:</span> ' +
           vis.totalTime + 'ms</div>' +
         '<div class="info-block"><span class="info-label">Sample interval:</span> ' +
@@ -166,10 +178,8 @@ profvis = (function() {
 
       headerRows.append("th")
         .attr("class", "percent")
-        .text("%");
-
-      headerRows.append("th")
-        .text("Proportion");
+        .attr("colspan", "2")
+        .text("% Proportion");
 
       // Insert each line of code
       var rows = tables.selectAll("tr.code-row")
@@ -379,7 +389,7 @@ profvis = (function() {
 
       // Margin inside the svg where the plotting occurs
       var dims = {
-        margin: { top: 0, right: 0, left: 0, bottom: 20 }
+        margin: { top: 0, right: 0, left: 0, bottom: 30 }
       };
       dims.width = el.clientWidth - dims.margin.left - dims.margin.right;
       dims.height = el.clientHeight - dims.margin.top - dims.margin.bottom;
