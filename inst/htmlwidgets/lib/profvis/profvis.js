@@ -162,7 +162,7 @@ profvis = (function() {
         content.append("div")
           .attr("class", "profvis-message")
           .append("div")
-            .text("Sources not available");
+            .text("(Sources not available)");
       }
 
       // One table for each file

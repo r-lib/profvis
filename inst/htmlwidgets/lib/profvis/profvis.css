@@ -388,3 +388,8 @@ table.profvis-table .timebar-cell > .timebar {
   font-family: Open Sans,Helvetica,Arial,sans-serif;
   font-size: 12px;
 }
+
+.profvis-message div {
+  color: #444;
+  height: 25%;
+}
