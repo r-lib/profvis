@@ -158,6 +158,13 @@ profvis = (function() {
     function generateCodeTable(el) {
       var content = d3.select(el);
 
+      if (vis.fileLineTimes.length === 0) {
+        content.append("div")
+          .attr("class", "profvis-message")
+          .append("div")
+            .text("Sources not available");
+      }
+
       // One table for each file
       var tables = content.selectAll("table")
           .data(vis.fileLineTimes)
