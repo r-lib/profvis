@@ -372,3 +372,19 @@ table.profvis-table .timebar-cell > .timebar {
 .profvis-infobox .infobox-title {
   font-weight: bold;
 }
+
+.profvis-message {
+  width: 100%;
+  height: 100%;
+  display: -ms-flexbox;
+  display: -webkit-flex;
+  display: flex;
+  -ms-flex-pack: center;
+  -webkit-justify-content: center;
+  justify-content: center;
+  -ms-flex-align: center;
+  -webkit-align-items: center;
+  align-items: center;
+  font-family: Open Sans,Helvetica,Arial,sans-serif;
+  font-size: 12px;
+}
