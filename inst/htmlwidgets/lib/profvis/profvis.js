@@ -17,7 +17,7 @@ profvis = (function() {
     function generateStatusBarButton(caption) {
       var spacerImage = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAAUCAYAAACnOeyiAAAAXklEQVR42mNgAIL///8zMYSGhjIDGYIMIiIMvECGMwMDN4M4kFEDUqIIZKwDMdSBjAsghj6Q8QPEMAAy/lOBoQekv4AYKkDGfgZeXl4RICOLQUtLiw3IUAJJMQIZ7AC2tU2tXJxOYgAAAABJRU5ErkJggg==';
 
-      var buttonHtml = 
+      var buttonHtml =
         '<div class="info-block result-block active"><span class="info-label">' + caption + '</span></div>' +
         '<div class="separator-block"><img class="separator-image" src="' + spacerImage + '"></div>';
 
@@ -183,9 +183,11 @@ profvis = (function() {
         .attr("class", "time")
         .text("Total");
 
+      var percentTooltip = "Percentage of total execution time";
       headerRows.append("th")
         .attr("class", "percent")
         .attr("colspan", "2")
+        .attr("title", percentTooltip)
         .text("% Proportion");
 
       // Insert each line of code
@@ -213,6 +215,7 @@ profvis = (function() {
 
       rows.append("td")
         .attr("class", "percent")
+        .attr("title", percentTooltip)
         .attr("data-pseudo-content",
               function(d) { return Math.round(d.sumTime/vis.totalTime * 100); });
 
@@ -220,6 +223,7 @@ profvis = (function() {
         .attr("class", "timebar-cell")
         .append("div")
           .attr("class", "timebar")
+          .attr("title", percentTooltip)
           .style("width", function(d) {
             return Math.round(d.propTime * 100) + "%";
           })
