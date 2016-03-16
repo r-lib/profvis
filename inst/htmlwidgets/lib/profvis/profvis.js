@@ -142,14 +142,14 @@ profvis = (function() {
       };
     }
 
-    function notifySourceFileMessage(d) {
+    function notifySourceFileMessage(d, details) {
       if (window.parent.postMessage) {
         window.parent.postMessage({
           source: "profvis",
           message: "sourcefile",
           file: d.filename,
           line: d.linenum,
-          details: ""
+          details: details
         }, window.location.origin);
       }
     }
@@ -235,6 +235,7 @@ profvis = (function() {
           // Info box is only relevant when mousing over flamegraph
           vis.infoBox.hide();
           highlighter.click(d);
+          notifySourceFileMessage(d, "select");
         })
         .on("mouseover", function(d) {
           if (highlighter.isLocked()) return;
@@ -249,7 +250,7 @@ profvis = (function() {
           highlighter.hover(null);
         })
         .on("dblclick", function(d) {
-          notifySourceFileMessage(d);
+          notifySourceFileMessage(d, "open");
         });
 
       function hideZeroTimeRows() {
@@ -892,6 +893,7 @@ profvis = (function() {
             // If it wasn't a drag, treat it as a click
             vis.infoBox.show(d);
             highlighter.click(d);
+            notifySourceFileMessage(d, "select");
           })
           .on("mouseover", function(d) {
             if (dragging) return;
@@ -931,7 +933,7 @@ profvis = (function() {
 
             redrawZoom(250);
 
-            notifySourceFileMessage(d);
+            notifySourceFileMessage(d, "open");
           });
 
         return cells;
