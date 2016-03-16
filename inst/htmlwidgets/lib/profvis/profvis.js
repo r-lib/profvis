@@ -183,7 +183,7 @@ profvis = (function() {
         .attr("class", "time")
         .text("Total");
 
-      var percentTooltip = "Percentage of total execution time";
+      var percentTooltip = "Percentage of tracked execution time";
       headerRows.append("th")
         .attr("class", "percent")
         .attr("colspan", "2")
