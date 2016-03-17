@@ -1518,9 +1518,11 @@ profvis = (function() {
       var lines = file.content.split("\n");
       var lineData = [];
       var filename = file.filename;
+      var normpath = file.normpath;
       for (var i=0; i<lines.length; i++) {
         lineData[i] = {
           filename: filename,
+          normpath: normpath,
           linenum: i + 1,
           content: lines[i],
           sumTime: 0

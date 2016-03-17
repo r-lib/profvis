@@ -149,6 +149,12 @@ parse_rprof <- function(path = "Rprof.out", expr_source = NULL) {
       list(filename = filename, content = content)
     }, SIMPLIFY = FALSE, USE.NAMES = FALSE)
 
+  # Assign absolute paths to provide the original location when raising source events
+  file_contents <- lapply(file_contents, function(e) {
+    suppressWarnings(e$normpath <- normalizePath(e$filename))
+    return(e)
+  })
+
   list(
     prof = prof_data,
     interval = interval,
