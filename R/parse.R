@@ -120,7 +120,7 @@ parse_rprof <- function(path = "Rprof.out", expr_source = NULL) {
 
   # Trim filenames to make output a bit easier to interpret
   prof_data$filename <- trim_filenames(prof_data$filename)
-  suppressWarnings(fullpaths <- normalizePath(names(file_contents)))
+  suppressWarnings(normpaths <- normalizePath(names(file_contents)))
   names(file_contents) <- trim_filenames(names(file_contents))
 
   # Remove srcref info from the prof_data in cases where no file is present.
@@ -145,7 +145,7 @@ parse_rprof <- function(path = "Rprof.out", expr_source = NULL) {
   prof_data <- prune_expr_mismatch(prof_data, file_contents[["<expr>"]])
 
   # Convert file_contents to a format suitable for client
-  file_contents <- mapply(names(file_contents), file_contents, fullpaths,
+  file_contents <- mapply(names(file_contents), file_contents, normpaths,
     FUN = function(filename, content, normpath) {
       list(filename = filename, content = content, normpath = normpath)
     }, SIMPLIFY = FALSE, USE.NAMES = FALSE)
