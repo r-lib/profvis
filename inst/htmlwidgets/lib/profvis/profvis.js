@@ -148,6 +148,7 @@ profvis = (function() {
           source: "profvis",
           message: "sourcefile",
           file: d.filename,
+          normpath: d.normpath,
           line: d.linenum,
           details: details
         }, window.location.origin);
