@@ -12,13 +12,14 @@
 
 .profvis-panel1 {
   left: 0px;
-  top: 0px;
+  top: 23px;
   position: absolute;
 }
 
 .profvis-panel1-vertical {
   bottom: 0px;
   width: 500px;
+  margin-bottom: 20px;
 }
 
 .profvis-panel1-horizontal {
@@ -35,11 +36,13 @@
 .profvis-panel2-vertical {
   top: 0px;
   left: 508px;
+  margin-bottom: 20px;
 }
 
 .profvis-panel2-horizontal {
   left: 0px;
   top: 408px;
+  margin-bottom: 20px;
 }
 
 .profvis-splitbar {
@@ -91,6 +94,26 @@
   overflow: hidden;
 }
 
+.profvis-footer {
+  position: absolute;
+  padding: 0px 0px;
+  bottom: 0px;
+  left: 0;
+  right: 0;
+  height: 19px;
+  line-height: 18px;
+  border-top: 1px solid rgb(196, 201, 204);
+  background-color: rgb(248, 249, 248);
+  color: #444;
+  font-family: Open Sans,Helvetica,Arial,sans-serif;
+  font-size: 12px;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  overflow: hidden;
+}
+
 .profvis-status-bar .info-block {
   display: inline-block;
   vertical-align: top;
@@ -98,12 +121,27 @@
   padding: 2px 11px 2px 11px;
 }
 
-.profvis-status-bar .result-block {
-  width: auto;
+.profvis-footer .info-block {
+  display: inline-block;
+  vertical-align: top;
+  padding: 1px 11px 1px 11px;
 }
 
-.profvis-status-bar .result-block.active {
-  background: rgb(227, 229, 230)
+.profvis-footer .info-block-right {
+  display: inline-block;
+  vertical-align: top;
+  padding: 1px 11px 1px 11px;
+  float: right;
+}
+
+.profvis-status-bar .result-block {
+  width: auto;
+  cursor: pointer;
+}
+
+.profvis-status-bar .result-block-active {
+  width: auto;
+  background: rgb(227, 229, 230);
 }
 
 .profvis-status-bar .spacing-block {
@@ -152,7 +190,7 @@
 
 .profvis-code {
   position: absolute;
-  top: 25px;
+  top: 0px;
   left: 0;
   bottom: 0;
   right: 0;
@@ -392,4 +430,30 @@ table.profvis-table .timebar-cell > .timebar {
 .profvis-message div {
   color: #444;
   height: 25%;
+}
+
+.profvis-treemap {
+  top: 0px;
+  bottom: 0px;
+  left: 0px;
+  right: 0px;
+  position: absolute;
+  margin-top: 23px;
+  margin-bottom: 21px;
+  margin-right: 1px;
+  overflow: hidden;
+  font: 10px sans-serif;
+  color: #161616;
+}
+
+.profvis-treemap .node {
+  border: solid 1px white;
+  line-height: 0.95;
+  overflow: hidden;
+  position: absolute;
+  border-radius: 4px;
+}
+
+.profvis-treemap .node div {
+  padding: 6px 6px;
 }
