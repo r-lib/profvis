@@ -76,7 +76,7 @@ profvis = (function() {
       };
     }
 
-    function generateOptionsPanel(el) {
+    function generateOptionsPanel(el, onOptionsChange) {
       var $el = $(el);
 
       el.innerHTML =
@@ -105,17 +105,8 @@ profvis = (function() {
 
       $el.find(".hide-internal")
         .on("click", function() {
-          vis.flameGraph.savePrevScales();
-
           var checked = toggleCheckbox($(this).find(".options-checkbox"));
-
-          if (checked) {
-            vis.flameGraph.useCollapsedDepth();
-            vis.flameGraph.redrawCollapse(400, 400);
-          } else {
-            vis.flameGraph.useUncollapsedDepth();
-            vis.flameGraph.redrawUncollapse(400, 250);
-          }
+          onOptionsChange(checked);
         });
 
       // Make the "hide internal" option available or unavailable to users
@@ -1229,40 +1220,6 @@ profvis = (function() {
     function generateTreemap(el) {
       var $el = $(el);
 
-      var tree = {
-          name: "tree",
-          children: [
-            {
-              name: "myf()",
-              size: 1.0,
-              level: 0,
-              children: [
-                { name: "pause1()", size: 0.5, level: 1 },
-                {
-                  name: "pause2()",
-                  size: 0.5,
-                  level: 1,
-                  children: [
-                    {
-                      name: "sys.time()",
-                      size: 0.5,
-                      level: 2,
-                      children: [
-                        { name: "a()", size: 0.1, level: 3 },
-                        { name: "b()", size: 0.1, level: 3 },
-                        { name: "c()", size: 0.1, level: 3 },
-                        { name: "d()", size: 0.1, level: 3 },
-                        { name: "e()", size: 0.1, level: 3 }
-                      ]
-                    }
-                  ]
-                }
-              ]
-            },
-            { name: "myf2()", size: 1.0, level: 0 },
-          ]
-      };
-
       var dims = {
         margin: { top: 0, right: 0, left: 0, bottom: 0 }
       };
@@ -1273,7 +1230,7 @@ profvis = (function() {
         var innerHeight = el.clientHeight - dims.margin.top - dims.margin.bottom;
 
         var colorScale = d3.scale.linear()
-          .domain([0.0, 1.0])
+          .domain([0.0, vis.totalTime])
           .range(["rgb(241, 243, 246)", "rgb(233, 238, 243)"]);
 
         var width = innerWidth,
@@ -1285,7 +1242,9 @@ profvis = (function() {
         var treemap = d3.layout.treemap()
             .size([width, height + paddingTop])
             .sticky(true)
-            .value(function(d) { return d.size; })
+            .value(function(d) {
+              return d.endTime - d.startTime;
+            })
             .padding([paddingTop, 0, 0, 0]);
 
         function position() {
@@ -1295,21 +1254,22 @@ profvis = (function() {
             .style("height", function(d) { return Math.max(0, d.dy - 1) + "px"; });
         }
 
-        var node = div.datum(tree).selectAll(".node")
+        var treemapData = vis.profTree.children[0];
+        var node = div.datum(treemapData).selectAll(".node")
             .data(treemap.nodes)
           .enter().append("div")
             .attr("class", "node")
             .call(position)
             .style("background-color", function(d) {
               if (d.name == 'tree') return "#FFF";
-              if (d.children) return color(d.size);
-              return color(d.size);
+
+              return color((d.endTime - d.startTime));
             })
             .append('div')
             .style("font-size", function(d) {
                 return Math.min(12, 0.18*Math.sqrt(d.area))+'px';
             })
-            .text(function(d) { return d.name; });
+            .text(function(d) { return d.label; });
       };
 
       renderTreemap();
@@ -1552,6 +1512,7 @@ profvis = (function() {
       codeTable: null,
       flameGraph: null,
       infoBox: null,
+      treemap: null,
 
       // Functions to enable/disable responding to scrollwheel events
       enableScroll: enableScroll,
@@ -1595,10 +1556,6 @@ profvis = (function() {
     codeTableEl.className = "profvis-code";
     panel1.appendChild(codeTableEl);
 
-    var optionsPanelEl = document.createElement("div");
-    optionsPanelEl.className = "profvis-options-panel";
-    panel1.appendChild(optionsPanelEl);
-
     var flameGraphEl = document.createElement("div");
     flameGraphEl.className = "profvis-flamegraph";
     panel2.appendChild(flameGraphEl);
@@ -1611,6 +1568,10 @@ profvis = (function() {
     treemapEl.className = "profvis-treemap";
     treemapEl.style.display = "none";
     vis.el.appendChild(treemapEl);
+
+    var optionsPanelEl = document.createElement("div");
+    optionsPanelEl.className = "profvis-options-panel";
+    vis.el.appendChild(optionsPanelEl);
 
     // Efficient to properly size panels before the code + flamegraph are
     // rendered, so that we don't have to re-render.
@@ -1638,12 +1599,24 @@ profvis = (function() {
           vis.treemap.onResize();
           break;
       }
-    }
+    };
+
+    var onOptionsChange = function(hide) {
+      vis.flameGraph.savePrevScales();
+
+      if (hide) {
+        vis.flameGraph.useCollapsedDepth();
+        vis.flameGraph.redrawCollapse(400, 400);
+      } else {
+        vis.flameGraph.useUncollapsedDepth();
+        vis.flameGraph.redrawUncollapse(400, 250);
+      }
+    };
 
     // Create the UI components
     vis.statusBar = generateStatusBar(statusBarEl, toggleViews);
     vis.footer = generateFooter(footerEl);
-    vis.optionsPanel = generateOptionsPanel(optionsPanelEl);
+    vis.optionsPanel = generateOptionsPanel(optionsPanelEl, onOptionsChange);
     vis.codeTable = generateCodeTable(codeTableEl);
     vis.flameGraph = generateFlameGraph(flameGraphEl);
     vis.infoBox = initInfoBox(infoBoxEl);
