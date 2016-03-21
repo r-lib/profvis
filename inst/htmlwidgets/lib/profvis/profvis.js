@@ -1264,12 +1264,13 @@ profvis = (function() {
       };
 
       var dims = {
-        margin: { top: 25, right: 0, left: 0, bottom: 25 }
+        margin: { top: 0, right: 0, left: 0, bottom: 0 }
       };
+      var paddingTop = 30;
 
       var renderTreemap = function () {
-        var innerWidth = el.clientWidth; // - dims.margin.left - dims.margin.right;
-        var innerHeight = el.clientHeight; // - dims.margin.top - dims.margin.bottom;
+        var innerWidth = el.clientWidth - dims.margin.left - dims.margin.right;
+        var innerHeight = el.clientHeight - dims.margin.top - dims.margin.bottom;
 
         var colorScale = d3.scale.linear()
           .domain([0.0, 1.0])
@@ -1282,13 +1283,14 @@ profvis = (function() {
                .style("position", "relative");
 
         var treemap = d3.layout.treemap()
-            .size([width, height])
+            .size([width, height + paddingTop])
             .sticky(true)
-            .value(function(d) { return d.size; });
+            .value(function(d) { return d.size; })
+            .padding([paddingTop, 0, 0, 0]);
 
         function position() {
           this.style("left", function(d) { return d.x + "px"; })
-            .style("top", function(d) { return d.y + "px"; })
+            .style("top", function(d) { return d.y - paddingTop + "px"; })
             .style("width", function(d) { return Math.max(0, d.dx - 1) + "px"; })
             .style("height", function(d) { return Math.max(0, d.dy - 1) + "px"; });
         }
@@ -1307,7 +1309,7 @@ profvis = (function() {
             .style("font-size", function(d) {
                 return Math.min(12, 0.18*Math.sqrt(d.area))+'px';
             })
-            .text(function(d) { return d.children ? null : d.name; });
+            .text(function(d) { return d.name; });
       };
 
       renderTreemap();
