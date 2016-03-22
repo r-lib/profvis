@@ -1255,7 +1255,9 @@ profvis = (function() {
             .value(function(d) {
               return d.timeRange;
             })
-            .padding([paddingTop, 0, 0, 0])
+            .padding(function (d) {
+              return [Math.min(paddingTop, d.dy), 0, 0, 0];
+            })
             .children(function (d) {
               return !hideInternals || !d.children ? d.children : d.children.filter(function(x) {
                 return x.depthCollapsed && x.depthCollapsed >= 0;
