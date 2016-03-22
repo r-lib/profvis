@@ -1225,7 +1225,17 @@ profvis = (function() {
       };
       var paddingTop = 30;
 
-      var renderTreemap = function (hideInternals) {
+      var hideInternals = true;
+
+      var useCollapsedDepth = function useCollapsedDepth() {
+        hideInternals = true;
+      }
+
+      var useUncollapsedDepth = function useUncollapsedDepth() {
+        hideInternals = false
+      }
+
+      var renderTreemap = function () {
         var innerWidth = el.clientWidth - dims.margin.left - dims.margin.right;
         var innerHeight = el.clientHeight - dims.margin.top - dims.margin.bottom;
 
@@ -1243,9 +1253,14 @@ profvis = (function() {
             .size([width, height + paddingTop])
             .sticky(true)
             .value(function(d) {
-              return d.endTime - d.startTime;
+              return d.timeRange;
             })
-            .padding([paddingTop, 0, 0, 0]);
+            .padding([paddingTop, 0, 0, 0])
+            .children(function (d) {
+              return !hideInternals || !d.children ? d.children : d.children.filter(function(x) {
+                return x.depthCollapsed && x.depthCollapsed >= 0;
+              });
+            });
 
         function position() {
           this.style("left", function(d) { return d.x + "px"; })
@@ -1254,8 +1269,46 @@ profvis = (function() {
             .style("height", function(d) { return Math.max(0, d.dy - 1) + "px"; });
         }
 
-        var treemapData = vis.profTree;
-        var node = div.datum(treemapData).selectAll(".node")
+        var copyProfTree = function(root) {
+          var data = {
+            label: root.label,
+            timeRange: root.endTime && root.startTime ? root.endTime - root.startTime : null,
+            depthCollapsed: root.depthCollapsed,
+            children: []
+          };
+
+          var nodes = [{
+            source: root,
+            parent: data
+          }];
+
+          while (nodes.length > 0) {
+            var node = nodes.pop();
+
+            if (node.source.children) {
+              node.source.children.forEach(function(e) {
+                var destNode = {
+                  label: e.label,
+                  timeRange: e.endTime - e.startTime,
+                  depthCollapsed: e.depthCollapsed,
+                  children: []
+                };
+
+                node.parent.children.push(destNode);
+
+                nodes.push({
+                  source: e,
+                  parent: destNode
+                });
+              });
+            }
+          }
+
+          return data;
+        }
+
+        var profTreeCopy = copyProfTree(vis.profTree);
+        var node = div.datum(profTreeCopy).selectAll(".node")
             .data(treemap.nodes)
           .enter().append("div")
             .attr("class", "node")
@@ -1263,7 +1316,7 @@ profvis = (function() {
             .style("background-color", function(d) {
               if (d.name == 'tree') return "#FFF";
 
-              return color((d.endTime - d.startTime));
+              return color(d.timeRange);
             })
             .append('div')
             .style("font-size", function(d) {
@@ -1276,7 +1329,9 @@ profvis = (function() {
 
       return {
         el: el,
-        onResize: renderTreemap
+        onResize: renderTreemap,
+        useCollapsedDepth: useCollapsedDepth,
+        useUncollapsedDepth: useUncollapsedDepth
       }
     }
 
@@ -1603,15 +1658,20 @@ profvis = (function() {
 
     var onOptionsChange = function(hide) {
       vis.flameGraph.savePrevScales();
-      vis.treemap.onResize(hide);
 
       if (hide) {
         vis.flameGraph.useCollapsedDepth();
+        vis.treemap.useCollapsedDepth();
+
         vis.flameGraph.redrawCollapse(400, 400);
       } else {
         vis.flameGraph.useUncollapsedDepth();
+        vis.treemap.useUncollapsedDepth();
+
         vis.flameGraph.redrawUncollapse(400, 250);
       }
+
+      vis.treemap.onResize();
     };
 
     // Create the UI components
