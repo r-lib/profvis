@@ -1225,7 +1225,7 @@ profvis = (function() {
       };
       var paddingTop = 30;
 
-      var renderTreemap = function () {
+      var renderTreemap = function (hideInternals) {
         var innerWidth = el.clientWidth - dims.margin.left - dims.margin.right;
         var innerHeight = el.clientHeight - dims.margin.top - dims.margin.bottom;
 
@@ -1254,7 +1254,7 @@ profvis = (function() {
             .style("height", function(d) { return Math.max(0, d.dy - 1) + "px"; });
         }
 
-        var treemapData = vis.profTree.children[0];
+        var treemapData = vis.profTree;
         var node = div.datum(treemapData).selectAll(".node")
             .data(treemap.nodes)
           .enter().append("div")
@@ -1603,6 +1603,7 @@ profvis = (function() {
 
     var onOptionsChange = function(hide) {
       vis.flameGraph.savePrevScales();
+      vis.treemap.onResize(hide);
 
       if (hide) {
         vis.flameGraph.useCollapsedDepth();
