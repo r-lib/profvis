@@ -290,6 +290,17 @@ table.profvis-table .time, table.profvis-table .percent {
   padding-right: 10px;
 }
 
+table.profvis-table .memory {
+  padding: 0 5px;
+  text-align: right;
+
+  min-width: 2em;
+  max-width: 4em;
+  overflow: hidden;
+
+  padding-right: 10px;
+}
+
 table.profvis-table .timebar-cell {
   padding-left: 0;
   border-left: 1px solid black;
@@ -301,6 +312,29 @@ table.profvis-table .timebar-cell > .timebar {
   background-color: #333;
 }
 
+table.profvis-table .membar-left-cell {
+  padding-left: 0;
+  padding-right: 0;
+  border-left: 0px solid black;
+  min-width: 2em;
+  width: 5em;
+}
+
+table.profvis-table .membar-left-cell > .membar {
+  background-color: #333;
+  float: right;
+}
+
+table.profvis-table .membar-right-cell {
+  padding-left: 0;
+  border-left: 1px solid black;
+  min-width: 2em;
+  width: 5em;
+}
+
+table.profvis-table .membar-right-cell > .membar {
+  background-color: #333;
+}
 
 .profvis-flamegraph .background {
   fill: rgb(249, 249, 250);

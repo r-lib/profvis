@@ -31,7 +31,15 @@ parse_rprof <- function(path = "Rprof.out", expr_source = NULL) {
 
   # Parse profiling data -----------------
   prof_lines <- lines[!is_label]
+
   prof_data <- sub(' +$', '', prof_lines)
+
+  # Memory profiles start with ':'
+  has_memory <- length(prof_data) > 0 && substr(prof_data[[1]], 1, 1) == ":"
+
+  # Remove trailing memory marker from ':m1:m2:m3:d:"c1" "c2" "c3"'
+  prof_data <- gsub("^:", "", prof_data)
+
   # Convert frames with srcrefs from:
   #  "foo" 2#8
   # to
@@ -54,7 +62,8 @@ parse_rprof <- function(path = "Rprof.out", expr_source = NULL) {
     '', prof_data, perl = TRUE
   )
 
-  prof_data <- str_split(prof_data, fixed(" "))
+  # Split by ':' for memory header or ' ' for callstack
+  prof_data <- str_split(prof_data, "[: ]")
 
   # Replace empty strings with character(0); otherwise causes incorrect output
   # later.
@@ -65,6 +74,12 @@ parse_rprof <- function(path = "Rprof.out", expr_source = NULL) {
 
   # Parse each line into a separate data frame
   prof_data <- mapply(prof_data, seq_along(prof_data), FUN = function(sample, time) {
+    memalloc <- 0
+    if (has_memory) {
+      # Memory is defined as: small:big:nodes:dupes
+      memalloc <- sum(as.integer(sample[1:3])) / 1024 ^ 2
+      sample <- sample[-4:-1]
+    }
 
     labels <- sample
     labels <- sub('",\\d+#\\d+$', '"', labels)
@@ -95,11 +110,15 @@ parse_rprof <- function(path = "Rprof.out", expr_source = NULL) {
       label = labels,
       filenum = filenum,
       linenum = linenum,
+      memalloc = memalloc,
       stringsAsFactors = FALSE
     )
   }, SIMPLIFY = FALSE)
 
   prof_data <- do.call(rbind, prof_data)
+
+  # Compute memory changes
+  prof_data$meminc <- append(0, diff(prof_data$memalloc))
 
   # Add filenames
   prof_data$filename <- labels$path[prof_data$filenum]
