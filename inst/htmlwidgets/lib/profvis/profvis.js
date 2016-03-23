@@ -14,26 +14,24 @@ profvis = (function() {
 
   profvis.render = function(el, message) {
 
-    function generateStatusBarButton(caption) {
+    function generateStatusBarButton(id, caption, active) {
       var spacerImage = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAAUCAYAAACnOeyiAAAAXklEQVR42mNgAIL///8zMYSGhjIDGYIMIiIMvECGMwMDN4M4kFEDUqIIZKwDMdSBjAsghj6Q8QPEMAAy/lOBoQekv4AYKkDGfgZeXl4RICOLQUtLiw3IUAJJMQIZ7AC2tU2tXJxOYgAAAABJRU5ErkJggg==';
 
       var buttonHtml =
-        '<div class="info-block result-block active"><span class="info-label">' + caption + '</span></div>' +
+        '<div id="' + id  + '" class="info-block ' +
+        (active ? 'result-block-active' : 'result-block') +
+        '"><span class="info-label">' + caption + '</span></div>' +
         '<div class="separator-block"><img class="separator-image" src="' + spacerImage + '"></div>';
 
       return buttonHtml;
     }
 
-    function generateStatusBar(el) {
+    function generateStatusBar(el, onToogle) {
       var $el = $(el);
 
       el.innerHTML =
-        generateStatusBarButton('Flame graph') +
-        '<div class="spacing-block"></div>' +
-        '<div class="info-block"><span class="info-label">Total time:</span> ' +
-          vis.totalTime + 'ms</div>' +
-        '<div class="info-block"><span class="info-label">Sample interval:</span> ' +
-          vis.interval + 'ms</div>' +
+        generateStatusBarButton('flameGraphButton', 'Flame graph', true) +
+        generateStatusBarButton('treemapButton', 'Treemap', false) +
         '<span role="button" class="options-button">Options &#x25BE;</span>';
 
       $el.find("span.options-button").on("click", function(e) {
@@ -43,12 +41,42 @@ profvis = (function() {
         vis.optionsPanel.toggleVisibility();
       });
 
+      var setStatusBarButtons = function(e) {
+        $(".info-block").removeClass("result-block-active");
+        $(".info-block").addClass("result-block");
+        e.addClass("result-block-active");
+      }
+
+      $el.find("#flameGraphButton").on("click", function() {
+        setStatusBarButtons($(this));
+        onToogle("flamegraph");
+      });
+
+      $el.find("#treemapButton").on("click", function() {
+        setStatusBarButtons($(this));
+        onToogle("treemap");
+      });
+
       return {
         el: el
       };
     }
 
-    function generateOptionsPanel(el) {
+    function generateFooter(el, onToogle) {
+      var $el = $(el);
+
+      el.innerHTML =
+        '<div class="info-block"><span class="info-label">Sample interval:</span> ' +
+          vis.interval + 'ms</div>' +
+        '<div class="info-block-right"><span class="info-label">Total time:</span> ' +
+          vis.totalTime + 'ms</div>';
+
+      return {
+        el: el
+      };
+    }
+
+    function generateOptionsPanel(el, onOptionsChange) {
       var $el = $(el);
 
       el.innerHTML =
@@ -77,17 +105,8 @@ profvis = (function() {
 
       $el.find(".hide-internal")
         .on("click", function() {
-          vis.flameGraph.savePrevScales();
-
           var checked = toggleCheckbox($(this).find(".options-checkbox"));
-
-          if (checked) {
-            vis.flameGraph.useCollapsedDepth();
-            vis.flameGraph.redrawCollapse(400, 400);
-          } else {
-            vis.flameGraph.useUncollapsedDepth();
-            vis.flameGraph.redrawUncollapse(400, 250);
-          }
+          onOptionsChange(checked);
         });
 
       // Make the "hide internal" option available or unavailable to users
@@ -1198,6 +1217,126 @@ profvis = (function() {
       };
     }
 
+    function generateTreemap(el) {
+      var $el = $(el);
+
+      var dims = {
+        margin: { top: 0, right: 0, left: 0, bottom: 0 }
+      };
+      var paddingTop = 30;
+
+      var hideInternals = true;
+
+      var useCollapsedDepth = function useCollapsedDepth() {
+        hideInternals = true;
+      }
+
+      var useUncollapsedDepth = function useUncollapsedDepth() {
+        hideInternals = false
+      }
+
+      var renderTreemap = function () {
+        var innerWidth = el.clientWidth - dims.margin.left - dims.margin.right;
+        var innerHeight = el.clientHeight - dims.margin.top - dims.margin.bottom;
+
+        var colorScale = d3.scale.linear()
+          .domain([0.0, vis.totalTime])
+          .range(["rgb(241, 243, 246)", "rgb(233, 238, 243)"]);
+
+        var width = innerWidth,
+            height = innerHeight,
+            color = colorScale,
+            div = d3.select(el).append("div")
+               .style("position", "relative");
+
+        var treemap = d3.layout.treemap()
+            .size([width, height + paddingTop])
+            .sticky(true)
+            .value(function(d) {
+              return d.timeRange;
+            })
+            .padding(function (d) {
+              return [Math.min(paddingTop, d.dy), 0, 0, 0];
+            })
+            .children(function (d) {
+              return !hideInternals || !d.children ? d.children : d.children.filter(function(x) {
+                return x.depthCollapsed && x.depthCollapsed >= 0;
+              });
+            });
+
+        function position() {
+          this.style("left", function(d) { return d.x + "px"; })
+            .style("top", function(d) { return d.y - paddingTop + "px"; })
+            .style("width", function(d) { return Math.max(0, d.dx - 1) + "px"; })
+            .style("height", function(d) { return Math.max(0, d.dy - 1) + "px"; });
+        }
+
+        var copyProfTree = function(root) {
+          var data = {
+            label: root.label,
+            timeRange: root.endTime && root.startTime ? root.endTime - root.startTime : null,
+            depthCollapsed: root.depthCollapsed,
+            children: []
+          };
+
+          var nodes = [{
+            source: root,
+            parent: data
+          }];
+
+          while (nodes.length > 0) {
+            var node = nodes.pop();
+
+            if (node.source.children) {
+              node.source.children.forEach(function(e) {
+                var destNode = {
+                  label: e.label,
+                  timeRange: e.endTime - e.startTime,
+                  depthCollapsed: e.depthCollapsed,
+                  children: []
+                };
+
+                node.parent.children.push(destNode);
+
+                nodes.push({
+                  source: e,
+                  parent: destNode
+                });
+              });
+            }
+          }
+
+          return data;
+        }
+
+        var profTreeCopy = copyProfTree(vis.profTree);
+        var node = div.datum(profTreeCopy).selectAll(".node")
+            .data(treemap.nodes)
+          .enter().append("div")
+            .attr("class", "node")
+            .call(position)
+            .style("background-color", function(d) {
+              if (d.name == 'tree') return "#FFF";
+
+              return color(d.timeRange);
+            })
+            .append('div')
+            .style("font-size", function(d) {
+                return Math.min(12, 0.18*Math.sqrt(d.area))+'px';
+            })
+            .text(function(d) { return d.label; });
+      };
+
+      renderTreemap();
+
+      return {
+        el: el,
+        onResize: renderTreemap,
+        useCollapsedDepth: useCollapsedDepth,
+        useUncollapsedDepth: useUncollapsedDepth
+      }
+    }
+
     function enableScroll() {
       vis.codeTable.enableScroll();
       vis.flameGraph.enableZoom();
@@ -1216,6 +1355,7 @@ profvis = (function() {
       var $el = $(vis.el);
       var $panel1 = $el.children(".profvis-panel1");
       var $panel2 = $el.children(".profvis-panel2");
+      var $panelTreemap = $el.children(".profvis-treemap");
       var $splitBar = $el.children(".profvis-splitbar");
 
       var splitBarGap;
@@ -1291,6 +1431,7 @@ profvis = (function() {
         debounce(function() {
           resizePanels(lastSplitProportion);
           vis.flameGraph.onResize();
+          vis.treemap.onResize();
         }, 250)
       );
 
@@ -1428,6 +1569,7 @@ profvis = (function() {
       codeTable: null,
       flameGraph: null,
       infoBox: null,
+      treemap: null,
 
       // Functions to enable/disable responding to scrollwheel events
       enableScroll: enableScroll,
@@ -1445,6 +1587,10 @@ profvis = (function() {
 
     // Render the objects ---------------------------------------------
 
+    var statusBarEl = document.createElement("div");
+    statusBarEl.className = "profvis-status-bar";
+    vis.el.appendChild(statusBarEl);
+
     // Container panels - top/bottom or left/right
     var panel1 = document.createElement("div");
     panel1.className = "profvis-panel1 profvis-panel1-" + splitClass;
@@ -1458,18 +1604,14 @@ profvis = (function() {
     splitBarEl.className = "profvis-splitbar profvis-splitbar-" + splitClass;
     vis.el.appendChild(splitBarEl);
 
-    // Items in the panels
-    var statusBarEl = document.createElement("div");
-    statusBarEl.className = "profvis-status-bar";
-    panel1.appendChild(statusBarEl);
+    var footerEl = document.createElement("div");
+    footerEl.className = "profvis-footer";
+    vis.el.appendChild(footerEl);
 
+    // Items in the panels
     var codeTableEl = document.createElement("div");
     codeTableEl.className = "profvis-code";
     panel1.appendChild(codeTableEl);
-
-    var optionsPanelEl = document.createElement("div");
-    optionsPanelEl.className = "profvis-options-panel";
-    panel1.appendChild(optionsPanelEl);
 
     var flameGraphEl = document.createElement("div");
     flameGraphEl.className = "profvis-flamegraph";
@@ -1479,17 +1621,69 @@ profvis = (function() {
     infoBoxEl.className = "profvis-infobox";
     panel2.appendChild(infoBoxEl);
 
+    var treemapEl = document.createElement("div");
+    treemapEl.className = "profvis-treemap";
+    treemapEl.style.display = "none";
+    vis.el.appendChild(treemapEl);
+
+    var optionsPanelEl = document.createElement("div");
+    optionsPanelEl.className = "profvis-options-panel";
+    vis.el.appendChild(optionsPanelEl);
 
     // Efficient to properly size panels before the code + flamegraph are
     // rendered, so that we don't have to re-render.
     initResizing(message.split);
 
+    var hideViews = function() {
+      splitBarEl.style.display = "none";
+      treemapEl.style.display = "none";
+      panel1.style.display = "none";
+      panel2.style.display = "none";
+    }
+
+    var toggleViews = function(view) {
+      switch (view) {
+        case "flamegraph":
+          hideViews();
+          splitBarEl.style.display = "block";
+          panel1.style.display = "block";
+          panel2.style.display = "block";
+          vis.flameGraph.onResize();
+          break;
+        case "treemap":
+          hideViews();
+          treemapEl.style.display = "block";
+          vis.treemap.onResize();
+          break;
+      }
+    };
+
+    var onOptionsChange = function(hide) {
+      vis.flameGraph.savePrevScales();
+
+      if (hide) {
+        vis.flameGraph.useCollapsedDepth();
+        vis.treemap.useCollapsedDepth();
+
+        vis.flameGraph.redrawCollapse(400, 400);
+      } else {
+        vis.flameGraph.useUncollapsedDepth();
+        vis.treemap.useUncollapsedDepth();
+
+        vis.flameGraph.redrawUncollapse(400, 250);
+      }
+
+      vis.treemap.onResize();
+    };
+
     // Create the UI components
-    vis.statusBar = generateStatusBar(statusBarEl);
-    vis.optionsPanel = generateOptionsPanel(optionsPanelEl);
+    vis.statusBar = generateStatusBar(statusBarEl, toggleViews);
+    vis.footer = generateFooter(footerEl);
+    vis.optionsPanel = generateOptionsPanel(optionsPanelEl, onOptionsChange);
     vis.codeTable = generateCodeTable(codeTableEl);
     vis.flameGraph = generateFlameGraph(flameGraphEl);
     vis.infoBox = initInfoBox(infoBoxEl);
+    vis.treemap = generateTreemap(treemapEl);
 
     // If any depth collapsing occured, enable the "hide internal" checkbox.
     if (prof.some(function(d) { return d.depth !== d.depthCollapsed; })) {
