@@ -30,7 +30,7 @@ profvis = (function() {
       var $el = $(el);
 
       el.innerHTML =
-        generateStatusBarButton('flameGraphButton', 'Flame graph', true) +
+        generateStatusBarButton('flameGraphButton', 'Flamegraph', true) +
         generateStatusBarButton('treemapButton', 'Treemap', false) +
         '<span role="button" class="options-button">Options &#x25BE;</span>';
 
@@ -66,10 +66,10 @@ profvis = (function() {
       var $el = $(el);
 
       el.innerHTML =
-        '<div class="info-block"><span class="info-label">Sample interval:</span> ' +
+        '<div class="info-block"><span class="info-label">Sample Interval:</span> ' +
           vis.interval + 'ms</div>' +
-        '<div class="info-block-right"><span class="info-label">Total time:</span> ' +
-          vis.totalTime + 'ms</div>';
+        '<div class="info-block-right"><span class="info-label">Totals:</span> ' +
+          vis.totalTime + 'ms / ' + (Math.round(vis.totalMem * 100) / 100) + 'MB</div>';
 
       return {
         el: el
@@ -1238,6 +1238,7 @@ profvis = (function() {
           "<tr><td class='infobox-title'>Label</td><td>" + escapeHTML(label) + "</td></tr>" +
           "<tr><td class='infobox-title'>Called from</td><td>" + escapeHTML(ref) + "</td></tr>" +
           "<tr><td class='infobox-title'>Total time</td><td>" + (d.endTime - d.startTime) + "ms</td></tr>" +
+          "<tr><td class='infobox-title'>Total memory</td><td>" + (Math.round(d.sumMem * 100) / 100) + "MB</td></tr>" +
           "<tr><td class='infobox-title'>Agg. total time</td><td>" + vis.aggLabelTimes[label] + "ms</td></tr>" +
           "<tr><td class='infobox-title'>Call stack depth</td><td>" + d.depth + "</td></tr>" +
           "</table>";

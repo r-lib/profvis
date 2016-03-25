@@ -226,7 +226,7 @@ table.profvis-table th {
 table.profvis-table th.filename {
   font-family: monospace;
   padding-left: 10px;
-  width: 70%;
+  width: 80%;
 }
 
 table.profvis-table th.percent {
@@ -242,8 +242,8 @@ table.profvis-table tr {
 /* Need to use td for locked cells, so that the border color overrides the
    border color from the row above. */
 table.profvis-table tr.locked > td {
-  border-top: 1px solid black;
-  border-bottom: 1px solid black;
+  border-top: 1px solid #444;
+  border-bottom: 1px solid #444;
 }
 
 table.profvis-table tr > td {
@@ -303,13 +303,15 @@ table.profvis-table .memory {
 
 table.profvis-table .timebar-cell {
   padding-left: 0;
-  border-left: 1px solid black;
+  border-left: 1px solid #444;
   min-width: 5em;
   width: 5em;
 }
 
 table.profvis-table .timebar-cell > .timebar {
-  background-color: #333;
+  background-color: #444;
+  border-radius: 0px 2px 2px 0px;
+  line-height: 15px;
 }
 
 table.profvis-table .membar-left-cell {
@@ -321,8 +323,9 @@ table.profvis-table .membar-left-cell {
 }
 
 table.profvis-table .membar-left-cell > .membar {
-  background-color: #333;
+  background-color: #444;
   float: right;
+  border-radius: 2px 0px 0px 2px;
 }
 
 table.profvis-table .membar-right-cell {
@@ -333,7 +336,8 @@ table.profvis-table .membar-right-cell {
 }
 
 table.profvis-table .membar-right-cell > .membar {
-  background-color: #333;
+  background-color: #444;
+  border-radius: 0px 2px 2px 0px;
 }
 
 .profvis-flamegraph .background {
