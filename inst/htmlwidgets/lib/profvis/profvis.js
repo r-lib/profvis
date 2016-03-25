@@ -1456,7 +1456,7 @@ profvis = (function() {
 
           // Size and position the panels
           $panel1.outerHeight($splitBar.position().top - splitBarGap.top -
-                             margin.top - $statusBar.innerHeight());
+                             margin.top);
           $panel2.offset({ top: offsetBottom($splitBar) + splitBarGap.bottom });
         }
 
