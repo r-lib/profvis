@@ -66,10 +66,12 @@ profvis = (function() {
       var $el = $(el);
 
       el.innerHTML =
-        '<div class="info-block"><span class="info-label">Sample Interval:</span> ' +
-          vis.interval + 'ms</div>' +
+        '<div class="info-block"><span class="info-label">Sample Interval: ' +
+          vis.interval + 'ms</span></div>' +
         '<div class="info-block-right"><span class="info-label">Totals:</span> ' +
-          vis.totalTime + 'ms / ' + (Math.round(vis.totalMem * 100) / 100) + 'MB</div>';
+        '<span class="info-label" title="Total time">' + vis.totalTime + 'ms</span> / ' +
+        '<span class="info-label" title="Peak memory allocation">' + (Math.round(vis.totalMem * 100) / 100) + 'MB</span>' +
+        '</div>';
 
       return {
         el: el
@@ -204,6 +206,7 @@ profvis = (function() {
         .text("Time");
 
       var percentTooltip = "Percentage of tracked execution time";
+      var percentMemTooltip = "Percentage of peak memory allocation";
       headerRows.append("th")
         .attr("class", "percent")
         .attr("colspan", "2")
@@ -217,6 +220,7 @@ profvis = (function() {
       headerRows.append("th")
         .attr("class", "percent")
         .attr("colspan", "3")
+        .attr("title", percentMemTooltip)
         .text("% Memory");
 
       // Insert each line of code
@@ -266,15 +270,17 @@ profvis = (function() {
 
       rows.append("td")
         .attr("class", "percent")
+        .attr("title", percentMemTooltip)
         .attr("data-pseudo-content",
-              function(d) { return Math.round(d.sumMem/vis.totalMem * 100); });
+              function(d) { return Math.min(Math.round(d.sumMem/vis.totalMem * 100), 100); });
 
       rows.append("td")
         .attr("class", "membar-left-cell")
         .append("div")
           .attr("class", "membar")
+          .attr("title", percentMemTooltip)
           .style("width", function(d) {
-            return Math.abs(Math.min(Math.round(d.propMem * 50), 0)) + "%";
+            return Math.min(Math.abs(Math.min(Math.round(d.propMem * 100), 0)), 100) + "%";
           })
           // Add the equivalent of &nbsp; to be added with CSS content
           .attr("data-pseudo-content", "\u00a0");
@@ -283,8 +289,9 @@ profvis = (function() {
         .attr("class", "membar-right-cell")
         .append("div")
           .attr("class", "membar")
+          .attr("title", percentMemTooltip)
           .style("width", function(d) {
-            return Math.max(Math.round(d.propMem * 50), 0) + "%";
+            return Math.min(Math.max(Math.round(d.propMem * 100), 0), 100) + "%";
           })
           // Add the equivalent of &nbsp; to be added with CSS content
           .attr("data-pseudo-content", "\u00a0");

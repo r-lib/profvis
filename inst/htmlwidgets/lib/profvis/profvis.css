@@ -10,6 +10,10 @@
    box-sizing: content-box;
 }
 
+.profvis .info-label {
+  cursor: default;
+}
+
 .profvis-panel1 {
   left: 0px;
   top: 23px;
