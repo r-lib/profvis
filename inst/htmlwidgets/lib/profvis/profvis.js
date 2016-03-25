@@ -1772,24 +1772,6 @@ profvis = (function() {
       };
     });
 
-    var aggregateTreeMem = function(root) {
-      var nodes = [root];
-      var sum = 0;
-
-      while(nodes.length > 0) {
-        var node = nodes.pop();
-        sum = node.meminc ? sum + node.meminc : sum;
-
-        if (node.children) {
-          node.children.forEach(function (child) {
-            nodes.push(child);
-          });
-        }
-      }
-
-      return sum;
-    }
-
     // Get timing data for each line
     var statsData = d3.nest()
       .key(function(d) { return d.filename; })
@@ -1807,11 +1789,7 @@ profvis = (function() {
         }, 0);
 
         var sumMem = leaves.reduce(function(sum, d) {
-          var incMem = 0;
-          if (!ancestorHasFilenameLinenum(d.filename, d.linenum, d.parent)) {
-            incMem = aggregateTreeMem(d);
-          }
-          return sum + incMem;
+          return sum + d.sumMem;
         }, 0);
 
         return {
@@ -2006,11 +1984,12 @@ profvis = (function() {
       var lastLeaf = null;   // The last leaf we've looked at
       var newLeaves = [];
       var collectedChildren = [];
+      var sumMem = 0;
 
       // This takes the start leaf, end leaf, and the set of children for the
       // new leaf, and creates a new leaf which copies all its properties from
       // the startLeaf, except lastTime and children.
-      function addNewLeaf(startLeaf, endLeaf, newLeafChildren) {
+      function addNewLeaf(startLeaf, endLeaf, newLeafChildren, sumMem) {
         var newLeaf = $.extend({}, startLeaf);
         newLeaf.lastTime = endLeaf.time;
         newLeaf.parent = tree;
@@ -2018,7 +1997,20 @@ profvis = (function() {
 
         // Recurse into children
         newLeaf = consolidateTree(newLeaf);
+
+        // Aggregate memory from this consolidation batch and their children
+        aggregateMemory(newLeaf, sumMem);
+
         newLeaves.push(newLeaf);
+      }
+
+      function aggregateMemory(leaf, sumMem) {
+        leaf.sumMem = sumMem;
+        if (leaf.children) {
+          leaf.children.forEach(function(child) {
+            leaf.sumMem += child.sumMem ? child.sumMem : 0;
+          });
+        }
       }
 
       for (var i=0; i<leaves.length; i++) {
@@ -2026,25 +2018,27 @@ profvis = (function() {
 
         if (i === 0) {
           startLeaf = leaf;
-
+          sumMem = 0;
         } else if (leaf.label !== startLeaf.label ||
                    leaf.filename !== startLeaf.filename ||
                    leaf.linenum !== startLeaf.linenum ||
                    leaf.depth !== startLeaf.depth)
         {
-          addNewLeaf(startLeaf, lastLeaf, collectedChildren);
+          addNewLeaf(startLeaf, lastLeaf, collectedChildren, sumMem);
 
           collectedChildren = [];
           startLeaf = leaf;
+          sumMem = 0;
         }
 
+        sumMem += leaf.meminc;
         collectedChildren = collectedChildren.concat(leaf.children);
         lastLeaf = leaf;
       }
 
       // Add the last one, if there were any at all
       if (i !== 0) {
-        addNewLeaf(startLeaf, lastLeaf, collectedChildren);
+        addNewLeaf(startLeaf, lastLeaf, collectedChildren, sumMem);
       }
 
       tree.children = newLeaves;
