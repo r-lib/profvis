@@ -272,7 +272,7 @@ profvis = (function() {
         .attr("class", "percent")
         .attr("title", percentMemTooltip)
         .attr("data-pseudo-content",
-              function(d) { return Math.min(Math.round(d.sumMem/vis.totalMem * 100), 100); });
+              function(d) { return Math.round(d.sumMem/vis.totalMem * 100); });
 
       rows.append("td")
         .attr("class", "membar-left-cell")
