@@ -68,9 +68,10 @@ profvis = (function() {
       el.innerHTML =
         '<div class="info-block"><span class="info-label">Sample Interval: ' +
           vis.interval + 'ms</span></div>' +
-        '<div class="info-block-right"><span class="info-label">Totals:</span> ' +
-        '<span class="info-label" title="Total time">' + vis.totalTime + 'ms</span> / ' +
+        '<div class="info-block-right">' +
         '<span class="info-label" title="Peak memory allocation">' + (Math.round(vis.totalMem * 100) / 100) + 'MB</span>' +
+        ' / ' +
+        '<span class="info-label" title="Total time">' + vis.totalTime + 'ms</span>' +
         '</div>';
 
       return {
@@ -87,6 +88,9 @@ profvis = (function() {
         '</div>' +
         '<div role="button" class="hide-zero-row">' +
           '<span class="options-checkbox" data-checked="0">&#x2610;</span> Hide lines of code with zero time' +
+        '</div>' +
+        '<div role="button" class="hide-memory">' +
+          '<span class="options-checkbox" data-checked="0">&#x2610;</span> Hide memory results' +
         '</div>';
 
       // Toggle the appearance of a checkbox and return the new checked state.
@@ -108,7 +112,13 @@ profvis = (function() {
       $el.find(".hide-internal")
         .on("click", function() {
           var checked = toggleCheckbox($(this).find(".options-checkbox"));
-          onOptionsChange(checked);
+          onOptionsChange("internals", checked);
+        });
+
+      $el.find(".hide-memory")
+        .on("click", function() {
+          var checked = toggleCheckbox($(this).find(".options-checkbox"));
+          onOptionsChange("memory", checked);
         });
 
       // Make the "hide internal" option available or unavailable to users
@@ -178,6 +188,7 @@ profvis = (function() {
 
     // Generate the code table ----------------------------------------
     function generateCodeTable(el) {
+      var useMemory = false;
       var content = d3.select(el);
 
       if (vis.fileLineStats.length === 0) {
@@ -201,27 +212,22 @@ profvis = (function() {
         .attr("class", "filename")
         .text(function(d) { return d.filename; });
 
-      headerRows.append("th")
-        .attr("class", "time")
-        .text("Time");
-
       var percentTooltip = "Percentage of tracked execution time";
       var percentMemTooltip = "Percentage of peak memory allocation";
-      headerRows.append("th")
-        .attr("class", "percent")
-        .attr("colspan", "2")
-        .attr("title", percentTooltip)
-        .text("% Time");
 
       headerRows.append("th")
         .attr("class", "memory")
+        .attr("colspan", "3")
         .text("Memory");
 
       headerRows.append("th")
-        .attr("class", "percent")
-        .attr("colspan", "3")
-        .attr("title", percentMemTooltip)
-        .text("% Memory");
+        .attr("class", "time")
+        .attr("colspan", "2")
+        .text("Time");
+
+      headerRows.append("th")
+        .attr("class", "spacing")
+        .attr("data-pseudo-content", "\u00a0");
 
       // Insert each line of code
       var rows = tables.selectAll("tr.code-row")
@@ -242,37 +248,10 @@ profvis = (function() {
         .each(function() { hljs.highlightBlock(this); });
 
       rows.append("td")
-        .attr("class", "time")
+        .attr("class", "memory")
+        .attr("title", "Memory allocation (MB)")
         .attr("data-pseudo-content",
-              function(d) { return (Math.round(d.sumTime * 100) / 100); });
-
-      rows.append("td")
-        .attr("class", "percent")
-        .attr("title", percentTooltip)
-        .attr("data-pseudo-content",
-              function(d) { return Math.round(d.sumTime/vis.totalTime * 100); });
-
-      rows.append("td")
-        .attr("class", "timebar-cell")
-        .append("div")
-          .attr("class", "timebar")
-          .attr("title", percentTooltip)
-          .style("width", function(d) {
-            return Math.round(d.propTime * 100) + "%";
-          })
-          // Add the equivalent of &nbsp; to be added with CSS content
-          .attr("data-pseudo-content", "\u00a0");
-
-      rows.append("td")
-        .attr("class", "time")
-        .attr("data-pseudo-content",
-              function(d) { return (Math.round(d.sumMem * 100) / 100); });
-
-      rows.append("td")
-        .attr("class", "percent")
-        .attr("title", percentMemTooltip)
-        .attr("data-pseudo-content",
-              function(d) { return Math.round(d.sumMem/vis.totalMem * 100); });
+              function(d) { return d.sumMem ? parseFloat(d.sumMem).toFixed(1) : 0; });
 
       rows.append("td")
         .attr("class", "membar-left-cell")
@@ -295,6 +274,27 @@ profvis = (function() {
           })
           // Add the equivalent of &nbsp; to be added with CSS content
           .attr("data-pseudo-content", "\u00a0");
+
+      rows.append("td")
+        .attr("class", "time")
+        .attr("title", "Total time (ms)")
+        .attr("data-pseudo-content",
+              function(d) { return (Math.round(d.sumTime * 100) / 100); });
+
+      rows.append("td")
+        .attr("class", "timebar-cell")
+        .append("div")
+          .attr("class", "timebar")
+          .attr("title", percentTooltip)
+          .style("width", function(d) {
+            return Math.round(d.propTime * 100) + "%";
+          })
+          // Add the equivalent of &nbsp; to be added with CSS content
+          .attr("data-pseudo-content", "\u00a0");
+
+      rows.append("td")
+        .attr("class", "spacing")
+        .attr("data-pseudo-content", "\u00a0");
 
       rows
         .on("click", function(d) {
@@ -373,6 +373,12 @@ profvis = (function() {
       function disableScroll() {
       }
 
+      function useMemoryResults(value) {
+        d3.selectAll(".memory").style("display", value ? "none" : "");
+        d3.selectAll(".membar-left-cell").style("display", value ? "none" : "");
+        d3.selectAll(".membar-right-cell").style("display", value ? "none" : "");
+      }
+
       return {
         el: el,
         hideZeroTimeRows: hideZeroTimeRows,
@@ -382,7 +388,8 @@ profvis = (function() {
         addActiveHighlight: addActiveHighlight,
         clearActiveHighlight: clearActiveHighlight,
         enableScroll: enableScroll,
-        disableScroll: disableScroll
+        disableScroll: disableScroll,
+        useMemoryResults: useMemoryResults
       };
     }
 
@@ -510,7 +517,6 @@ profvis = (function() {
       }
 
       useCollapsedDepth();
-
 
       // SVG container objects ------------------------------------------------
       var svg = d3.select(el).append('svg');
@@ -1707,22 +1713,33 @@ profvis = (function() {
       }
     };
 
-    var onOptionsChange = function(hide) {
-      vis.flameGraph.savePrevScales();
+    var onOptionsChange = function(option, checked) {
+      switch (option)
+      {
+        case "internals": {
+          vis.flameGraph.savePrevScales();
 
-      if (hide) {
-        vis.flameGraph.useCollapsedDepth();
-        vis.treemap.useCollapsedDepth();
+          if (checked) {
+            vis.flameGraph.useCollapsedDepth();
+            vis.treemap.useCollapsedDepth();
 
-        vis.flameGraph.redrawCollapse(400, 400);
-      } else {
-        vis.flameGraph.useUncollapsedDepth();
-        vis.treemap.useUncollapsedDepth();
+            vis.flameGraph.redrawCollapse(400, 400);
+          } else {
+            vis.flameGraph.useUncollapsedDepth();
+            vis.treemap.useUncollapsedDepth();
 
-        vis.flameGraph.redrawUncollapse(400, 250);
+            vis.flameGraph.redrawUncollapse(400, 250);
+          }
+
+          vis.treemap.onResize();
+
+          break;
+        }
+        case "memory": {
+          vis.codeTable.useMemoryResults(checked);
+          break;
+        }
       }
-
-      vis.treemap.onResize();
     };
 
     // Create the UI components
