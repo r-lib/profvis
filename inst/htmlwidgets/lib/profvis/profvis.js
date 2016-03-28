@@ -30,7 +30,7 @@ profvis = (function() {
       var $el = $(el);
 
       el.innerHTML =
-        generateStatusBarButton('flameGraphButton', 'Flame graph', true) +
+        generateStatusBarButton('flameGraphButton', 'Flamegraph', true) +
         generateStatusBarButton('treemapButton', 'Treemap', false) +
         '<span role="button" class="options-button">Options &#x25BE;</span>';
 
@@ -66,10 +66,13 @@ profvis = (function() {
       var $el = $(el);
 
       el.innerHTML =
-        '<div class="info-block"><span class="info-label">Sample interval:</span> ' +
-          vis.interval + 'ms</div>' +
-        '<div class="info-block-right"><span class="info-label">Total time:</span> ' +
-          vis.totalTime + 'ms</div>';
+        '<div class="info-block"><span class="info-label">Sample Interval: ' +
+          vis.interval + 'ms</span></div>' +
+        '<div class="info-block-right">' +
+        '<span class="info-label" title="Peak memory allocation">' + (Math.round(vis.totalMem * 100) / 100) + 'MB</span>' +
+        ' / ' +
+        '<span class="info-label" title="Total time">' + vis.totalTime + 'ms</span>' +
+        '</div>';
 
       return {
         el: el
@@ -85,6 +88,9 @@ profvis = (function() {
         '</div>' +
         '<div role="button" class="hide-zero-row">' +
           '<span class="options-checkbox" data-checked="0">&#x2610;</span> Hide lines of code with zero time' +
+        '</div>' +
+        '<div role="button" class="hide-memory">' +
+          '<span class="options-checkbox" data-checked="0">&#x2610;</span> Hide memory results' +
         '</div>';
 
       // Toggle the appearance of a checkbox and return the new checked state.
@@ -106,7 +112,13 @@ profvis = (function() {
       $el.find(".hide-internal")
         .on("click", function() {
           var checked = toggleCheckbox($(this).find(".options-checkbox"));
-          onOptionsChange(checked);
+          onOptionsChange("internals", checked);
+        });
+
+      $el.find(".hide-memory")
+        .on("click", function() {
+          var checked = toggleCheckbox($(this).find(".options-checkbox"));
+          onOptionsChange("memory", checked);
         });
 
       // Make the "hide internal" option available or unavailable to users
@@ -176,9 +188,10 @@ profvis = (function() {
 
     // Generate the code table ----------------------------------------
     function generateCodeTable(el) {
+      var useMemory = false;
       var content = d3.select(el);
 
-      if (vis.fileLineTimes.length === 0) {
+      if (vis.fileLineStats.length === 0) {
         content.append("div")
           .attr("class", "profvis-message")
           .append("div")
@@ -187,7 +200,7 @@ profvis = (function() {
 
       // One table for each file
       var tables = content.selectAll("table")
-          .data(vis.fileLineTimes)
+          .data(vis.fileLineStats)
         .enter()
           .append("table")
           .attr("class", "profvis-table");
@@ -199,16 +212,22 @@ profvis = (function() {
         .attr("class", "filename")
         .text(function(d) { return d.filename; });
 
+      var percentTooltip = "Percentage of tracked execution time";
+      var percentMemTooltip = "Percentage of peak memory allocation";
+
+      headerRows.append("th")
+        .attr("class", "memory")
+        .attr("colspan", "3")
+        .text("Memory");
+
       headerRows.append("th")
         .attr("class", "time")
-        .text("Total");
-
-      var percentTooltip = "Percentage of tracked execution time";
-      headerRows.append("th")
-        .attr("class", "percent")
         .attr("colspan", "2")
-        .attr("title", percentTooltip)
-        .text("% Proportion");
+        .text("Time");
+
+      headerRows.append("th")
+        .attr("class", "spacing")
+        .attr("data-pseudo-content", "\u00a0");
 
       // Insert each line of code
       var rows = tables.selectAll("tr.code-row")
@@ -229,15 +248,38 @@ profvis = (function() {
         .each(function() { hljs.highlightBlock(this); });
 
       rows.append("td")
-        .attr("class", "time")
+        .attr("class", "memory")
+        .attr("title", "Memory allocation (MB)")
         .attr("data-pseudo-content",
-              function(d) { return (Math.round(d.sumTime * 100) / 100); });
+              function(d) { return d.sumMem ? parseFloat(d.sumMem).toFixed(1) : 0; });
 
       rows.append("td")
-        .attr("class", "percent")
-        .attr("title", percentTooltip)
+        .attr("class", "membar-left-cell")
+        .append("div")
+          .attr("class", "membar")
+          .attr("title", percentMemTooltip)
+          .style("width", function(d) {
+            return Math.min(Math.abs(Math.min(Math.round(d.propMem * 100), 0)), 100) + "%";
+          })
+          // Add the equivalent of &nbsp; to be added with CSS content
+          .attr("data-pseudo-content", "\u00a0");
+
+      rows.append("td")
+        .attr("class", "membar-right-cell")
+        .append("div")
+          .attr("class", "membar")
+          .attr("title", percentMemTooltip)
+          .style("width", function(d) {
+            return Math.min(Math.max(Math.round(d.propMem * 100), 0), 100) + "%";
+          })
+          // Add the equivalent of &nbsp; to be added with CSS content
+          .attr("data-pseudo-content", "\u00a0");
+
+      rows.append("td")
+        .attr("class", "time")
+        .attr("title", "Total time (ms)")
         .attr("data-pseudo-content",
-              function(d) { return Math.round(d.sumTime/vis.totalTime * 100); });
+              function(d) { return (Math.round(d.sumTime * 100) / 100); });
 
       rows.append("td")
         .attr("class", "timebar-cell")
@@ -249,6 +291,10 @@ profvis = (function() {
           })
           // Add the equivalent of &nbsp; to be added with CSS content
           .attr("data-pseudo-content", "\u00a0");
+
+      rows.append("td")
+        .attr("class", "spacing")
+        .attr("data-pseudo-content", "\u00a0");
 
       rows
         .on("click", function(d) {
@@ -327,6 +373,12 @@ profvis = (function() {
       function disableScroll() {
       }
 
+      function useMemoryResults(value) {
+        d3.selectAll(".memory").style("display", value ? "none" : "");
+        d3.selectAll(".membar-left-cell").style("display", value ? "none" : "");
+        d3.selectAll(".membar-right-cell").style("display", value ? "none" : "");
+      }
+
       return {
         el: el,
         hideZeroTimeRows: hideZeroTimeRows,
@@ -336,7 +388,8 @@ profvis = (function() {
         addActiveHighlight: addActiveHighlight,
         clearActiveHighlight: clearActiveHighlight,
         enableScroll: enableScroll,
-        disableScroll: disableScroll
+        disableScroll: disableScroll,
+        useMemoryResults: useMemoryResults
       };
     }
 
@@ -464,7 +517,6 @@ profvis = (function() {
       }
 
       useCollapsedDepth();
-
 
       // SVG container objects ------------------------------------------------
       var svg = d3.select(el).append('svg');
@@ -1199,6 +1251,7 @@ profvis = (function() {
           "<tr><td class='infobox-title'>Label</td><td>" + escapeHTML(label) + "</td></tr>" +
           "<tr><td class='infobox-title'>Called from</td><td>" + escapeHTML(ref) + "</td></tr>" +
           "<tr><td class='infobox-title'>Total time</td><td>" + (d.endTime - d.startTime) + "ms</td></tr>" +
+          "<tr><td class='infobox-title'>Total memory</td><td>" + (Math.round(d.sumMem * 100) / 100) + "MB</td></tr>" +
           "<tr><td class='infobox-title'>Agg. total time</td><td>" + vis.aggLabelTimes[label] + "ms</td></tr>" +
           "<tr><td class='infobox-title'>Call stack depth</td><td>" + d.depth + "</td></tr>" +
           "</table>";
@@ -1357,6 +1410,7 @@ profvis = (function() {
       var $panel2 = $el.children(".profvis-panel2");
       var $panelTreemap = $el.children(".profvis-treemap");
       var $splitBar = $el.children(".profvis-splitbar");
+      var $statusBar = $el.children(".profvis-status-bar");
 
       var splitBarGap;
       var margin;
@@ -1559,9 +1613,10 @@ profvis = (function() {
       profTree: getProfTree(prof),
       interval: message.interval,
       totalTime: getTotalTime(prof),
+      totalMem: getTotalMemory(prof),
       files: message.files,
       aggLabelTimes: getAggregatedLabelTimes(prof),
-      fileLineTimes: getFileLineTimes(prof, message.files),
+      fileLineStats: getFileLineStats(prof, message.files),
 
       // Objects representing each component
       statusBar: null,
@@ -1658,22 +1713,33 @@ profvis = (function() {
       }
     };
 
-    var onOptionsChange = function(hide) {
-      vis.flameGraph.savePrevScales();
+    var onOptionsChange = function(option, checked) {
+      switch (option)
+      {
+        case "internals": {
+          vis.flameGraph.savePrevScales();
 
-      if (hide) {
-        vis.flameGraph.useCollapsedDepth();
-        vis.treemap.useCollapsedDepth();
+          if (checked) {
+            vis.flameGraph.useCollapsedDepth();
+            vis.treemap.useCollapsedDepth();
 
-        vis.flameGraph.redrawCollapse(400, 400);
-      } else {
-        vis.flameGraph.useUncollapsedDepth();
-        vis.treemap.useUncollapsedDepth();
+            vis.flameGraph.redrawCollapse(400, 400);
+          } else {
+            vis.flameGraph.useUncollapsedDepth();
+            vis.treemap.useUncollapsedDepth();
 
-        vis.flameGraph.redrawUncollapse(400, 250);
+            vis.flameGraph.redrawUncollapse(400, 250);
+          }
+
+          vis.treemap.onResize();
+
+          break;
+        }
+        case "memory": {
+          vis.codeTable.useMemoryResults(checked);
+          break;
+        }
       }
-
-      vis.treemap.onResize();
     };
 
     // Create the UI components
@@ -1701,14 +1767,14 @@ profvis = (function() {
 
   // Calculate amount of time spent on each line of code. Returns nested objects
   // grouped by file, and then by line number.
-  function getFileLineTimes(prof, files) {
+  function getFileLineStats(prof, files) {
     // Drop entries with null or "" filename
     prof = prof.filter(function(row) {
       return row.filename !== null && row.filename !== "";
     });
 
     // Gather line-by-line file contents
-    var fileLineTimes = files.map(function(file) {
+    var fileLineStats = files.map(function(file) {
       // Create array of objects with info for each line of code.
       var lines = file.content.split("\n");
       var lineData = [];
@@ -1720,7 +1786,8 @@ profvis = (function() {
           normpath: normpath,
           linenum: i + 1,
           content: lines[i],
-          sumTime: 0
+          sumTime: 0,
+          sumMem: 0,
         };
       }
 
@@ -1731,7 +1798,7 @@ profvis = (function() {
     });
 
     // Get timing data for each line
-    var timeData = d3.nest()
+    var statsData = d3.nest()
       .key(function(d) { return d.filename; })
       .key(function(d) { return d.linenum; })
       .rollup(function(leaves) {
@@ -1746,43 +1813,57 @@ profvis = (function() {
           return sum + incTime;
         }, 0);
 
+        var sumMem = leaves.reduce(function(sum, d) {
+          return sum + d.sumMem;
+        }, 0);
+
         return {
           filename: leaves[0].filename,
           linenum: leaves[0].linenum,
-          sumTime: sumTime
+          sumTime: sumTime,
+          sumMem: sumMem
         };
       })
       .entries(prof);
 
     // Insert the sumTimes into line content data
-    timeData.forEach(function(fileInfo) {
+    statsData.forEach(function(fileInfo) {
       // Find item in fileTimes that matches the file of this fileInfo object
-      var fileLineData = fileLineTimes.filter(function(d) {
+      var fileLineData = fileLineStats.filter(function(d) {
         return d.filename === fileInfo.key;
       })[0].lineData;
 
       fileInfo.values.forEach(function(lineInfo) {
         lineInfo = lineInfo.values;
         fileLineData[lineInfo.linenum - 1].sumTime = lineInfo.sumTime;
+        fileLineData[lineInfo.linenum - 1].sumMem = lineInfo.sumMem;
       });
     });
 
     // Calculate proportional times, relative to the longest time in the data
     // set. Modifies data in place.
-    var fileMaxTimes = fileLineTimes.map(function(lines) {
+    var fileMaxTimes = fileLineStats.map(function(lines) {
       var lineTimes = lines.lineData.map(function(x) { return x.sumTime; });
       return d3.max(lineTimes);
     });
 
     var maxTime = d3.max(fileMaxTimes);
 
-    fileLineTimes.map(function(lines) {
+    fileLineStats.map(function(lines) {
       lines.lineData.map(function(line) {
         line.propTime = line.sumTime / maxTime;
       });
     });
 
-    return fileLineTimes;
+    var totalMem = getTotalMemory(prof);
+
+    fileLineStats.map(function(lines) {
+      lines.lineData.map(function(line) {
+        line.propMem = line.sumMem / totalMem;
+      });
+    });
+
+    return fileLineStats;
 
     // Returns true if the given node or one of its ancestors has the given
     // filename and linenum; false otherwise.
@@ -1826,6 +1907,11 @@ profvis = (function() {
   function getTotalTime(prof) {
     return d3.max(prof, function(d) { return d.endTime; }) -
            d3.min(prof, function(d) { return d.startTime; });
+  }
+
+  // Find the total memory spanned in the data
+  function getTotalMemory(prof) {
+    return d3.max(prof, function(d) { return d.memalloc; });
   }
 
   // Calculate the total amount of time spent in each function label
@@ -1923,11 +2009,12 @@ profvis = (function() {
       var lastLeaf = null;   // The last leaf we've looked at
       var newLeaves = [];
       var collectedChildren = [];
+      var sumMem = 0;
 
       // This takes the start leaf, end leaf, and the set of children for the
       // new leaf, and creates a new leaf which copies all its properties from
       // the startLeaf, except lastTime and children.
-      function addNewLeaf(startLeaf, endLeaf, newLeafChildren) {
+      function addNewLeaf(startLeaf, endLeaf, newLeafChildren, sumMem) {
         var newLeaf = $.extend({}, startLeaf);
         newLeaf.lastTime = endLeaf.time;
         newLeaf.parent = tree;
@@ -1935,7 +2022,20 @@ profvis = (function() {
 
         // Recurse into children
         newLeaf = consolidateTree(newLeaf);
+
+        // Aggregate memory from this consolidation batch and their children
+        aggregateMemory(newLeaf, sumMem);
+
         newLeaves.push(newLeaf);
+      }
+
+      function aggregateMemory(leaf, sumMem) {
+        leaf.sumMem = sumMem;
+        if (leaf.children) {
+          leaf.children.forEach(function(child) {
+            leaf.sumMem += child.sumMem ? child.sumMem : 0;
+          });
+        }
       }
 
       for (var i=0; i<leaves.length; i++) {
@@ -1943,25 +2043,27 @@ profvis = (function() {
 
         if (i === 0) {
           startLeaf = leaf;
-
+          sumMem = 0;
         } else if (leaf.label !== startLeaf.label ||
                    leaf.filename !== startLeaf.filename ||
                    leaf.linenum !== startLeaf.linenum ||
                    leaf.depth !== startLeaf.depth)
         {
-          addNewLeaf(startLeaf, lastLeaf, collectedChildren);
+          addNewLeaf(startLeaf, lastLeaf, collectedChildren, sumMem);
 
           collectedChildren = [];
           startLeaf = leaf;
+          sumMem = 0;
         }
 
+        sumMem += leaf.meminc;
         collectedChildren = collectedChildren.concat(leaf.children);
         lastLeaf = leaf;
       }
 
       // Add the last one, if there were any at all
       if (i !== 0) {
-        addNewLeaf(startLeaf, lastLeaf, collectedChildren);
+        addNewLeaf(startLeaf, lastLeaf, collectedChildren, sumMem);
       }
 
       tree.children = newLeaves;

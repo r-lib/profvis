@@ -10,6 +10,10 @@
    box-sizing: content-box;
 }
 
+.profvis-footer .info-label {
+  cursor: default;
+}
+
 .profvis-panel1 {
   left: 0px;
   top: 23px;
@@ -23,7 +27,7 @@
 }
 
 .profvis-panel1-horizontal {
-  height: 400px;
+  height: 378px;
   right: 0px;
 }
 
@@ -220,13 +224,17 @@ table.profvis-table {
 
 table.profvis-table th {
   background-color: rgb(249, 249, 250);
-  width: 15%;
+  width: 12%;
+}
+
+table.profvis-table th.spacing {
+  width: 20px;
 }
 
 table.profvis-table th.filename {
   font-family: monospace;
   padding-left: 10px;
-  width: 70%;
+  width: auto;
 }
 
 table.profvis-table th.percent {
@@ -242,8 +250,8 @@ table.profvis-table tr {
 /* Need to use td for locked cells, so that the border color overrides the
    border color from the row above. */
 table.profvis-table tr.locked > td {
-  border-top: 1px solid black;
-  border-bottom: 1px solid black;
+  border-top: 1px solid #444;
+  border-bottom: 1px solid #444;
 }
 
 table.profvis-table tr > td {
@@ -272,8 +280,7 @@ table.profvis-table .code {
   margin: 0;
   min-height: 1.25em;
   line-height: 1.25;
-  width: 640px;
-  max-width: 640px;
+  width: auto;
   font-family: monospace;
   background: transparent;
 }
@@ -290,17 +297,69 @@ table.profvis-table .time, table.profvis-table .percent {
   padding-right: 10px;
 }
 
+table.profvis-table .memory {
+  padding-right: 5px;
+}
+
+table.profvis-table th.time {
+  text-align: center;
+}
+
+table.profvis-table .memory {
+  padding: 0 5px;
+  text-align: right;
+
+  min-width: 2em;
+  max-width: 4em;
+  overflow: hidden;
+
+  padding-right: 10px;
+}
+
+table.profvis-table th.memory {
+  text-align: center;
+}
+
 table.profvis-table .timebar-cell {
   padding-left: 0;
-  border-left: 1px solid black;
-  min-width: 5em;
-  width: 5em;
+  border-left: 1px solid #444;
+  min-width: 3em;
+  width: 3em;
 }
 
 table.profvis-table .timebar-cell > .timebar {
-  background-color: #333;
+  background-color: #444;
+  border-radius: 0px 2px 2px 0px;
+  line-height: 15px;
 }
 
+table.profvis-table .membar-left-cell {
+  padding-left: 0;
+  padding-right: 0;
+  border-left: 0px solid black;
+  min-width: 0.5em;
+  width: 0.5em;
+}
+
+table.profvis-table .membar-left-cell > .membar {
+  background-color: #444;
+  float: right;
+  border-radius: 2px 0px 0px 2px;
+  line-height: 15px;
+}
+
+table.profvis-table .membar-right-cell {
+  padding-left: 0;
+  border-left: 1px solid black;
+  min-width: 1em;
+  width: 1em;
+}
+
+table.profvis-table .membar-right-cell > .membar {
+  background-color: #444;
+  border-radius: 0px 2px 2px 0px;
+  line-height: 15px;
+}
 
 .profvis-flamegraph .background {
   fill: rgb(249, 249, 250);

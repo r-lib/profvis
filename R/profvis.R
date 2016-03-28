@@ -72,7 +72,7 @@ profvis <- function(expr = NULL, interval = 0.01, prof_output = NULL,
 
     gc()
     Rprof(prof_output, interval = interval, line.profiling = TRUE,
-          gc.profiling = TRUE)
+          gc.profiling = TRUE, memory.profiling = TRUE)
     on.exit(Rprof(NULL), add = TRUE)
     if (remove_on_exit)
       on.exit(unlink(prof_output), add = TRUE)
