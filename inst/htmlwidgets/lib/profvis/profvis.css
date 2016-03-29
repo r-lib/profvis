@@ -516,3 +516,81 @@ table.profvis-table .membar-right-cell > .membar {
 .profvis-treemap .node div {
   padding: 6px 6px;
 }
+
+.profvis-treetable {
+  top: 0px;
+  bottom: 0px;
+  left: 0px;
+  right: 0px;
+  position: absolute;
+  margin-top: 23px;
+  margin-bottom: 21px;
+  margin-right: 0px;
+  overflow: hidden;
+  font: 10px sans-serif;
+  color: #161616;
+  font-family: Open Sans,Helvetica,Arial,sans-serif;
+  font-size: 12px;
+}
+
+.profvis-treetable .results {
+  width: 100%;
+}
+
+.profvis-treetable th {
+  font-weight: normal;
+  height: 18px;
+  background-color: #F8F9F8;
+  border-bottom: solid 1px #E4E4E4;
+  border-right: solid 1px #E4E4E4;
+  padding-left: 3px;
+  padding-right: 3px;
+}
+
+.profvis-treetable td {
+  height: 18px;
+  border-bottom: solid 1px #E4E4E4;
+  border-right: solid 1px #E4E4E4;
+  padding-left: 3px;
+  padding-right: 3px;
+}
+
+.profvis-treetable .action {
+  width: 18px;
+}
+
+.profvis-treetable .memory {
+  width: 120px;
+  text-align: right;
+}
+
+.profvis-treetable th {
+  cursor: default;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  overflow: hidden;
+}
+
+.profvis-treetable th.memory {
+  text-align: center;
+}
+
+.profvis-treetable .time {
+  width: 120px;
+  text-align: right;
+}
+
+.profvis-treetable th.time {
+  text-align: center;
+}
+
+.profvis-treetable th.label {
+  text-align: left;
+}
+
+.profvis-treetable .path {
+  text-align: left;
+  border-right: 0px;
+}

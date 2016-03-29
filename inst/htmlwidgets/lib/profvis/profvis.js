@@ -192,6 +192,11 @@ profvis = (function() {
       }
     }
 
+    function roundOneDecimal(number, decimals) {
+      if (!number) return 0;
+      return parseFloat(Math.round(number * 100) / 100).toFixed(1);
+    }
+
     // Generate the code table ----------------------------------------
     function generateCodeTable(el) {
       var useMemory = false;
@@ -257,7 +262,7 @@ profvis = (function() {
         .attr("class", "memory")
         .attr("title", "Memory allocation (MB)")
         .attr("data-pseudo-content",
-              function(d) { return d.sumMem ? parseFloat(d.sumMem).toFixed(1) : 0; });
+              function(d) { return roundOneDecimal(d.sumMem); });
 
       rows.append("td")
         .attr("class", "membar-left-cell")
@@ -1401,12 +1406,14 @@ profvis = (function() {
       var content = d3.select(el);
 
       var table = content.append("table")
-          .attr("class", "profvis-treetable");
+          .attr("class", "results")
+          .attr("cellspacing", "0")
+          .attr("cellpadding", "0");
 
       var headerRows = table.append("tr");
 
       headerRows.append("th")
-        .attr("colspan", "1");
+        .attr("class", "actions");
 
       headerRows.append("th")
         .attr("class", "memory")
@@ -1417,38 +1424,37 @@ profvis = (function() {
         .text("Time");
 
       headerRows.append("th")
-        .attr("class", "function")
-        .text("Function");
+        .attr("class", "label")
+        .text("Expression");
 
       headerRows.append("th")
         .attr("class", "path")
         .text("Path");
 
       var rows = table.selectAll("tr.treetable-row")
-          .data(vis.fileLineStats)
+          .data(vis.profTree.children)
         .enter()
           .append("tr")
           .attr("class", "treetable-row");
 
       rows.append("td")
-        .attr("class", "code r")
-        .text(function(d) { return ""; });
+        .attr("class", "action");
 
       rows.append("td")
-        .attr("class", "code r")
-        .text(function(d) { return "0.0MB"; });
+        .attr("class", "memory")
+        .text(function(d) { return roundOneDecimal(d.sumMem) + " MB"; });
 
       rows.append("td")
-        .attr("class", "code r")
-        .text(function(d) { return "0.0ms"; });
+        .attr("class", "time")
+        .text(function(d) { return (d.endTime - d.startTime) + " ms"; });
 
       rows.append("td")
-        .attr("class", "code r")
-        .text(function(d) { return "NA"; });
+        .attr("class", "label")
+        .text(function(d) { return d.label; });
 
       rows.append("td")
-        .attr("class", "code r")
-        .text(function(d) { return "NA"; });
+        .attr("class", "path")
+        .text(function(d) { return d.filename; });
 
       rows
         .on("click", function(d) {
@@ -1770,6 +1776,7 @@ profvis = (function() {
       treemapEl.style.display = "none";
       panel1.style.display = "none";
       panel2.style.display = "none";
+      treetableEl.style.display = "none";
     }
 
     var toggleViews = function(view) {
