@@ -30,9 +30,9 @@ profvis = (function() {
       var $el = $(el);
 
       el.innerHTML =
-        generateStatusBarButton('flameGraphButton', 'Flamegraph', true) +
-        generateStatusBarButton('treetableButton', 'Treetable', false) +
-        generateStatusBarButton('treemapButton', 'Treemap', false) +
+        generateStatusBarButton('flameGraphButton', 'Graph', true) +
+        generateStatusBarButton('treetableButton', 'Table', false) +
+        generateStatusBarButton('treemapButton', 'Map', false) +
         '<span role="button" class="options-button">Options &#x25BE;</span>';
 
       $el.find("span.options-button").on("click", function(e) {
@@ -1431,36 +1431,51 @@ profvis = (function() {
         .attr("class", "path")
         .text("Path");
 
-      var rows = table.selectAll("tr.treetable-row")
-          .data(vis.profTree.children)
+      function appendRows(container, parent) {
+        var rows = container.selectAll("tr.treetable-row")
+          .data(parent.children)
         .enter()
           .append("tr")
           .attr("class", "treetable-row");
 
-      rows.append("td")
-        .attr("class", "action");
+        rows.append("td")
+          .attr("class", "action");
 
-      rows.append("td")
-        .attr("class", "memory")
-        .text(function(d) { return roundOneDecimal(d.sumMem) + " MB"; });
+        rows.append("td")
+          .attr("class", "memory")
+          .text(function(d) { return roundOneDecimal(d.sumMem) + " MB"; });
 
-      rows.append("td")
-        .attr("class", "time")
-        .text(function(d) { return (d.endTime - d.startTime) + " ms"; });
+        rows.append("td")
+          .attr("class", "time")
+          .text(function(d) {
+            return (d.endTime - d.startTime) + " ms";
+          });
 
-      rows.append("td")
-        .attr("class", "label")
-        .text(function(d) { return d.label; });
+        var cells = rows.append("td")
+          .attr("class", "label")
+          .style("padding-left", function(d){
+            return (3 + 4 * d.depth) + "px";
+          })
+          .on("click", function(d) {
+            var e = d3.select(this)[0];
+            appendRows(table, d);
+          });
 
-      rows.append("td")
-        .attr("class", "path")
-        .text(function(d) { return d.filename; });
+        cells.append("div")
+          .attr("class", function (d) {
+            return d.children && d.children.length > 0 ? "expand" : "";
+          });
 
-      rows
-        .on("click", function(d) {
-        })
-        .on("dblclick", function(d) {
-        });
+        cells.append("div")
+          .attr("class", "labelText")
+          .text(function(d) { return d.label; });
+
+        rows.append("td")
+          .attr("class", "path")
+          .text(function(d) { return d.filename; });
+      }
+
+      appendRows(table, vis.profTree);
 
       return {
         el: el

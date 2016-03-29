@@ -155,7 +155,7 @@
 
 .profvis-status-bar .separator-block {
   display: inline-block;
-  width: 2px;
+  width: 1px;
   text-align: center;
 }
 
@@ -590,7 +590,26 @@ table.profvis-table .membar-right-cell > .membar {
   text-align: left;
 }
 
+.profvis-treetable td.label {
+  cursor: pointer;
+}
+
+.profvis-treetable .labelText {
+  display: inline-block;
+}
+
 .profvis-treetable .path {
   text-align: left;
   border-right: 0px;
+}
+
+.profvis-treetable .expand {
+  width: 0px;
+  height: 0px;
+  margin-left: 3px;
+  margin-right: 6px;
+  border-top: 4px solid transparent;
+	border-left: 6px solid #161616;
+	border-bottom: 4px solid transparent;
+	display: inline-block;
 }
