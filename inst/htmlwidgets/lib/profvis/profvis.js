@@ -31,6 +31,7 @@ profvis = (function() {
 
       el.innerHTML =
         generateStatusBarButton('flameGraphButton', 'Flamegraph', true) +
+        generateStatusBarButton('treetableButton', 'Treetable', false) +
         generateStatusBarButton('treemapButton', 'Treemap', false) +
         '<span role="button" class="options-button">Options &#x25BE;</span>';
 
@@ -55,6 +56,11 @@ profvis = (function() {
       $el.find("#treemapButton").on("click", function() {
         setStatusBarButtons($(this));
         onToogle("treemap");
+      });
+
+      $el.find("#treetableButton").on("click", function() {
+        setStatusBarButtons($(this));
+        onToogle("treetable");
       });
 
       return {
@@ -1390,6 +1396,71 @@ profvis = (function() {
       }
     }
 
+    // Generate the tree table ----------------------------------------
+    function generateTreetable(el) {
+      var content = d3.select(el);
+
+      var table = content.append("table")
+          .attr("class", "profvis-treetable");
+
+      var headerRows = table.append("tr");
+
+      headerRows.append("th")
+        .attr("colspan", "1");
+
+      headerRows.append("th")
+        .attr("class", "memory")
+        .text("Memory");
+
+      headerRows.append("th")
+        .attr("class", "time")
+        .text("Time");
+
+      headerRows.append("th")
+        .attr("class", "function")
+        .text("Function");
+
+      headerRows.append("th")
+        .attr("class", "path")
+        .text("Path");
+
+      var rows = table.selectAll("tr.treetable-row")
+          .data(vis.fileLineStats)
+        .enter()
+          .append("tr")
+          .attr("class", "treetable-row");
+
+      rows.append("td")
+        .attr("class", "code r")
+        .text(function(d) { return ""; });
+
+      rows.append("td")
+        .attr("class", "code r")
+        .text(function(d) { return "0.0MB"; });
+
+      rows.append("td")
+        .attr("class", "code r")
+        .text(function(d) { return "0.0ms"; });
+
+      rows.append("td")
+        .attr("class", "code r")
+        .text(function(d) { return "NA"; });
+
+      rows.append("td")
+        .attr("class", "code r")
+        .text(function(d) { return "NA"; });
+
+      rows
+        .on("click", function(d) {
+        })
+        .on("dblclick", function(d) {
+        });
+
+      return {
+        el: el
+      };
+    }
+
     function enableScroll() {
       vis.codeTable.enableScroll();
       vis.flameGraph.enableZoom();
@@ -1408,7 +1479,6 @@ profvis = (function() {
       var $el = $(vis.el);
       var $panel1 = $el.children(".profvis-panel1");
       var $panel2 = $el.children(".profvis-panel2");
-      var $panelTreemap = $el.children(".profvis-treemap");
       var $splitBar = $el.children(".profvis-splitbar");
       var $statusBar = $el.children(".profvis-status-bar");
 
@@ -1625,6 +1695,7 @@ profvis = (function() {
       flameGraph: null,
       infoBox: null,
       treemap: null,
+      treetable: null,
 
       // Functions to enable/disable responding to scrollwheel events
       enableScroll: enableScroll,
@@ -1681,6 +1752,11 @@ profvis = (function() {
     treemapEl.style.display = "none";
     vis.el.appendChild(treemapEl);
 
+    var treetableEl = document.createElement("div");
+    treetableEl.className = "profvis-treetable";
+    treetableEl.style.display = "none";
+    vis.el.appendChild(treetableEl);
+
     var optionsPanelEl = document.createElement("div");
     optionsPanelEl.className = "profvis-options-panel";
     vis.el.appendChild(optionsPanelEl);
@@ -1709,6 +1785,10 @@ profvis = (function() {
           hideViews();
           treemapEl.style.display = "block";
           vis.treemap.onResize();
+          break;
+        case "treetable":
+          hideViews();
+          treetableEl.style.display = "block";
           break;
       }
     };
@@ -1750,6 +1830,7 @@ profvis = (function() {
     vis.flameGraph = generateFlameGraph(flameGraphEl);
     vis.infoBox = initInfoBox(infoBoxEl);
     vis.treemap = generateTreemap(treemapEl);
+    vis.treetable = generateTreetable(treetableEl);
 
     // If any depth collapsing occured, enable the "hide internal" checkbox.
     if (prof.some(function(d) { return d.depth !== d.depthCollapsed; })) {
