@@ -1431,34 +1431,68 @@ profvis = (function() {
         .attr("class", "path")
         .text("Path");
 
-      function appendRows(container, parent) {
+      function updateRows(container) {
         var rows = container.selectAll("tr.treetable-row")
-          .data(parent.children)
-        .enter()
-          .append("tr")
+          .data(vis.profTable, function(d) {
+            return d.treetable.id;
+          });
+
+        rows.exit()
+          .remove();
+
+        rows
+          .style("display", function(d) {
+            var collapsed = false;
+            while (d.parent) {
+              d = d.parent;
+              if (d.treetable.collapsed) {
+                collapsed = true;
+                break;
+              }
+            }
+            return collapsed ? "none" : "";
+          });
+
+        var newRows = rows.enter()
+          .append("tr");
+
+        newRows
           .attr("class", "treetable-row");
 
-        rows.append("td")
-          .attr("class", "action");
+        newRows.append("td")
+          .attr("class", "action")
+          .text(function(d) { return d.treetable.id; });
 
-        rows.append("td")
+        newRows.append("td")
           .attr("class", "memory")
           .text(function(d) { return roundOneDecimal(d.sumMem) + " MB"; });
 
-        rows.append("td")
+        newRows.append("td")
           .attr("class", "time")
           .text(function(d) {
             return (d.endTime - d.startTime) + " ms";
           });
 
-        var cells = rows.append("td")
+        var cells = newRows.append("td")
           .attr("class", "label")
           .style("padding-left", function(d){
             return (3 + 4 * d.depth) + "px";
           })
           .on("click", function(d) {
-            var e = d3.select(this)[0];
-            appendRows(table, d);
+            var collapsed = d.treetable.collapsed;
+            if (collapsed === undefined) {
+              vis.profTable = vis.profTable.concat(d.children);
+              d.treetable.collapsed = false;
+              updateRows(table);
+            }
+            else if (collapsed) {
+              d.treetable.collapsed = false;
+              updateRows(table);
+            }
+            else {
+              d.treetable.collapsed = true;
+              updateRows(table);
+            }
           });
 
         cells.append("div")
@@ -1470,12 +1504,41 @@ profvis = (function() {
           .attr("class", "labelText")
           .text(function(d) { return d.label; });
 
-        rows.append("td")
+        newRows.append("td")
           .attr("class", "path")
           .text(function(d) { return d.filename; });
+
+        var unorderedRows = d3.selectAll("tr.treetable-row")
+          .data(vis.profTable, function(d) {
+            return d.treetable.id;
+          });
+        unorderedRows.sort(function(a,b) {
+          return (a.treetable.id < b.treetable.id) ? -1 : (a.treetable.id == b.treetable.id ? 0 : 1);
+        });
       }
 
-      appendRows(table, vis.profTree);
+      var nameProfTreeNodes = function (e) {
+        var nodes = [e];
+
+        var id = 0;
+        while (nodes.length > 0) {
+          var node = nodes.shift();
+          if (!node.treetable)
+            node.treetable = {};
+
+          node.treetable.id = id;
+          id = id + 1;
+
+          node.children.forEach(function(c) {
+            nodes.unshift(c);
+          });
+        }
+      }
+
+      nameProfTreeNodes(vis.profTree);
+
+      vis.profTable = vis.profTree.children;
+      updateRows(table);
 
       return {
         el: el
@@ -1708,6 +1771,7 @@ profvis = (function() {
       files: message.files,
       aggLabelTimes: getAggregatedLabelTimes(prof),
       fileLineStats: getFileLineStats(prof, message.files),
+      profTable: [],
 
       // Objects representing each component
       statusBar: null,
