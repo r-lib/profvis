@@ -1474,31 +1474,37 @@ profvis = (function() {
           });
 
         var cells = newRows.append("td")
-          .attr("class", "label")
           .style("padding-left", function(d){
-            return (3 + 4 * d.depth) + "px";
+            return (3 + 10 * d.depth) + "px";
           })
           .on("click", function(d) {
             var collapsed = d.treetable.collapsed;
             if (collapsed === undefined) {
               vis.profTable = vis.profTable.concat(d.children);
               d.treetable.collapsed = false;
+              this.className = "label collapse";
+
               updateRows(table);
             }
             else if (collapsed) {
               d.treetable.collapsed = false;
+              this.className = "label collapse";
+
               updateRows(table);
             }
             else {
               d.treetable.collapsed = true;
+              this.className = "label expand";
+
               updateRows(table);
             }
+          })
+          .attr("class", function(d) {
+            return d.children && d.children.length > 0 ? "label expand" : "";
           });
 
-        cells.append("div")
-          .attr("class", function (d) {
-            return d.children && d.children.length > 0 ? "expand" : "";
-          });
+        var cellWrapper = cells.append("div");
+        cellWrapper.append("div");
 
         cells.append("div")
           .attr("class", "labelText")

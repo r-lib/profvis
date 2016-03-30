@@ -605,7 +605,11 @@ table.profvis-table .membar-right-cell > .membar {
   width: 200px;
 }
 
-.profvis-treetable .expand {
+.profvis-treetable .expand > div {
+	display: inline-block;
+}
+
+.profvis-treetable .expand > div > div{
   width: 0px;
   height: 0px;
   margin-left: 3px;
@@ -613,5 +617,19 @@ table.profvis-table .membar-right-cell > .membar {
   border-top: 4px solid transparent;
 	border-left: 6px solid #161616;
 	border-bottom: 4px solid transparent;
+}
+
+.profvis-treetable .collapse > div {
+	display: inline-block;
+}
+
+.profvis-treetable .collapse > div > div {
+  width: 0px;
+  height: 0px;
+  margin-left: 3px;
+  margin-right: 6px;
+  border-right: 4px solid transparent;
+	border-top: 6px solid #161616;
+	border-left: 4px solid transparent;
 	display: inline-block;
 }
