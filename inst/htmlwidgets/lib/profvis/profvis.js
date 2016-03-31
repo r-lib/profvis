@@ -1403,12 +1403,16 @@ profvis = (function() {
         .text("Time");
 
       headerRows.append("th")
+        .attr("class", "count")
+        .text("Count");
+
+      headerRows.append("th")
         .attr("class", "label")
         .text("Expression");
 
       headerRows.append("th")
         .attr("class", "path")
-        .text("Path");
+        .text("File");
 
       function updateRows(container) {
         var rows = container.selectAll("tr.treetable-row")
@@ -1481,6 +1485,12 @@ profvis = (function() {
           .attr("class", "timeCell")
           .text(function(d) {
             return d.sumTime + " ms";
+          });
+
+        newRows.append("td")
+          .attr("class", "count")
+          .text(function(d) {
+            return d.sumCount;
           });
 
         var labelCell = newRows.append("td")

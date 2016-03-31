@@ -564,7 +564,7 @@ table.profvis-table .membar-right-cell > .membar {
 }
 
 .profvis-treetable .memory {
-  width: 120px;
+  width: 100px;
   text-align: right;
 }
 
@@ -582,11 +582,20 @@ table.profvis-table .membar-right-cell > .membar {
 }
 
 .profvis-treetable .time {
-  width: 120px;
+  width: 100px;
   text-align: right;
 }
 
 .profvis-treetable th.time {
+  text-align: center;
+}
+
+.profvis-treetable .count {
+  width: 50px;
+  text-align: right;
+}
+
+.profvis-treetable th.count {
   text-align: center;
 }
 
