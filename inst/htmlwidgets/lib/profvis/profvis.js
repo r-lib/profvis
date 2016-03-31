@@ -1454,7 +1454,10 @@ profvis = (function() {
           });
 
         var newRows = rows.enter()
-          .append("tr");
+          .append("tr")
+          .filter(function(d) {
+            return d.children && d.children.length > 0;
+          });
 
         newRows
           .attr("class", "treetable-row");
@@ -1478,6 +1481,9 @@ profvis = (function() {
             return (3 + 10 * d.depth) + "px";
           })
           .on("click", function(d) {
+            if (!d.treetable.canExpand)
+              return;
+
             var collapsed = d.treetable.collapsed;
             if (collapsed === undefined) {
               vis.profTable = vis.profTable.concat(d.children);
@@ -1500,7 +1506,14 @@ profvis = (function() {
             }
           })
           .attr("class", function(d) {
-            return d.children && d.children.length > 0 ? "label expand" : "";
+            d.treetable.canExpand = false;
+            if (d.children) {
+              d.children.forEach(function(c) {
+                if (c.children && c.children.length > 0)
+                  d.treetable.canExpand = true;
+              });
+            }
+            return d.treetable.canExpand ? "label expand" : "";
           });
 
         var cellWrapper = cells.append("div");
