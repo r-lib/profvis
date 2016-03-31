@@ -227,7 +227,7 @@ profvis = (function() {
       var percentMemTooltip = "Percentage of peak memory allocation";
 
       headerRows.append("th")
-        .attr("class", "memory")
+        .attr("class", "table-memory memory")
         .attr("colspan", "3")
         .text("Memory");
 
@@ -259,13 +259,13 @@ profvis = (function() {
         .each(function() { hljs.highlightBlock(this); });
 
       rows.append("td")
-        .attr("class", "memory")
+        .attr("class", "table-memory memory")
         .attr("title", "Memory allocation (MB)")
         .attr("data-pseudo-content",
               function(d) { return roundOneDecimal(d.sumMem); });
 
       rows.append("td")
-        .attr("class", "membar-left-cell")
+        .attr("class", "table-memory membar-left-cell")
         .append("div")
           .attr("class", "membar")
           .attr("title", percentMemTooltip)
@@ -276,7 +276,7 @@ profvis = (function() {
           .attr("data-pseudo-content", "\u00a0");
 
       rows.append("td")
-        .attr("class", "membar-right-cell")
+        .attr("class", "table-memory membar-right-cell")
         .append("div")
           .attr("class", "membar")
           .attr("title", percentMemTooltip)
@@ -385,9 +385,7 @@ profvis = (function() {
       }
 
       function useMemoryResults(value) {
-        d3.selectAll(".memory").style("display", value ? "none" : "");
-        d3.selectAll(".membar-left-cell").style("display", value ? "none" : "");
-        d3.selectAll(".membar-right-cell").style("display", value ? "none" : "");
+        d3.selectAll(".table-memory").style("display", value ? "none" : "");
       }
 
       return {
@@ -1395,7 +1393,7 @@ profvis = (function() {
         .attr("class", "action");
 
       headerRows.append("th")
-        .attr("class", "memory")
+        .attr("class", "treetable-memory memory")
         .text("Memory");
 
       headerRows.append("th")
@@ -1449,40 +1447,40 @@ profvis = (function() {
           .attr("class", "action");
 
         var memoryCell = newRows.append("td")
-          .attr("class", "memoryWrapper");
+          .attr("class", "treetable-memory memory-wrapper");
 
         var memoryLeftCell = memoryCell.append("div")
-          .attr("class", "memoryLefBarWrapper");
+          .attr("class", "memory-leftbar-wrapper");
 
         memoryLeftCell.append("div")
-          .attr("class", "memoryLeftBar")
+          .attr("class", "memory-leftbar")
           .style("width", function(d) {
             return  1 + Math.min(Math.abs(Math.min(Math.round(d.propMem * 5), 0)), 5) + "px";
           });
 
         memoryCell.append("div")
-          .attr("class", "memoryRightBar")
+          .attr("class", "memory-rightbar")
           .style("width", function(d) {
             return 1 + Math.min(Math.max(Math.round(d.propMem * 13), 0), 13) + "px";
           });
 
         memoryCell.append("div")
-          .attr("class", "memoryCell")
+          .attr("class", "memory-cell")
           .text(function(d) {
             return roundOneDecimal(d.sumMem) + " MB";
           });
 
         var timeCell = newRows.append("td")
-          .attr("class", "timeWrapper");
+          .attr("class", "time-wrapper");
 
         timeCell.append("div")
-          .attr("class", "timeBar")
+          .attr("class", "timebar")
           .style("width", function(d) {
             return Math.round(d.propTime * 20) + "px";
           });
 
         timeCell.append("div")
-          .attr("class", "timeCell")
+          .attr("class", "timecell")
           .text(function(d) {
             return d.sumTime + " ms";
           });
@@ -1537,7 +1535,7 @@ profvis = (function() {
         cellWrapper.append("div");
 
         labelCell.append("div")
-          .attr("class", "labelText")
+          .attr("class", "label-text")
           .text(function(d) { return d.label; });
 
         newRows.append("td")
@@ -1609,14 +1607,18 @@ profvis = (function() {
         return head.sumChildren;
       }
 
-      debugger;
+      function useMemoryResults(value) {
+        d3.selectAll(".treetable-memory").style("display", value ? "none" : "");
+      }
+
       vis.profTable = buildProfTable(vis.profTree);
 
       updateRows(table);
 
       return {
         el: el,
-        onResize: function() {}
+        onResize: function() {},
+        useMemoryResults: useMemoryResults
       };
     }
 
@@ -1713,7 +1715,9 @@ profvis = (function() {
       $(window).resize(
         debounce(function() {
           resizePanels(lastSplitProportion);
-          vis.selectedTab.onResize();
+          vis.activeViews.forEach(function(e) {
+            if (e.onResize) e.onResize();
+          });
         }, 250)
       );
 
@@ -1855,7 +1859,7 @@ profvis = (function() {
       infoBox: null,
       treemap: null,
       treetable: null,
-      selectedTab: null,
+      activeViews: [],
 
       // Functions to enable/disable responding to scrollwheel events
       enableScroll: enableScroll,
@@ -1942,7 +1946,7 @@ profvis = (function() {
           panel1.style.display = "block";
           panel2.style.display = "block";
 
-          vis.selectedTab = vis.flameGraph;
+          vis.activeViews = [vis.flameGraph, vis.codeTable];
           break;
         case "treemap":
           if (!vis.treemap) {
@@ -1951,7 +1955,7 @@ profvis = (function() {
 
           treemapEl.style.display = "block";
 
-          vis.selectedTab = vis.treemap;
+          vis.activeViews = [vis.treemap];
           break;
         case "treetable":
           if (!vis.treetable) {
@@ -1960,11 +1964,13 @@ profvis = (function() {
 
           treetableEl.style.display = "block";
 
-          vis.selectedTab = vis.treetable;
+          vis.activeViews = [vis.treetable];
           break;
       }
 
-      vis.selectedTab.onResize();
+      vis.activeViews.forEach(function(e) {
+        if (e.onResize) e.onResize();
+      });
     };
 
     var onOptionsChange = function(option, checked) {
@@ -1986,7 +1992,9 @@ profvis = (function() {
           break;
         }
         case "memory": {
-          vis.codeTable.useMemoryResults(checked);
+          vis.activeViews.forEach(function(e) {
+            if (e.useMemoryResults) e.useMemoryResults(checked);
+          });
           break;
         }
       }
@@ -2001,7 +2009,7 @@ profvis = (function() {
     vis.infoBox = initInfoBox(infoBoxEl);
     vis.treemap = null;
     vis.treetable = null;
-    vis.selectedTab = vis.flameGraph;
+    vis.activeViews = [vis.flameGraph, vis.codeTable];
 
     // If any depth collapsing occured, enable the "hide internal" checkbox.
     if (prof.some(function(d) { return d.depth !== d.depthCollapsed; })) {

@@ -607,7 +607,7 @@ table.profvis-table .membar-right-cell > .membar {
   cursor: pointer;
 }
 
-.profvis-treetable .labelText {
+.profvis-treetable .label-text {
   display: inline-block;
 }
 
@@ -646,11 +646,11 @@ table.profvis-table .membar-right-cell > .membar {
 	display: inline-block;
 }
 
-.profvis-treetable .timeWrapper {
+.profvis-treetable .time-wrapper {
   padding: 0px;
 }
 
-.profvis-treetable .timeBar {
+.profvis-treetable .timebar {
   width: 0px;
   height: 14px;
   background-color: #5A5A5A;
@@ -660,23 +660,23 @@ table.profvis-table .membar-right-cell > .membar {
   margin-top: 1px;
 }
 
-.profvis-treetable .timeCell {
+.profvis-treetable .timecell {
   padding-top: 2px;
   padding-right: 3px;
   float: right;
 }
 
-.profvis-treetable .memoryWrapper {
+.profvis-treetable .memory-wrapper {
   padding-left: 0px;
 }
 
-.profvis-treetable .memoryLefBarWrapper {
+.profvis-treetable .memory-leftbar-wrapper {
   float: left;
   height: 14px;
   width: 5px;
 }
 
-.profvis-treetable .memoryLeftBar {
+.profvis-treetable .memory-leftbar {
   width: 2px;
   height: 14px;
   background-color: #5A5A5A;
@@ -684,7 +684,7 @@ table.profvis-table .membar-right-cell > .membar {
   border-radius: 1px 0px 0px 1px;
 }
 
-.profvis-treetable .memoryRightBar {
+.profvis-treetable .memory-rightbar {
   width: 2px;
   float: left;
   height: 14px;
@@ -692,7 +692,7 @@ table.profvis-table .membar-right-cell > .membar {
   border-radius: 0px 1px 1px 0px;
 }
 
-.profvis-treetable .memoryCell {
+.profvis-treetable .memory-cell {
   float: right;
 }
 
