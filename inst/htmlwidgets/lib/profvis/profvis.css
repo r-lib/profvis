@@ -536,6 +536,7 @@ table.profvis-table .membar-right-cell > .membar {
 
 .profvis-treetable .results {
   width: 100%;
+  table-layout: fixed;
 }
 
 .profvis-treetable th {
@@ -554,6 +555,8 @@ table.profvis-table .membar-right-cell > .membar {
   border-right: solid 1px #E4E4E4;
   padding-left: 3px;
   padding-right: 3px;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .profvis-treetable .action {
@@ -633,3 +636,54 @@ table.profvis-table .membar-right-cell > .membar {
 	border-left: 4px solid transparent;
 	display: inline-block;
 }
+
+.profvis-treetable .timeWrapper {
+  padding: 0px;
+}
+
+.profvis-treetable .timeBar {
+  width: 0px;
+  height: 14px;
+  background-color: #5A5A5A;
+  float: left;
+  border-radius: 0px 2px 2px 0px;
+  padding-top: 0px;
+  margin-top: 1px;
+}
+
+.profvis-treetable .timeCell {
+  padding-top: 2px;
+  padding-right: 3px;
+  float: right;
+}
+
+.profvis-treetable .memoryWrapper {
+  padding-left: 0px;
+}
+
+.profvis-treetable .memoryLefBarWrapper {
+  float: left;
+  height: 14px;
+  width: 5px;
+}
+
+.profvis-treetable .memoryLeftBar {
+  width: 2px;
+  height: 14px;
+  background-color: #5A5A5A;
+  float: right;
+  border-radius: 1px 0px 0px 1px;
+}
+
+.profvis-treetable .memoryRightBar {
+  width: 2px;
+  float: left;
+  height: 14px;
+  background-color: #5A5A5A;
+  border-radius: 0px 1px 1px 0px;
+}
+
+.profvis-treetable .memoryCell {
+  float: right;
+}
+

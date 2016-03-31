@@ -1413,7 +1413,7 @@ profvis = (function() {
       var headerRows = table.append("tr");
 
       headerRows.append("th")
-        .attr("class", "actions");
+        .attr("class", "action");
 
       headerRows.append("th")
         .attr("class", "memory")
@@ -1463,20 +1463,48 @@ profvis = (function() {
           .attr("class", "treetable-row");
 
         newRows.append("td")
-          .attr("class", "action")
-          .text(function(d) { return d.treetable.id; });
+          .attr("class", "action");
 
-        newRows.append("td")
-          .attr("class", "memory")
-          .text(function(d) { return roundOneDecimal(d.sumMem) + " MB"; });
+        var memoryCell = newRows.append("td")
+          .attr("class", "memoryWrapper");
 
-        newRows.append("td")
-          .attr("class", "time")
+        var memoryLeftCell = memoryCell.append("div")
+          .attr("class", "memoryLefBarWrapper");
+
+        memoryLeftCell.append("div")
+          .attr("class", "memoryLeftBar")
+          .style("width", function(d) {
+            return  1 + Math.min(Math.abs(Math.min(Math.round(d.sumMem  / vis.totalMem * 5), 0)), 5) + "px";
+          });
+
+        memoryCell.append("div")
+          .attr("class", "memoryRightBar")
+          .style("width", function(d) {
+            return 1 + Math.min(Math.max(Math.round(d.sumMem  / vis.totalMem * 13), 0), 13) + "px";
+          });
+
+        memoryCell.append("div")
+          .attr("class", "memoryCell")
+          .text(function(d) {
+            return roundOneDecimal(d.sumMem) + " MB";
+          });
+
+        var timeCell = newRows.append("td")
+          .attr("class", "timeWrapper");
+
+        timeCell.append("div")
+          .attr("class", "timeBar")
+          .style("width", function(d) {
+            return Math.round((d.endTime - d.startTime) / vis.totalTime * 20) + "px";
+          });
+
+        timeCell.append("div")
+          .attr("class", "timeCell")
           .text(function(d) {
             return (d.endTime - d.startTime) + " ms";
           });
 
-        var cells = newRows.append("td")
+        var labelCell = newRows.append("td")
           .style("padding-left", function(d){
             return (3 + 10 * d.depth) + "px";
           })
@@ -1516,10 +1544,10 @@ profvis = (function() {
             return d.treetable.canExpand ? "label expand" : "";
           });
 
-        var cellWrapper = cells.append("div");
+        var cellWrapper = labelCell.append("div");
         cellWrapper.append("div");
 
-        cells.append("div")
+        labelCell.append("div")
           .attr("class", "labelText")
           .text(function(d) { return d.label; });
 
