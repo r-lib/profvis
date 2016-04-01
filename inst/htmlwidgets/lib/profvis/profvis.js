@@ -1390,7 +1390,8 @@ profvis = (function() {
       var headerRows = table.append("tr");
 
       headerRows.append("th")
-        .attr("class", "action");
+        .attr("class", "count")
+        .text("Count");
 
       headerRows.append("th")
         .attr("class", "treetable-memory memory")
@@ -1399,10 +1400,6 @@ profvis = (function() {
       headerRows.append("th")
         .attr("class", "time")
         .text("Time");
-
-      headerRows.append("th")
-        .attr("class", "count")
-        .text("Count");
 
       headerRows.append("th")
         .attr("class", "label")
@@ -1415,7 +1412,7 @@ profvis = (function() {
       function updateLabelCells(labelCell) {
         labelCell
           .style("padding-left", function(d){
-            return (3 + 14 * d.depth) + "px";
+            return (3 + 15 * (d.depth - 1)) + "px";
           })
           .on("click", function(d) {
             if (!d.canExpand)
@@ -1486,13 +1483,23 @@ profvis = (function() {
               return false;
 
             return d.sumChildren.length > 0;
+          })
+          .on("click", function(d) {
+            table.selectAll("tr")
+              .style("background-color", null);
+
+            this.style.backgroundColor = "#FDFDFD";
+            notifySourceFileMessage(d, "select");
           });
 
         newRows
           .attr("class", "treetable-row");
 
         newRows.append("td")
-          .attr("class", "action");
+          .attr("class", "count")
+          .text(function(d) {
+            return d.sumCount;
+          });
 
         var memoryCell = newRows.append("td")
           .attr("class", "treetable-memory memory-wrapper");
@@ -1533,12 +1540,6 @@ profvis = (function() {
             return d.sumTime + " ms";
           });
 
-        newRows.append("td")
-          .attr("class", "count")
-          .text(function(d) {
-            return d.sumCount;
-          });
-
         var labelCell = newRows.append("td");
         updateLabelCells(labelCell);
 
@@ -1566,6 +1567,16 @@ profvis = (function() {
         var head = jQuery.extend({}, profTree);
         var nodes = [head];
 
+        var getNormPath = function(filename) {
+          var normpath = null;
+          vis.files.forEach(function(e) {
+            if (e.filename == filename) {
+              normpath = e.normpath;
+            }
+          });
+          return normpath;
+        };
+
         var aggregateChildren = function(node) {
           var nameMap = {};
           node.children.forEach(function(c) {
@@ -1577,6 +1588,7 @@ profvis = (function() {
               nameMapEntry.children = [];
               nameMapEntry.parent = node;
               nameMapEntry.sumCount = 1;
+              nameMapEntry.normpath = nameMapEntry.filename ? getNormPath(nameMapEntry.filename) : nameMapEntry.normpath;
             }
             else {
               nameMapEntry.sumMem = nameMapEntry.sumMem + c.sumMem;
