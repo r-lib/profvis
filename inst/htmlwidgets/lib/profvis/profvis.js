@@ -30,9 +30,9 @@ profvis = (function() {
       var $el = $(el);
 
       el.innerHTML =
-        generateStatusBarButton('flameGraphButton', 'Graph', true) +
-        generateStatusBarButton('treetableButton', 'Table', false) +
-        generateStatusBarButton('treemapButton', 'Map', false) +
+        generateStatusBarButton('flameGraphButton', 'Flame Graph', true) +
+        generateStatusBarButton('treetableButton', 'Data Table', false) +
+        generateStatusBarButton('treemapButton', 'Treemap', false) +
         '<span role="button" class="options-button">Options &#x25BE;</span>';
 
       $el.find("span.options-button").on("click", function(e) {
@@ -185,7 +185,7 @@ profvis = (function() {
           source: "profvis",
           message: "sourcefile",
           file: d.filename,
-          normpath: d.normpath,
+          normpath: d.normpath ? d.normpath : getNormPath(vis.files, d.filename),
           line: d.linenum,
           details: details
         }, window.location.origin);
@@ -1567,16 +1567,6 @@ profvis = (function() {
         var head = jQuery.extend({}, profTree);
         var nodes = [head];
 
-        var getNormPath = function(filename) {
-          var normpath = null;
-          vis.files.forEach(function(e) {
-            if (e.filename == filename) {
-              normpath = e.normpath;
-            }
-          });
-          return normpath;
-        };
-
         var aggregateChildren = function(node) {
           var nameMap = {};
           node.children.forEach(function(c) {
@@ -1588,7 +1578,6 @@ profvis = (function() {
               nameMapEntry.children = [];
               nameMapEntry.parent = node;
               nameMapEntry.sumCount = 1;
-              nameMapEntry.normpath = nameMapEntry.filename ? getNormPath(nameMapEntry.filename) : nameMapEntry.normpath;
             }
             else {
               nameMapEntry.sumMem = nameMapEntry.sumMem + c.sumMem;
@@ -2477,6 +2466,16 @@ profvis = (function() {
       }, delay);
     };
   }
+
+  var getNormPath = function(files, filename) {
+    var normpath = null;
+    files.forEach(function(e) {
+      if (e.filename == filename) {
+        normpath = e.normpath;
+      }
+    });
+    return normpath;
+  };
 
 
   (function() {
