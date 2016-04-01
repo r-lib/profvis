@@ -1422,15 +1422,12 @@ profvis = (function() {
             if (collapsed === undefined) {
               vis.profTable = vis.profTable.concat(d.sumChildren);
               d.collapsed = false;
-              this.className = "label collapse";
             }
             else if (collapsed) {
               d.collapsed = false;
-              this.className = "label collapse";
             }
             else {
               d.collapsed = true;
-              this.className = "label expand";
             }
 
             updateRows();
@@ -1444,7 +1441,12 @@ profvis = (function() {
                     d.canExpand = true;
               });
             }
-            return d.canExpand ? "label expand label-pointer" : "label";
+
+            var collapsedClass = "";
+            if (d.canExpand)
+              collapsedClass = d.collapsed === undefined ? "expand" : d.collapsed ? "expand" : "collapse";
+
+            return "label " + (d.canExpand ? "label-pointer " + collapsedClass : "");
           });
       }
 
