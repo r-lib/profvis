@@ -603,7 +603,7 @@ table.profvis-table .membar-right-cell > .membar {
   text-align: left;
 }
 
-.profvis-treetable td.label {
+.profvis-treetable td.label-pointer {
   cursor: pointer;
 }
 

@@ -1412,8 +1412,47 @@ profvis = (function() {
         .attr("class", "path")
         .text("File");
 
-      function updateRows(container) {
-        var rows = container.selectAll("tr.treetable-row")
+      function updateLabelCells(labelCell) {
+        labelCell
+          .style("padding-left", function(d){
+            return (3 + 14 * d.depth) + "px";
+          })
+          .on("click", function(d) {
+            if (!d.canExpand)
+              return;
+
+            var collapsed = d.collapsed;
+            if (collapsed === undefined) {
+              vis.profTable = vis.profTable.concat(d.sumChildren);
+              d.collapsed = false;
+              this.className = "label collapse";
+            }
+            else if (collapsed) {
+              d.collapsed = false;
+              this.className = "label collapse";
+            }
+            else {
+              d.collapsed = true;
+              this.className = "label expand";
+            }
+
+            updateRows();
+          })
+          .attr("class", function(d) {
+            d.canExpand = false;
+            if (d.sumChildren) {
+              d.sumChildren.forEach(function(c) {
+                if (c.sumChildren.length > 0)
+                  if (!vis.hideInternals || c.depthCollapsed !== null)
+                    d.canExpand = true;
+              });
+            }
+            return d.canExpand ? "label expand label-pointer" : "label";
+          });
+      }
+
+      function updateRows() {
+        var rows = table.selectAll("tr.treetable-row")
           .data(vis.profTable, function(d) {
             return d.id;
           });
@@ -1421,8 +1460,11 @@ profvis = (function() {
         rows.exit()
           .remove();
 
-        rows
+        var updatedRows = rows
           .style("display", function(d) {
+            if (vis.hideInternals && d.depthCollapsed === null)
+              return "none";
+
             var collapsed = false;
             while (d.parent) {
               d = d.parent;
@@ -1434,9 +1476,15 @@ profvis = (function() {
             return collapsed ? "none" : "";
           });
 
+        var updatedLabelCells = updatedRows.selectAll("td.label");
+        updateLabelCells(updatedLabelCells);
+
         var newRows = rows.enter()
           .append("tr")
           .filter(function(d) {
+            if (vis.hideInternals && d.depthCollapsed === null)
+              return false;
+
             return d.sumChildren.length > 0;
           });
 
@@ -1491,45 +1539,8 @@ profvis = (function() {
             return d.sumCount;
           });
 
-        var labelCell = newRows.append("td")
-          .style("padding-left", function(d){
-            return (3 + 10 * d.depth) + "px";
-          })
-          .on("click", function(d) {
-            if (!d.canExpand)
-              return;
-
-            var collapsed = d.collapsed;
-            if (collapsed === undefined) {
-              vis.profTable = vis.profTable.concat(d.sumChildren);
-              d.collapsed = false;
-              this.className = "label collapse";
-
-              updateRows(table);
-            }
-            else if (collapsed) {
-              d.collapsed = false;
-              this.className = "label collapse";
-
-              updateRows(table);
-            }
-            else {
-              d.collapsed = true;
-              this.className = "label expand";
-
-              updateRows(table);
-            }
-          })
-          .attr("class", function(d) {
-            d.canExpand = false;
-            if (d.sumChildren) {
-              d.sumChildren.forEach(function(c) {
-                if (c.sumChildren.length > 0)
-                  d.canExpand = true;
-              });
-            }
-            return d.canExpand ? "label expand" : "";
-          });
+        var labelCell = newRows.append("td");
+        updateLabelCells(labelCell);
 
         var cellWrapper = labelCell.append("div");
         cellWrapper.append("div");
@@ -1613,11 +1624,11 @@ profvis = (function() {
 
       vis.profTable = buildProfTable(vis.profTree);
 
-      updateRows(table);
+      updateRows();
 
       return {
         el: el,
-        onResize: function() {},
+        onResize: updateRows,
         useMemoryResults: useMemoryResults
       };
     }
@@ -1863,7 +1874,9 @@ profvis = (function() {
 
       // Functions to enable/disable responding to scrollwheel events
       enableScroll: enableScroll,
-      disableScroll: disableScroll
+      disableScroll: disableScroll,
+
+      hideInternals: true
     };
 
 
@@ -1987,7 +2000,9 @@ profvis = (function() {
             vis.flameGraph.redrawUncollapse(400, 250);
           }
 
-          vis.treemap.onResize();
+          vis.activeViews.forEach(function(e) {
+            if (e.onResize) e.onResize();
+          })
 
           break;
         }
