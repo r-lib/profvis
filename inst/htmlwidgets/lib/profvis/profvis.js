@@ -31,8 +31,7 @@ profvis = (function() {
 
       el.innerHTML =
         generateStatusBarButton('flameGraphButton', 'Flame Graph', true) +
-        generateStatusBarButton('treetableButton', 'Data Table', false) +
-        generateStatusBarButton('treemapButton', 'Treemap', false) +
+        generateStatusBarButton('treetableButton', 'Data', false) +
         '<span role="button" class="options-button">Options &#x25BE;</span>';
 
       $el.find("span.options-button").on("click", function(e) {
@@ -1387,32 +1386,52 @@ profvis = (function() {
           .attr("cellspacing", "0")
           .attr("cellpadding", "0");
 
-      var headerRows = table.append("tr");
+      table.append("col");
+      table.append("col")
+        .style("width", "120px");
+      table.append("col")
+        .style("width", "50px");
+      table.append("col")
+        .style("width", "70px")
+        .attr("class", "treetable-memory");
+      table.append("col")
+        .style("width", "40px")
+        .attr("class", "treetable-memory");
+      table.append("col")
+        .style("width", "70px");
+      table.append("col")
+        .style("width", "40px");
 
-      headerRows.append("th")
-        .attr("class", "count")
-        .text("Count");
+      var tableBody = table.append("tbody");
 
-      headerRows.append("th")
-        .attr("class", "treetable-memory memory")
-        .text("Memory");
-
-      headerRows.append("th")
-        .attr("class", "time")
-        .text("Time");
+      var headerRows = tableBody.append("tr");
 
       headerRows.append("th")
         .attr("class", "label")
-        .text("Expression");
+        .text("Code");
 
       headerRows.append("th")
         .attr("class", "path")
         .text("File");
 
+      headerRows.append("th")
+        .attr("class", "count")
+        .text("Calls");
+
+      headerRows.append("th")
+        .attr("class", "treetable-memory memory")
+        .attr("colspan", "2")
+        .text("Memory (MB)");
+
+      headerRows.append("th")
+        .attr("class", "time")
+        .attr("colspan", "2")
+        .text("Time (ms)");
+
       function updateLabelCells(labelCell) {
         labelCell
           .style("padding-left", function(d){
-            return (3 + 15 * (d.depth - 1)) + "px";
+            return (8 + 15 * (d.depth - 1)) + "px";
           })
           .on("click", function(d) {
             if (!d.canExpand)
@@ -1451,7 +1470,7 @@ profvis = (function() {
       }
 
       function updateRows() {
-        var rows = table.selectAll("tr.treetable-row")
+        var rows = tableBody.selectAll("tr.treetable-row")
           .data(vis.profTable, function(d) {
             return d.id;
           });
@@ -1497,51 +1516,6 @@ profvis = (function() {
         newRows
           .attr("class", "treetable-row");
 
-        newRows.append("td")
-          .attr("class", "count")
-          .text(function(d) {
-            return d.sumCount;
-          });
-
-        var memoryCell = newRows.append("td")
-          .attr("class", "treetable-memory memory-wrapper");
-
-        var memoryLeftCell = memoryCell.append("div")
-          .attr("class", "memory-leftbar-wrapper");
-
-        memoryLeftCell.append("div")
-          .attr("class", "memory-leftbar")
-          .style("width", function(d) {
-            return  1 + Math.min(Math.abs(Math.min(Math.round(d.propMem * 5), 0)), 5) + "px";
-          });
-
-        memoryCell.append("div")
-          .attr("class", "memory-rightbar")
-          .style("width", function(d) {
-            return 1 + Math.min(Math.max(Math.round(d.propMem * 13), 0), 13) + "px";
-          });
-
-        memoryCell.append("div")
-          .attr("class", "memory-cell")
-          .text(function(d) {
-            return roundOneDecimal(d.sumMem) + " MB";
-          });
-
-        var timeCell = newRows.append("td")
-          .attr("class", "time-wrapper");
-
-        timeCell.append("div")
-          .attr("class", "timebar")
-          .style("width", function(d) {
-            return Math.round(d.propTime * 20) + "px";
-          });
-
-        timeCell.append("div")
-          .attr("class", "timecell")
-          .text(function(d) {
-            return d.sumTime + " ms";
-          });
-
         var labelCell = newRows.append("td");
         updateLabelCells(labelCell);
 
@@ -1554,12 +1528,64 @@ profvis = (function() {
 
         newRows.append("td")
           .attr("class", "path")
-          .text(function(d) { return d.filename; });
+          .text(function(d) {
+            var lastSlash = d.filename ? d.filename.lastIndexOf("/") : -1;
+            if (lastSlash >= 0)
+              return d.filename.substr(lastSlash + 1);
+
+            return d.filename;
+          });
+
+        newRows.append("td")
+          .attr("class", "count")
+          .text(function(d) {
+            return d.sumCount;
+          });
+
+        newRows.append("td")
+          .attr("class", "treetable-memory memory-info")
+          .text(function(d) {
+            return roundOneDecimal(d.sumMem);
+          });
+
+        var memoryBarContainer = newRows.append("td")
+          .attr("class", "treetable-memory memory-bar-container");
+
+        var memoryLeftCell = memoryBarContainer.append("div")
+          .attr("class", "memory-leftbar-wrapper");
+
+        memoryLeftCell.append("div")
+          .attr("class", "memory-leftbar")
+          .style("width", function(d) {
+            return  1 + Math.min(Math.abs(Math.min(Math.round(d.propMem * 5), 0)), 5) + "px";
+          });
+
+        memoryBarContainer.append("div")
+          .attr("class", "memory-rightbar")
+          .style("width", function(d) {
+            return 1 + Math.min(Math.max(Math.round(d.propMem * 13), 0), 13) + "px";
+          });
+
+        newRows.append("td")
+          .attr("class", "time-info")
+          .text(function(d) {
+            return d.sumTime;
+          });
+
+        var timeCell = newRows.append("td")
+          .attr("class", "time-bar-container");
+
+        timeCell.append("div")
+          .attr("class", "timebar")
+          .style("width", function(d) {
+            return Math.round(d.propTime * 20) + "px";
+          });
 
         var unorderedRows = d3.selectAll("tr.treetable-row")
           .data(vis.profTable, function(d) {
             return d.id;
           });
+
         unorderedRows.sort(function(a,b) {
           return (a.id < b.id) ? -1 : (a.id == b.id ? 0 : 1);
         });

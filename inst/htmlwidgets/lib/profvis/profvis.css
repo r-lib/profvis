@@ -591,7 +591,6 @@ table.profvis-table .membar-right-cell > .membar {
 }
 
 .profvis-treetable .count {
-  width: 50px;
   text-align: right;
 }
 
@@ -601,6 +600,7 @@ table.profvis-table .membar-right-cell > .membar {
 
 .profvis-treetable th.label {
   text-align: left;
+  padding-left: 5px;
 }
 
 .profvis-treetable td.label-pointer {
@@ -613,8 +613,6 @@ table.profvis-table .membar-right-cell > .membar {
 
 .profvis-treetable .path {
   text-align: left;
-  border-right: 0px;
-  width: 200px;
 }
 
 .profvis-treetable .expand > div {
@@ -646,8 +644,10 @@ table.profvis-table .membar-right-cell > .membar {
 	display: inline-block;
 }
 
-.profvis-treetable .time-wrapper {
+.profvis-treetable .time-info {
   padding: 0px;
+  padding-right: 2px;
+  text-align: right;
 }
 
 .profvis-treetable .timebar {
@@ -655,7 +655,7 @@ table.profvis-table .membar-right-cell > .membar {
   height: 14px;
   background-color: #5A5A5A;
   float: left;
-  border-radius: 0px 2px 2px 0px;
+  border-radius: 2px 2px 2px 2px;
   padding-top: 0px;
   margin-top: 1px;
 }
@@ -663,11 +663,12 @@ table.profvis-table .membar-right-cell > .membar {
 .profvis-treetable .timecell {
   padding-top: 2px;
   padding-right: 3px;
-  float: right;
 }
 
-.profvis-treetable .memory-wrapper {
+.profvis-treetable .memory-info {
   padding-left: 0px;
+  padding-right: 2px;
+  text-align: right;
 }
 
 .profvis-treetable .memory-leftbar-wrapper {
@@ -693,6 +694,12 @@ table.profvis-table .membar-right-cell > .membar {
 }
 
 .profvis-treetable .memory-cell {
-  float: right;
 }
 
+.profvis-treetable .memory-bar-container {
+  margin-right: 3px;
+}
+
+.profvis-treetable .time-bar-container {
+  margin-right: 3px;
+}
