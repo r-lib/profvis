@@ -155,7 +155,7 @@
 
 .profvis-status-bar .separator-block {
   display: inline-block;
-  width: 2px;
+  width: 1px;
   text-align: center;
 }
 
@@ -515,4 +515,191 @@ table.profvis-table .membar-right-cell > .membar {
 
 .profvis-treemap .node div {
   padding: 6px 6px;
+}
+
+.profvis-treetable {
+  top: 0px;
+  bottom: 0px;
+  left: 0px;
+  right: 0px;
+  position: absolute;
+  margin-top: 23px;
+  margin-bottom: 21px;
+  margin-right: 0px;
+  overflow: hidden;
+  font: 10px sans-serif;
+  color: #161616;
+  font-family: Open Sans,Helvetica,Arial,sans-serif;
+  font-size: 12px;
+  overflow-y: auto;
+}
+
+.profvis-treetable .results {
+  width: 100%;
+  table-layout: fixed;
+}
+
+.profvis-treetable th {
+  font-weight: normal;
+  height: 18px;
+  background-color: #F8F9F8;
+  border-bottom: solid 1px #E4E4E4;
+  border-right: solid 1px #E4E4E4;
+  padding-left: 3px;
+  padding-right: 3px;
+}
+
+.profvis-treetable td {
+  height: 18px;
+  border-bottom: solid 1px #E4E4E4;
+  border-right: solid 1px #E4E4E4;
+  padding-left: 3px;
+  padding-right: 3px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.profvis-treetable .action {
+  width: 18px;
+}
+
+.profvis-treetable .memory {
+  width: 100px;
+  text-align: right;
+}
+
+.profvis-treetable th {
+  cursor: default;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  overflow: hidden;
+}
+
+.profvis-treetable th.memory {
+  text-align: center;
+}
+
+.profvis-treetable .time {
+  width: 100px;
+  text-align: right;
+}
+
+.profvis-treetable th.time {
+  text-align: center;
+}
+
+.profvis-treetable .count {
+  text-align: right;
+}
+
+.profvis-treetable th.count {
+  text-align: center;
+}
+
+.profvis-treetable th.label {
+  text-align: left;
+  padding-left: 5px;
+}
+
+.profvis-treetable td.label-pointer {
+  cursor: pointer;
+}
+
+.profvis-treetable .label-text {
+  display: inline-block;
+}
+
+.profvis-treetable .path {
+  text-align: left;
+}
+
+.profvis-treetable .expand > div {
+	display: inline-block;
+}
+
+.profvis-treetable .expand > div > div{
+  width: 0px;
+  height: 0px;
+  margin-left: 3px;
+  margin-right: 6px;
+  border-top: 4px solid transparent;
+	border-left: 6px solid #161616;
+	border-bottom: 4px solid transparent;
+}
+
+.profvis-treetable .collapse > div {
+	display: inline-block;
+}
+
+.profvis-treetable .collapse > div > div {
+  width: 0px;
+  height: 0px;
+  margin-left: 3px;
+  margin-right: 6px;
+  border-right: 4px solid transparent;
+	border-top: 6px solid #161616;
+	border-left: 4px solid transparent;
+	display: inline-block;
+}
+
+.profvis-treetable .time-info {
+  padding: 0px;
+  padding-right: 2px;
+  text-align: right;
+}
+
+.profvis-treetable .timebar {
+  width: 0px;
+  height: 14px;
+  background-color: #5A5A5A;
+  float: left;
+  border-radius: 2px 2px 2px 2px;
+  padding-top: 0px;
+  margin-top: 1px;
+}
+
+.profvis-treetable .timecell {
+  padding-top: 2px;
+  padding-right: 3px;
+}
+
+.profvis-treetable .memory-info {
+  padding-left: 0px;
+  padding-right: 2px;
+  text-align: right;
+}
+
+.profvis-treetable .memory-leftbar-wrapper {
+  float: left;
+  height: 14px;
+  width: 5px;
+}
+
+.profvis-treetable .memory-leftbar {
+  width: 2px;
+  height: 14px;
+  background-color: #5A5A5A;
+  float: right;
+  border-radius: 1px 0px 0px 1px;
+}
+
+.profvis-treetable .memory-rightbar {
+  width: 2px;
+  float: left;
+  height: 14px;
+  background-color: #5A5A5A;
+  border-radius: 0px 1px 1px 0px;
+}
+
+.profvis-treetable .memory-cell {
+}
+
+.profvis-treetable .memory-bar-container {
+  margin-right: 3px;
+}
+
+.profvis-treetable .time-bar-container {
+  margin-right: 3px;
 }

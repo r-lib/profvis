@@ -30,8 +30,8 @@ profvis = (function() {
       var $el = $(el);
 
       el.innerHTML =
-        generateStatusBarButton('flameGraphButton', 'Flamegraph', true) +
-        generateStatusBarButton('treemapButton', 'Treemap', false) +
+        generateStatusBarButton('flameGraphButton', 'Flame Graph', true) +
+        generateStatusBarButton('treetableButton', 'Data', false) +
         '<span role="button" class="options-button">Options &#x25BE;</span>';
 
       $el.find("span.options-button").on("click", function(e) {
@@ -55,6 +55,11 @@ profvis = (function() {
       $el.find("#treemapButton").on("click", function() {
         setStatusBarButtons($(this));
         onToogle("treemap");
+      });
+
+      $el.find("#treetableButton").on("click", function() {
+        setStatusBarButtons($(this));
+        onToogle("treetable");
       });
 
       return {
@@ -179,11 +184,16 @@ profvis = (function() {
           source: "profvis",
           message: "sourcefile",
           file: d.filename,
-          normpath: d.normpath,
+          normpath: d.normpath ? d.normpath : getNormPath(vis.files, d.filename),
           line: d.linenum,
           details: details
         }, window.location.origin);
       }
+    }
+
+    function roundOneDecimal(number, decimals) {
+      if (!number) return 0;
+      return parseFloat(Math.round(number * 100) / 100).toFixed(1);
     }
 
     // Generate the code table ----------------------------------------
@@ -216,7 +226,7 @@ profvis = (function() {
       var percentMemTooltip = "Percentage of peak memory allocation";
 
       headerRows.append("th")
-        .attr("class", "memory")
+        .attr("class", "table-memory memory")
         .attr("colspan", "3")
         .text("Memory");
 
@@ -248,13 +258,13 @@ profvis = (function() {
         .each(function() { hljs.highlightBlock(this); });
 
       rows.append("td")
-        .attr("class", "memory")
+        .attr("class", "table-memory memory")
         .attr("title", "Memory allocation (MB)")
         .attr("data-pseudo-content",
-              function(d) { return d.sumMem ? parseFloat(d.sumMem).toFixed(1) : 0; });
+              function(d) { return roundOneDecimal(d.sumMem); });
 
       rows.append("td")
-        .attr("class", "membar-left-cell")
+        .attr("class", "table-memory membar-left-cell")
         .append("div")
           .attr("class", "membar")
           .attr("title", percentMemTooltip)
@@ -265,7 +275,7 @@ profvis = (function() {
           .attr("data-pseudo-content", "\u00a0");
 
       rows.append("td")
-        .attr("class", "membar-right-cell")
+        .attr("class", "table-memory membar-right-cell")
         .append("div")
           .attr("class", "membar")
           .attr("title", percentMemTooltip)
@@ -374,9 +384,7 @@ profvis = (function() {
       }
 
       function useMemoryResults(value) {
-        d3.selectAll(".memory").style("display", value ? "none" : "");
-        d3.selectAll(".membar-left-cell").style("display", value ? "none" : "");
-        d3.selectAll(".membar-right-cell").style("display", value ? "none" : "");
+        d3.selectAll(".table-memory").style("display", value ? "none" : "");
       }
 
       return {
@@ -509,14 +517,7 @@ profvis = (function() {
         getDepth: null
       };
 
-      function useCollapsedDepth() {
-        scales.getDepth = function(d) { return d.depthCollapsed; };
-      }
-      function useUncollapsedDepth() {
-        scales.getDepth = function(d) { return d.depth; };
-      }
-
-      useCollapsedDepth();
+      scales.getDepth = function(d) { return vis.hideInternals ? d.depthCollapsed : d.depth; };
 
       // SVG container objects ------------------------------------------------
       var svg = d3.select(el).append('svg');
@@ -1224,8 +1225,6 @@ profvis = (function() {
         redrawCollapse: redrawCollapse,
         redrawUncollapse: redrawUncollapse,
         savePrevScales: savePrevScales,
-        useCollapsedDepth: useCollapsedDepth,
-        useUncollapsedDepth: useUncollapsedDepth,
         addLockHighlight: addLockHighlight,
         clearLockHighlight: clearLockHighlight,
         addActiveHighlight: addActiveHighlight,
@@ -1278,16 +1277,6 @@ profvis = (function() {
       };
       var paddingTop = 30;
 
-      var hideInternals = true;
-
-      var useCollapsedDepth = function useCollapsedDepth() {
-        hideInternals = true;
-      }
-
-      var useUncollapsedDepth = function useUncollapsedDepth() {
-        hideInternals = false
-      }
-
       var renderTreemap = function () {
         var innerWidth = el.clientWidth - dims.margin.left - dims.margin.right;
         var innerHeight = el.clientHeight - dims.margin.top - dims.margin.bottom;
@@ -1312,7 +1301,7 @@ profvis = (function() {
               return [Math.min(paddingTop, d.dy), 0, 0, 0];
             })
             .children(function (d) {
-              return !hideInternals || !d.children ? d.children : d.children.filter(function(x) {
+              return !vis.hideInternals || !d.children ? d.children : d.children.filter(function(x) {
                 return x.depthCollapsed && x.depthCollapsed >= 0;
               });
             });
@@ -1384,10 +1373,293 @@ profvis = (function() {
 
       return {
         el: el,
-        onResize: renderTreemap,
-        useCollapsedDepth: useCollapsedDepth,
-        useUncollapsedDepth: useUncollapsedDepth
+        onResize: renderTreemap
       }
+    }
+
+    // Generate the tree table ----------------------------------------
+    function generateTreetable(el) {
+      var content = d3.select(el);
+
+      var table = content.append("table")
+          .attr("class", "results")
+          .attr("cellspacing", "0")
+          .attr("cellpadding", "0");
+
+      table.append("col");
+      table.append("col")
+        .style("width", "120px");
+      table.append("col")
+        .style("width", "50px");
+      table.append("col")
+        .style("width", "70px")
+        .attr("class", "treetable-memory");
+      table.append("col")
+        .style("width", "40px")
+        .attr("class", "treetable-memory");
+      table.append("col")
+        .style("width", "70px");
+      table.append("col")
+        .style("width", "40px");
+
+      var tableBody = table.append("tbody");
+
+      var headerRows = tableBody.append("tr");
+
+      headerRows.append("th")
+        .attr("class", "label")
+        .text("Code");
+
+      headerRows.append("th")
+        .attr("class", "path")
+        .text("File");
+
+      headerRows.append("th")
+        .attr("class", "count")
+        .text("Calls");
+
+      headerRows.append("th")
+        .attr("class", "treetable-memory memory")
+        .attr("colspan", "2")
+        .text("Memory (MB)");
+
+      headerRows.append("th")
+        .attr("class", "time")
+        .attr("colspan", "2")
+        .text("Time (ms)");
+
+      function updateLabelCells(labelCell) {
+        labelCell
+          .style("padding-left", function(d){
+            return (8 + 15 * (d.depth - 1)) + "px";
+          })
+          .on("click", function(d) {
+            if (!d.canExpand)
+              return;
+
+            var collapsed = d.collapsed;
+            if (collapsed === undefined) {
+              vis.profTable = vis.profTable.concat(d.sumChildren);
+              d.collapsed = false;
+            }
+            else if (collapsed) {
+              d.collapsed = false;
+            }
+            else {
+              d.collapsed = true;
+            }
+
+            updateRows();
+          })
+          .attr("class", function(d) {
+            d.canExpand = false;
+            if (d.sumChildren) {
+              d.sumChildren.forEach(function(c) {
+                if (c.sumChildren.length > 0)
+                  if (!vis.hideInternals || c.depthCollapsed !== null)
+                    d.canExpand = true;
+              });
+            }
+
+            var collapsedClass = "";
+            if (d.canExpand)
+              collapsedClass = d.collapsed === undefined ? "expand" : d.collapsed ? "expand" : "collapse";
+
+            return "label " + (d.canExpand ? "label-pointer " + collapsedClass : "");
+          });
+      }
+
+      function updateRows() {
+        var rows = tableBody.selectAll("tr.treetable-row")
+          .data(vis.profTable, function(d) {
+            return d.id;
+          });
+
+        rows.exit()
+          .remove();
+
+        var updatedRows = rows
+          .style("display", function(d) {
+            if (vis.hideInternals && d.depthCollapsed === null)
+              return "none";
+
+            var collapsed = false;
+            while (d.parent) {
+              d = d.parent;
+              if (d.collapsed) {
+                collapsed = true;
+                break;
+              }
+            }
+            return collapsed ? "none" : "";
+          });
+
+        var updatedLabelCells = updatedRows.selectAll("td.label");
+        updateLabelCells(updatedLabelCells);
+
+        var newRows = rows.enter()
+          .append("tr")
+          .filter(function(d) {
+            if (vis.hideInternals && d.depthCollapsed === null)
+              return false;
+
+            return d.sumChildren.length > 0;
+          })
+          .on("click", function(d) {
+            table.selectAll("tr")
+              .style("background-color", null);
+
+            this.style.backgroundColor = "#FDFDFD";
+            notifySourceFileMessage(d, "select");
+          });
+
+        newRows
+          .attr("class", "treetable-row");
+
+        var labelCell = newRows.append("td");
+        updateLabelCells(labelCell);
+
+        var cellWrapper = labelCell.append("div");
+        cellWrapper.append("div");
+
+        labelCell.append("div")
+          .attr("class", "label-text")
+          .text(function(d) { return d.label; });
+
+        newRows.append("td")
+          .attr("class", "path")
+          .text(function(d) {
+            var lastSlash = d.filename ? d.filename.lastIndexOf("/") : -1;
+            if (lastSlash >= 0)
+              return d.filename.substr(lastSlash + 1);
+
+            return d.filename;
+          });
+
+        newRows.append("td")
+          .attr("class", "count")
+          .text(function(d) {
+            return d.sumCount;
+          });
+
+        newRows.append("td")
+          .attr("class", "treetable-memory memory-info")
+          .text(function(d) {
+            return roundOneDecimal(d.sumMem);
+          });
+
+        var memoryBarContainer = newRows.append("td")
+          .attr("class", "treetable-memory memory-bar-container");
+
+        var memoryLeftCell = memoryBarContainer.append("div")
+          .attr("class", "memory-leftbar-wrapper");
+
+        memoryLeftCell.append("div")
+          .attr("class", "memory-leftbar")
+          .style("width", function(d) {
+            return  1 + Math.min(Math.abs(Math.min(Math.round(d.propMem * 5), 0)), 5) + "px";
+          });
+
+        memoryBarContainer.append("div")
+          .attr("class", "memory-rightbar")
+          .style("width", function(d) {
+            return 1 + Math.min(Math.max(Math.round(d.propMem * 13), 0), 13) + "px";
+          });
+
+        newRows.append("td")
+          .attr("class", "time-info")
+          .text(function(d) {
+            return d.sumTime;
+          });
+
+        var timeCell = newRows.append("td")
+          .attr("class", "time-bar-container");
+
+        timeCell.append("div")
+          .attr("class", "timebar")
+          .style("width", function(d) {
+            return Math.round(d.propTime * 20) + "px";
+          });
+
+        var unorderedRows = d3.selectAll("tr.treetable-row")
+          .data(vis.profTable, function(d) {
+            return d.id;
+          });
+
+        unorderedRows.sort(function(a,b) {
+          return (a.id < b.id) ? -1 : (a.id == b.id ? 0 : 1);
+        });
+      }
+
+      var buildProfTable = function (profTree) {
+        var head = jQuery.extend({}, profTree);
+        var nodes = [head];
+
+        var aggregateChildren = function(node) {
+          var nameMap = {};
+          node.children.forEach(function(c) {
+            var nameMapEntry = nameMap[c.label];
+            if (!nameMapEntry) {
+              nameMapEntry = jQuery.extend({}, c);
+              nameMapEntry.sumTime = c.endTime - c.startTime;
+              nameMapEntry.sumChildren = [];
+              nameMapEntry.children = [];
+              nameMapEntry.parent = node;
+              nameMapEntry.sumCount = 1;
+            }
+            else {
+              nameMapEntry.sumMem = nameMapEntry.sumMem + c.sumMem;
+              nameMapEntry.sumTime = nameMapEntry.sumTime + (c.endTime - c.startTime);
+              nameMapEntry.sumCount = nameMapEntry.sumCount + 1;
+            }
+
+            nameMapEntry.propMem = nameMapEntry.sumMem  / vis.totalMem;
+            nameMapEntry.propTime = nameMapEntry.sumTime  / vis.totalTime;
+
+            c.children.forEach(function(e) {
+              nameMapEntry.children.push(e);
+            });
+
+            nameMap[c.label] = nameMapEntry;
+          });
+
+          var childrenSum = [];
+          for (var label in nameMap) {
+            childrenSum.push(nameMap[label]);
+          }
+
+          return childrenSum;
+        }
+
+        var id = 0;
+        while (nodes.length > 0) {
+          var node = nodes.shift();
+
+          node.id = id;
+          id = id + 1;
+
+          node.sumChildren = aggregateChildren(node);
+          node.sumChildren.forEach(function(c) {
+            nodes.unshift(c);
+          });
+        }
+
+        return head.sumChildren;
+      }
+
+      function useMemoryResults(value) {
+        d3.selectAll(".treetable-memory").style("display", value ? "none" : "");
+      }
+
+      vis.profTable = buildProfTable(vis.profTree);
+
+      updateRows();
+
+      return {
+        el: el,
+        onResize: updateRows,
+        useMemoryResults: useMemoryResults
+      };
     }
 
     function enableScroll() {
@@ -1408,7 +1680,6 @@ profvis = (function() {
       var $el = $(vis.el);
       var $panel1 = $el.children(".profvis-panel1");
       var $panel2 = $el.children(".profvis-panel2");
-      var $panelTreemap = $el.children(".profvis-treemap");
       var $splitBar = $el.children(".profvis-splitbar");
       var $statusBar = $el.children(".profvis-status-bar");
 
@@ -1484,8 +1755,9 @@ profvis = (function() {
       $(window).resize(
         debounce(function() {
           resizePanels(lastSplitProportion);
-          vis.flameGraph.onResize();
-          vis.treemap.onResize();
+          vis.activeViews.forEach(function(e) {
+            if (e.onResize) e.onResize();
+          });
         }, 250)
       );
 
@@ -1617,6 +1889,7 @@ profvis = (function() {
       files: message.files,
       aggLabelTimes: getAggregatedLabelTimes(prof),
       fileLineStats: getFileLineStats(prof, message.files),
+      profTable: [],
 
       // Objects representing each component
       statusBar: null,
@@ -1625,10 +1898,14 @@ profvis = (function() {
       flameGraph: null,
       infoBox: null,
       treemap: null,
+      treetable: null,
+      activeViews: [],
 
       // Functions to enable/disable responding to scrollwheel events
       enableScroll: enableScroll,
-      disableScroll: disableScroll
+      disableScroll: disableScroll,
+
+      hideInternals: true
     };
 
 
@@ -1681,6 +1958,11 @@ profvis = (function() {
     treemapEl.style.display = "none";
     vis.el.appendChild(treemapEl);
 
+    var treetableEl = document.createElement("div");
+    treetableEl.className = "profvis-treetable";
+    treetableEl.style.display = "none";
+    vis.el.appendChild(treetableEl);
+
     var optionsPanelEl = document.createElement("div");
     optionsPanelEl.className = "profvis-options-panel";
     vis.el.appendChild(optionsPanelEl);
@@ -1694,23 +1976,43 @@ profvis = (function() {
       treemapEl.style.display = "none";
       panel1.style.display = "none";
       panel2.style.display = "none";
+      treetableEl.style.display = "none";
     }
 
     var toggleViews = function(view) {
+      hideViews();
+
       switch (view) {
         case "flamegraph":
-          hideViews();
           splitBarEl.style.display = "block";
           panel1.style.display = "block";
           panel2.style.display = "block";
-          vis.flameGraph.onResize();
+
+          vis.activeViews = [vis.flameGraph, vis.codeTable];
           break;
         case "treemap":
-          hideViews();
+          if (!vis.treemap) {
+            vis.treemap = generateTreemap(treemapEl);
+          }
+
           treemapEl.style.display = "block";
-          vis.treemap.onResize();
+
+          vis.activeViews = [vis.treemap];
+          break;
+        case "treetable":
+          if (!vis.treetable) {
+            vis.treetable = generateTreetable(treetableEl);
+          }
+
+          treetableEl.style.display = "block";
+
+          vis.activeViews = [vis.treetable];
           break;
       }
+
+      vis.activeViews.forEach(function(e) {
+        if (e.onResize) e.onResize();
+      });
     };
 
     var onOptionsChange = function(option, checked) {
@@ -1719,24 +2021,24 @@ profvis = (function() {
         case "internals": {
           vis.flameGraph.savePrevScales();
 
+          vis.hideInternals = checked;
           if (checked) {
-            vis.flameGraph.useCollapsedDepth();
-            vis.treemap.useCollapsedDepth();
-
             vis.flameGraph.redrawCollapse(400, 400);
           } else {
-            vis.flameGraph.useUncollapsedDepth();
-            vis.treemap.useUncollapsedDepth();
 
             vis.flameGraph.redrawUncollapse(400, 250);
           }
 
-          vis.treemap.onResize();
+          vis.activeViews.forEach(function(e) {
+            if (e.onResize) e.onResize();
+          })
 
           break;
         }
         case "memory": {
-          vis.codeTable.useMemoryResults(checked);
+          vis.activeViews.forEach(function(e) {
+            if (e.useMemoryResults) e.useMemoryResults(checked);
+          });
           break;
         }
       }
@@ -1749,7 +2051,9 @@ profvis = (function() {
     vis.codeTable = generateCodeTable(codeTableEl);
     vis.flameGraph = generateFlameGraph(flameGraphEl);
     vis.infoBox = initInfoBox(infoBoxEl);
-    vis.treemap = generateTreemap(treemapEl);
+    vis.treemap = null;
+    vis.treetable = null;
+    vis.activeViews = [vis.flameGraph, vis.codeTable];
 
     // If any depth collapsing occured, enable the "hide internal" checkbox.
     if (prof.some(function(d) { return d.depth !== d.depthCollapsed; })) {
@@ -2190,6 +2494,16 @@ profvis = (function() {
       }, delay);
     };
   }
+
+  var getNormPath = function(files, filename) {
+    var normpath = null;
+    files.forEach(function(e) {
+      if (e.filename == filename) {
+        normpath = e.normpath;
+      }
+    });
+    return normpath;
+  };
 
 
   (function() {
