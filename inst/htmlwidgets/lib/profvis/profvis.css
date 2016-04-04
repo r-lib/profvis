@@ -491,32 +491,6 @@ table.profvis-table .membar-right-cell > .membar {
   height: 25%;
 }
 
-.profvis-treemap {
-  top: 0px;
-  bottom: 0px;
-  left: 0px;
-  right: 0px;
-  position: absolute;
-  margin-top: 23px;
-  margin-bottom: 21px;
-  margin-right: 1px;
-  overflow: hidden;
-  font: 10px sans-serif;
-  color: #161616;
-}
-
-.profvis-treemap .node {
-  border: solid 1px white;
-  line-height: 0.95;
-  overflow: hidden;
-  position: absolute;
-  border-radius: 4px;
-}
-
-.profvis-treemap .node div {
-  padding: 6px 6px;
-}
-
 .profvis-treetable {
   top: 0px;
   bottom: 0px;
