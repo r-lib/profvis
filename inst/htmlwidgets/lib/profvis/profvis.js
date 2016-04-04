@@ -52,11 +52,6 @@ profvis = (function() {
         onToogle("flamegraph");
       });
 
-      $el.find("#treemapButton").on("click", function() {
-        setStatusBarButtons($(this));
-        onToogle("treemap");
-      });
-
       $el.find("#treetableButton").on("click", function() {
         setStatusBarButtons($(this));
         onToogle("treetable");
@@ -383,8 +378,8 @@ profvis = (function() {
       function disableScroll() {
       }
 
-      function useMemoryResults(value) {
-        d3.selectAll(".table-memory").style("display", value ? "none" : "");
+      function useMemoryResults() {
+        d3.selectAll(".table-memory").style("display", vis.hideMemory ? "none" : "");
       }
 
       return {
@@ -1269,114 +1264,6 @@ profvis = (function() {
       };
     }
 
-    function generateTreemap(el) {
-      var $el = $(el);
-
-      var dims = {
-        margin: { top: 0, right: 0, left: 0, bottom: 0 }
-      };
-      var paddingTop = 30;
-
-      var renderTreemap = function () {
-        var innerWidth = el.clientWidth - dims.margin.left - dims.margin.right;
-        var innerHeight = el.clientHeight - dims.margin.top - dims.margin.bottom;
-
-        var colorScale = d3.scale.linear()
-          .domain([0.0, vis.totalTime])
-          .range(["rgb(241, 243, 246)", "rgb(233, 238, 243)"]);
-
-        var width = innerWidth,
-            height = innerHeight,
-            color = colorScale,
-            div = d3.select(el).append("div")
-               .style("position", "relative");
-
-        var treemap = d3.layout.treemap()
-            .size([width, height + paddingTop])
-            .sticky(true)
-            .value(function(d) {
-              return d.timeRange;
-            })
-            .padding(function (d) {
-              return [Math.min(paddingTop, d.dy), 0, 0, 0];
-            })
-            .children(function (d) {
-              return !vis.hideInternals || !d.children ? d.children : d.children.filter(function(x) {
-                return x.depthCollapsed && x.depthCollapsed >= 0;
-              });
-            });
-
-        function position() {
-          this.style("left", function(d) { return d.x + "px"; })
-            .style("top", function(d) { return d.y - paddingTop + "px"; })
-            .style("width", function(d) { return Math.max(0, d.dx - 1) + "px"; })
-            .style("height", function(d) { return Math.max(0, d.dy - 1) + "px"; });
-        }
-
-        var copyProfTree = function(root) {
-          var data = {
-            label: root.label,
-            timeRange: root.endTime && root.startTime ? root.endTime - root.startTime : null,
-            depthCollapsed: root.depthCollapsed,
-            children: []
-          };
-
-          var nodes = [{
-            source: root,
-            parent: data
-          }];
-
-          while (nodes.length > 0) {
-            var node = nodes.pop();
-
-            if (node.source.children) {
-              node.source.children.forEach(function(e) {
-                var destNode = {
-                  label: e.label,
-                  timeRange: e.endTime - e.startTime,
-                  depthCollapsed: e.depthCollapsed,
-                  children: []
-                };
-
-                node.parent.children.push(destNode);
-
-                nodes.push({
-                  source: e,
-                  parent: destNode
-                });
-              });
-            }
-          }
-
-          return data;
-        }
-
-        var profTreeCopy = copyProfTree(vis.profTree);
-        var node = div.datum(profTreeCopy).selectAll(".node")
-            .data(treemap.nodes)
-          .enter().append("div")
-            .attr("class", "node")
-            .call(position)
-            .style("background-color", function(d) {
-              if (d.name == 'tree') return "#FFF";
-
-              return color(d.timeRange);
-            })
-            .append('div')
-            .style("font-size", function(d) {
-                return Math.min(12, 0.18*Math.sqrt(d.area))+'px';
-            })
-            .text(function(d) { return d.label; });
-      };
-
-      renderTreemap();
-
-      return {
-        el: el,
-        onResize: renderTreemap
-      }
-    }
-
     // Generate the tree table ----------------------------------------
     function generateTreetable(el) {
       var content = d3.select(el);
@@ -1589,6 +1476,8 @@ profvis = (function() {
         unorderedRows.sort(function(a,b) {
           return (a.id < b.id) ? -1 : (a.id == b.id ? 0 : 1);
         });
+
+        useMemoryResults();
       }
 
       var buildProfTable = function (profTree) {
@@ -1647,8 +1536,8 @@ profvis = (function() {
         return head.sumChildren;
       }
 
-      function useMemoryResults(value) {
-        d3.selectAll(".treetable-memory").style("display", value ? "none" : "");
+      function useMemoryResults() {
+        d3.selectAll(".treetable-memory").style("display", vis.hideMemory ? "none" : "");
       }
 
       vis.profTable = buildProfTable(vis.profTree);
@@ -1897,7 +1786,6 @@ profvis = (function() {
       codeTable: null,
       flameGraph: null,
       infoBox: null,
-      treemap: null,
       treetable: null,
       activeViews: [],
 
@@ -1905,7 +1793,8 @@ profvis = (function() {
       enableScroll: enableScroll,
       disableScroll: disableScroll,
 
-      hideInternals: true
+      hideInternals: true,
+      hideMemory: false
     };
 
 
@@ -1953,11 +1842,6 @@ profvis = (function() {
     infoBoxEl.className = "profvis-infobox";
     panel2.appendChild(infoBoxEl);
 
-    var treemapEl = document.createElement("div");
-    treemapEl.className = "profvis-treemap";
-    treemapEl.style.display = "none";
-    vis.el.appendChild(treemapEl);
-
     var treetableEl = document.createElement("div");
     treetableEl.className = "profvis-treetable";
     treetableEl.style.display = "none";
@@ -1973,7 +1857,6 @@ profvis = (function() {
 
     var hideViews = function() {
       splitBarEl.style.display = "none";
-      treemapEl.style.display = "none";
       panel1.style.display = "none";
       panel2.style.display = "none";
       treetableEl.style.display = "none";
@@ -1989,15 +1872,6 @@ profvis = (function() {
           panel2.style.display = "block";
 
           vis.activeViews = [vis.flameGraph, vis.codeTable];
-          break;
-        case "treemap":
-          if (!vis.treemap) {
-            vis.treemap = generateTreemap(treemapEl);
-          }
-
-          treemapEl.style.display = "block";
-
-          vis.activeViews = [vis.treemap];
           break;
         case "treetable":
           if (!vis.treetable) {
@@ -2036,8 +1910,9 @@ profvis = (function() {
           break;
         }
         case "memory": {
+          vis.hideMemory = checked;
           vis.activeViews.forEach(function(e) {
-            if (e.useMemoryResults) e.useMemoryResults(checked);
+            if (e.useMemoryResults) e.useMemoryResults();
           });
           break;
         }
@@ -2051,7 +1926,6 @@ profvis = (function() {
     vis.codeTable = generateCodeTable(codeTableEl);
     vis.flameGraph = generateFlameGraph(flameGraphEl);
     vis.infoBox = initInfoBox(infoBoxEl);
-    vis.treemap = null;
     vis.treetable = null;
     vis.activeViews = [vis.flameGraph, vis.codeTable];
 
