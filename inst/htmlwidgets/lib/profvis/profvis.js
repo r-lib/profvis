@@ -383,8 +383,8 @@ profvis = (function() {
       function disableScroll() {
       }
 
-      function useMemoryResults(value) {
-        d3.selectAll(".table-memory").style("display", value ? "none" : "");
+      function useMemoryResults() {
+        d3.selectAll(".table-memory").style("display", vis.hideMemory ? "none" : "");
       }
 
       return {
@@ -1589,6 +1589,8 @@ profvis = (function() {
         unorderedRows.sort(function(a,b) {
           return (a.id < b.id) ? -1 : (a.id == b.id ? 0 : 1);
         });
+
+        useMemoryResults();
       }
 
       var buildProfTable = function (profTree) {
@@ -1647,8 +1649,8 @@ profvis = (function() {
         return head.sumChildren;
       }
 
-      function useMemoryResults(value) {
-        d3.selectAll(".treetable-memory").style("display", value ? "none" : "");
+      function useMemoryResults() {
+        d3.selectAll(".treetable-memory").style("display", vis.hideMemory ? "none" : "");
       }
 
       vis.profTable = buildProfTable(vis.profTree);
@@ -1905,7 +1907,8 @@ profvis = (function() {
       enableScroll: enableScroll,
       disableScroll: disableScroll,
 
-      hideInternals: true
+      hideInternals: true,
+      hideMemory: false
     };
 
 
@@ -2036,8 +2039,9 @@ profvis = (function() {
           break;
         }
         case "memory": {
+          vis.hideMemory = checked;
           vis.activeViews.forEach(function(e) {
-            if (e.useMemoryResults) e.useMemoryResults(checked);
+            if (e.useMemoryResults) e.useMemoryResults();
           });
           break;
         }
