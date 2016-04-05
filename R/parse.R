@@ -63,7 +63,12 @@ parse_rprof <- function(path = "Rprof.out", expr_source = NULL) {
   )
 
   # Split by ':' for memory header or ' ' for callstack
-  prof_data <- str_split(prof_data, "[: ]")
+  prof_data <- str_split(prof_data, " ")
+  if (has_memory) {
+    prof_data <- lapply(prof_data, function(prof_row) {
+      c(str_split(prof_row[1], ":")[[1]], prof_row[-1])
+    })
+  }
 
   # Replace empty strings with character(0); otherwise causes incorrect output
   # later.
