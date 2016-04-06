@@ -1606,6 +1606,9 @@ profvis = (function() {
       // Resize the panels. splitProportion is a number from 0-1 representing the
       // horizontal position of the split bar.
       function resizePanels(splitProportion) {
+        if (!splitProportion)
+          splitProportion = lastSplitProportion;
+
         if (splitDir === "v") {
           var innerWidth = offsetRight($panel2) - $panel1.offset().left;
 
@@ -1763,6 +1766,10 @@ profvis = (function() {
         $splitBar[0].addEventListener("mousedown", startDrag);
       })();
 
+
+      return {
+        resizePanels: resizePanels
+      };
     }
 
 
@@ -1794,7 +1801,9 @@ profvis = (function() {
       disableScroll: disableScroll,
 
       hideInternals: true,
-      hideMemory: false
+      hideMemory: false,
+
+      resizePanels: null
     };
 
 
@@ -1853,7 +1862,8 @@ profvis = (function() {
 
     // Efficient to properly size panels before the code + flamegraph are
     // rendered, so that we don't have to re-render.
-    initResizing(message.split);
+    var resize = initResizing(message.split);
+    vis.resizePanels = resize.resizePanels;
 
     var hideViews = function() {
       splitBarEl.style.display = "none";
@@ -1872,6 +1882,7 @@ profvis = (function() {
           panel2.style.display = "block";
 
           vis.activeViews = [vis.flameGraph, vis.codeTable];
+          vis.resizePanels();
           break;
         case "treetable":
           if (!vis.treetable) {
