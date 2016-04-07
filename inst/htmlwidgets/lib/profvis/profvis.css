@@ -647,12 +647,11 @@ table.profvis-table .membar-right-cell > .membar {
   padding-left: 0px;
   padding-right: 2px;
   text-align: right;
-  border-right: 0px;
 }
 
 .profvis-treetable .memory-info-right {
-  padding-left: 0px;
-  padding-right: 2px;
+  padding-left: 2px;
+  padding-right: 0px;
   text-align: left;
 }
 
@@ -683,7 +682,6 @@ table.profvis-table .membar-right-cell > .membar {
 
 .profvis-treetable .memory-bar-container {
   margin-right: 3px;
-  border-right: 0px;
 }
 
 .profvis-treetable .time-bar-container {

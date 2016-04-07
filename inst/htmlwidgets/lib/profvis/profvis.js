@@ -1285,16 +1285,16 @@ profvis = (function() {
       table.append("col")
         .style("width", "50px");
       table.append("col")
-        .style("width", "40px")
+        .style("width", "50px")
         .attr("class", "treetable-memory");
       table.append("col")
-        .style("width", "30px")
+        .style("width", "26px")
         .attr("class", "treetable-memory");
       table.append("col")
-        .style("width", "40px")
+        .style("width", "50px")
         .attr("class", "treetable-memory");
       table.append("col")
-        .style("width", "70px");
+        .style("width", "50px");
       table.append("col")
         .style("width", "40px");
 
