@@ -222,7 +222,7 @@ profvis = (function() {
 
       headerRows.append("th")
         .attr("class", "table-memory memory")
-        .attr("colspan", "3")
+        .attr("colspan", "4")
         .text("Memory");
 
       headerRows.append("th")
@@ -254,9 +254,9 @@ profvis = (function() {
 
       rows.append("td")
         .attr("class", "table-memory memory")
-        .attr("title", "Memory deallocation / allocation (MB)")
+        .attr("title", "Memory deallocation (MB)")
         .attr("data-pseudo-content",
-              function(d) { return roundOneDecimal(d.sumMemDealloc) + " / " + roundOneDecimal(d.sumMemAlloc); });
+              function(d) { return roundOneDecimal(d.sumMemDealloc); });
 
       rows.append("td")
         .attr("class", "table-memory membar-left-cell")
@@ -279,6 +279,12 @@ profvis = (function() {
           })
           // Add the equivalent of &nbsp; to be added with CSS content
           .attr("data-pseudo-content", "\u00a0");
+
+      rows.append("td")
+        .attr("class", "table-memory memory memory-right")
+        .attr("title", "Memory allocation (MB)")
+        .attr("data-pseudo-content",
+              function(d) { return roundOneDecimal(d.sumMemAlloc); });
 
       rows.append("td")
         .attr("class", "time")
@@ -1279,7 +1285,10 @@ profvis = (function() {
       table.append("col")
         .style("width", "50px");
       table.append("col")
-        .style("width", "80px")
+        .style("width", "40px")
+        .attr("class", "treetable-memory");
+      table.append("col")
+        .style("width", "30px")
         .attr("class", "treetable-memory");
       table.append("col")
         .style("width", "40px")
@@ -1307,7 +1316,7 @@ profvis = (function() {
 
       headerRows.append("th")
         .attr("class", "treetable-memory memory")
-        .attr("colspan", "2")
+        .attr("colspan", "3")
         .text("Memory (MB)");
 
       headerRows.append("th")
@@ -1432,7 +1441,7 @@ profvis = (function() {
         newRows.append("td")
           .attr("class", "treetable-memory memory-info")
           .text(function(d) {
-            return roundOneDecimal(d.sumMemDealloc) + " / " + roundOneDecimal(d.sumMemAlloc);
+            return roundOneDecimal(d.sumMemDealloc);
           });
 
         var memoryBarContainer = newRows.append("td")
@@ -1451,6 +1460,12 @@ profvis = (function() {
           .attr("class", "memory-rightbar")
           .style("width", function(d) {
             return 1 + Math.min(Math.max(Math.round(d.propMemAlloc * 13), 0), 13) + "px";
+          });
+
+        newRows.append("td")
+          .attr("class", "treetable-memory memory-info-right")
+          .text(function(d) {
+            return roundOneDecimal(d.sumMemAlloc);
           });
 
         newRows.append("td")
@@ -1483,7 +1498,7 @@ profvis = (function() {
       var buildProfTable = function (profTree) {
         var head = jQuery.extend({}, profTree);
         var nodes = [head];
-        debugger;
+
         var aggregateChildren = function(node) {
           var nameMap = {};
           node.children.forEach(function(c) {
