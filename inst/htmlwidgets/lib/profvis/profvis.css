@@ -346,7 +346,7 @@ table.profvis-table .membar-left-cell {
 }
 
 table.profvis-table .membar-left-cell > .membar {
-  background-color: #BBBBBB;
+  background-color: #A7A7A7;
   float: right;
   border-radius: 2px 0px 0px 2px;
   line-height: 15px;
@@ -664,7 +664,7 @@ table.profvis-table .membar-right-cell > .membar {
 .profvis-treetable .memory-leftbar {
   width: 2px;
   height: 14px;
-  background-color: #BBBBBB;
+  background-color: #A7A7A7;
   float: right;
   border-radius: 1px 0px 0px 1px;
 }
