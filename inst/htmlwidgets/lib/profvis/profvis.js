@@ -218,11 +218,11 @@ profvis = (function() {
         .text(function(d) { return d.filename; });
 
       var percentTooltip = "Percentage of tracked execution time";
-      var percentMemTooltip = "Percentage of peak memory allocation";
+      var percentMemTooltip = "Percentage of peak memory deallocation and allocation";
 
       headerRows.append("th")
         .attr("class", "table-memory memory")
-        .attr("colspan", "3")
+        .attr("colspan", "4")
         .text("Memory");
 
       headerRows.append("th")
@@ -254,9 +254,9 @@ profvis = (function() {
 
       rows.append("td")
         .attr("class", "table-memory memory")
-        .attr("title", "Memory allocation (MB)")
+        .attr("title", "Memory deallocation (MB)")
         .attr("data-pseudo-content",
-              function(d) { return roundOneDecimal(d.sumMem); });
+              function(d) { return roundOneDecimal(d.sumMemDealloc) != 0 ? roundOneDecimal(d.sumMemDealloc) : ""; });
 
       rows.append("td")
         .attr("class", "table-memory membar-left-cell")
@@ -264,7 +264,7 @@ profvis = (function() {
           .attr("class", "membar")
           .attr("title", percentMemTooltip)
           .style("width", function(d) {
-            return Math.min(Math.abs(Math.min(Math.round(d.propMem * 100), 0)), 100) + "%";
+            return Math.min(Math.abs(Math.min(Math.round(d.propMemDealloc * 100), 0)), 100) + "%";
           })
           // Add the equivalent of &nbsp; to be added with CSS content
           .attr("data-pseudo-content", "\u00a0");
@@ -275,16 +275,22 @@ profvis = (function() {
           .attr("class", "membar")
           .attr("title", percentMemTooltip)
           .style("width", function(d) {
-            return Math.min(Math.max(Math.round(d.propMem * 100), 0), 100) + "%";
+            return Math.min(Math.max(Math.round(d.propMemAlloc * 100), 0), 100) + "%";
           })
           // Add the equivalent of &nbsp; to be added with CSS content
           .attr("data-pseudo-content", "\u00a0");
 
       rows.append("td")
+        .attr("class", "table-memory memory memory-right")
+        .attr("title", "Memory allocation (MB)")
+        .attr("data-pseudo-content",
+              function(d) { return roundOneDecimal(d.sumMemAlloc) != 0 ? roundOneDecimal(d.sumMemAlloc) : ""; });
+
+      rows.append("td")
         .attr("class", "time")
         .attr("title", "Total time (ms)")
         .attr("data-pseudo-content",
-              function(d) { return (Math.round(d.sumTime * 100) / 100); });
+              function(d) { return Math.round(d.sumTime * 100) != 0 ? (Math.round(d.sumTime * 100) / 100) : ""; });
 
       rows.append("td")
         .attr("class", "timebar-cell")
@@ -1279,13 +1285,16 @@ profvis = (function() {
       table.append("col")
         .style("width", "50px");
       table.append("col")
-        .style("width", "70px")
+        .style("width", "50px")
         .attr("class", "treetable-memory");
       table.append("col")
-        .style("width", "40px")
+        .style("width", "26px")
         .attr("class", "treetable-memory");
       table.append("col")
-        .style("width", "70px");
+        .style("width", "50px")
+        .attr("class", "treetable-memory");
+      table.append("col")
+        .style("width", "50px");
       table.append("col")
         .style("width", "40px");
 
@@ -1307,7 +1316,7 @@ profvis = (function() {
 
       headerRows.append("th")
         .attr("class", "treetable-memory memory")
-        .attr("colspan", "2")
+        .attr("colspan", "3")
         .text("Memory (MB)");
 
       headerRows.append("th")
@@ -1396,7 +1405,7 @@ profvis = (function() {
             table.selectAll("tr")
               .style("background-color", null);
 
-            this.style.backgroundColor = "#FDFDFD";
+            this.style.backgroundColor = "rgb(241, 241, 241)";
             notifySourceFileMessage(d, "select");
           });
 
@@ -1432,7 +1441,7 @@ profvis = (function() {
         newRows.append("td")
           .attr("class", "treetable-memory memory-info")
           .text(function(d) {
-            return roundOneDecimal(d.sumMem);
+            return roundOneDecimal(d.sumMemDealloc);
           });
 
         var memoryBarContainer = newRows.append("td")
@@ -1444,13 +1453,19 @@ profvis = (function() {
         memoryLeftCell.append("div")
           .attr("class", "memory-leftbar")
           .style("width", function(d) {
-            return  1 + Math.min(Math.abs(Math.min(Math.round(d.propMem * 5), 0)), 5) + "px";
+            return  1 + Math.min(Math.abs(Math.min(Math.round(d.propMemDealloc * 5), 0)), 5) + "px";
           });
 
         memoryBarContainer.append("div")
           .attr("class", "memory-rightbar")
           .style("width", function(d) {
-            return 1 + Math.min(Math.max(Math.round(d.propMem * 13), 0), 13) + "px";
+            return 1 + Math.min(Math.max(Math.round(d.propMemAlloc * 13), 0), 13) + "px";
+          });
+
+        newRows.append("td")
+          .attr("class", "treetable-memory memory-info-right")
+          .text(function(d) {
+            return roundOneDecimal(d.sumMemAlloc);
           });
 
         newRows.append("td")
@@ -1498,12 +1513,16 @@ profvis = (function() {
             }
             else {
               nameMapEntry.sumMem = nameMapEntry.sumMem + c.sumMem;
+              nameMapEntry.sumMemDealloc = nameMapEntry.sumMemDealloc + c.sumMemDealloc;
+              nameMapEntry.sumMemAlloc = nameMapEntry.sumMemAlloc + c.sumMemAlloc;
               nameMapEntry.sumTime = nameMapEntry.sumTime + (c.endTime - c.startTime);
               nameMapEntry.sumCount = nameMapEntry.sumCount + 1;
             }
 
-            nameMapEntry.propMem = nameMapEntry.sumMem  / vis.totalMem;
-            nameMapEntry.propTime = nameMapEntry.sumTime  / vis.totalTime;
+            nameMapEntry.propMem = nameMapEntry.sumMem / vis.totalMem;
+            nameMapEntry.propMemDealloc = nameMapEntry.sumMemDealloc / vis.totalMem;
+            nameMapEntry.propMemAlloc = nameMapEntry.sumMemAlloc / vis.totalMem;
+            nameMapEntry.propTime = nameMapEntry.sumTime / vis.totalTime;
 
             c.children.forEach(function(e) {
               nameMapEntry.children.push(e);
@@ -1977,6 +1996,8 @@ profvis = (function() {
           content: lines[i],
           sumTime: 0,
           sumMem: 0,
+          sumMemAlloc: 0,
+          sumMemDealloc: 0
         };
       }
 
@@ -2006,11 +2027,21 @@ profvis = (function() {
           return sum + d.sumMem;
         }, 0);
 
+        var sumMemDealloc = leaves.reduce(function(sum, d) {
+          return sum + d.sumMemDealloc;
+        }, 0);
+
+        var sumMemAlloc = leaves.reduce(function(sum, d) {
+          return sum + d.sumMemAlloc;
+        }, 0);
+
         return {
           filename: leaves[0].filename,
           linenum: leaves[0].linenum,
           sumTime: sumTime,
-          sumMem: sumMem
+          sumMem: sumMem,
+          sumMemAlloc: sumMemAlloc,
+          sumMemDealloc: sumMemDealloc
         };
       })
       .entries(prof);
@@ -2026,6 +2057,8 @@ profvis = (function() {
         lineInfo = lineInfo.values;
         fileLineData[lineInfo.linenum - 1].sumTime = lineInfo.sumTime;
         fileLineData[lineInfo.linenum - 1].sumMem = lineInfo.sumMem;
+        fileLineData[lineInfo.linenum - 1].sumMemDealloc = lineInfo.sumMemDealloc;
+        fileLineData[lineInfo.linenum - 1].sumMemAlloc = lineInfo.sumMemAlloc;
       });
     });
 
@@ -2049,6 +2082,8 @@ profvis = (function() {
     fileLineStats.map(function(lines) {
       lines.lineData.map(function(line) {
         line.propMem = line.sumMem / totalMem;
+        line.propMemDealloc = line.sumMemDealloc / totalMem;
+        line.propMemAlloc = line.sumMemAlloc / totalMem;
       });
     });
 
@@ -2199,11 +2234,13 @@ profvis = (function() {
       var newLeaves = [];
       var collectedChildren = [];
       var sumMem = 0;
+      var sumMemDealloc = 0;
+      var sumMemAlloc = 0;
 
       // This takes the start leaf, end leaf, and the set of children for the
       // new leaf, and creates a new leaf which copies all its properties from
       // the startLeaf, except lastTime and children.
-      function addNewLeaf(startLeaf, endLeaf, newLeafChildren, sumMem) {
+      function addNewLeaf(startLeaf, endLeaf, newLeafChildren, sumMem, sumMemDealloc, sumMemAlloc) {
         var newLeaf = $.extend({}, startLeaf);
         newLeaf.lastTime = endLeaf.time;
         newLeaf.parent = tree;
@@ -2213,16 +2250,20 @@ profvis = (function() {
         newLeaf = consolidateTree(newLeaf);
 
         // Aggregate memory from this consolidation batch and their children
-        aggregateMemory(newLeaf, sumMem);
+        aggregateMemory(newLeaf, sumMem, sumMemDealloc, sumMemAlloc);
 
         newLeaves.push(newLeaf);
       }
 
-      function aggregateMemory(leaf, sumMem) {
+      function aggregateMemory(leaf, sumMem, sumMemDealloc, sumMemAlloc) {
         leaf.sumMem = sumMem;
+        leaf.sumMemDealloc = sumMemDealloc;
+        leaf.sumMemAlloc = sumMemAlloc;
         if (leaf.children) {
           leaf.children.forEach(function(child) {
             leaf.sumMem += child.sumMem ? child.sumMem : 0;
+            leaf.sumMemDealloc += child.sumMemDealloc ? child.sumMemDealloc : 0;
+            leaf.sumMemAlloc += child.sumMemAlloc ? child.sumMemAlloc : 0;
           });
         }
       }
@@ -2232,27 +2273,29 @@ profvis = (function() {
 
         if (i === 0) {
           startLeaf = leaf;
-          sumMem = 0;
+          sumMem = sumMemAlloc = sumMemDealloc = 0;
         } else if (leaf.label !== startLeaf.label ||
                    leaf.filename !== startLeaf.filename ||
                    leaf.linenum !== startLeaf.linenum ||
                    leaf.depth !== startLeaf.depth)
         {
-          addNewLeaf(startLeaf, lastLeaf, collectedChildren, sumMem);
+          addNewLeaf(startLeaf, lastLeaf, collectedChildren, sumMem, sumMemDealloc, sumMemAlloc);
 
           collectedChildren = [];
           startLeaf = leaf;
-          sumMem = 0;
+          sumMem = sumMemAlloc = sumMemDealloc = 0;
         }
 
         sumMem += leaf.meminc;
+        sumMemDealloc += Math.min(leaf.meminc, 0);
+        sumMemAlloc += Math.max(leaf.meminc, 0);
         collectedChildren = collectedChildren.concat(leaf.children);
         lastLeaf = leaf;
       }
 
       // Add the last one, if there were any at all
       if (i !== 0) {
-        addNewLeaf(startLeaf, lastLeaf, collectedChildren, sumMem);
+        addNewLeaf(startLeaf, lastLeaf, collectedChildren, sumMem, sumMemDealloc, sumMemAlloc);
       }
 
       tree.children = newLeaves;

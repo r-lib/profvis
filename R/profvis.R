@@ -23,6 +23,14 @@
 #' @param split Direction of split. Either \code{"v"} (the default) for
 #'   vertical, or \code{"h"} for horizontal. This is the orientation of the
 #'   split bar.
+#' @param torture Triggers garbage collection after every \code{torture}
+#' memory allocation call.
+#'
+#' Note that memory allocation is only approximate due to the nature of the
+#' sampling profiler and garbage collection: when garbage collection triggers,
+#' memory allocations will be attributed to different lines of code.
+#' Using \code{torture = steps} helps prevent this, by making R trigger garbage
+#' collection afer every \code{torture} memory allocation step.
 #'
 #' @seealso \code{\link{print.profvis}} for printing options.
 #' @seealso \code{\link{Rprof}} for more information about how the profiling
@@ -32,7 +40,7 @@
 #' @export
 profvis <- function(expr = NULL, interval = 0.01, prof_output = NULL,
                     prof_input = NULL, width = NULL, height = NULL,
-                    split = c("v", "h"))
+                    split = c("v", "h"), torture = 0)
 {
   split <- match.arg(split)
   expr_q <- substitute(expr)
@@ -71,6 +79,12 @@ profvis <- function(expr = NULL, interval = 0.01, prof_output = NULL,
     }
 
     gc()
+
+    if (!identical(torture, 0)) {
+      gctorture2(step = torture)
+      on.exit(gctorture2(step = 0), add = TRUE)
+    }
+
     Rprof(prof_output, interval = interval, line.profiling = TRUE,
           gc.profiling = TRUE, memory.profiling = TRUE)
     on.exit(Rprof(NULL), add = TRUE)
