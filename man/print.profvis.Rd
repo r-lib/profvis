@@ -17,8 +17,14 @@
 \item{height}{Height of the htmlwidget}
 
 \item{split}{Direction of split. Either \code{"v"} (the default) for
-vertical, or \code{"h"} for horizontal. This is the orientation of the
-split bar.}
+  vertical, or \code{"h"} for horizontal. This is the orientation of the
+  split bar.
+
+Note that memory allocation is only approximate due to the nature of the
+sampling profiler and garbage collection: when garbage collection triggers,
+memory allocations will be attributed to different lines of code.
+Using \code{torture = steps} helps prevent this, by making R trigger garbage
+collection afer every \code{torture} memory allocation step.}
 
 \item{viewer}{If \code{FALSE} (the default), display in an external web
 browser. If \code{TRUE}, attempt to display in the RStudio viewer pane.
