@@ -23,6 +23,8 @@
 #' @param split Direction of split. Either \code{"v"} (the default) for
 #'   vertical, or \code{"h"} for horizontal. This is the orientation of the
 #'   split bar.
+#' @param torture Triggers garbage collection after every \code{torture}
+#' memory allocation call.
 #'
 #' Note that memory allocation is only approximate due to the nature of the
 #' sampling profiler and garbage collection: when garbage collection triggers,
