@@ -1326,6 +1326,7 @@ profvis = (function() {
 
       function updateLabelCells(labelCell) {
         labelCell
+          .attr("nowrap", "true")
           .style("padding-left", function(d){
             return (8 + 15 * (d.depth - 1)) + "px";
           })

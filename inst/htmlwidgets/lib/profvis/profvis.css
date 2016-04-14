@@ -89,8 +89,8 @@
   border-bottom: 1px solid rgb(196, 201, 204);
   background-color: rgb(248, 249, 248);
   color: #444;
-  font-family: Open Sans,Helvetica,Arial,sans-serif;
-  font-size: 12px;
+  font-family: "Lucida Sans", "DejaVu Sans", "Lucida Grande", "Segoe UI", Verdana, Helvetica, sans-serif;
+  font-size: 11px;
   -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
@@ -109,8 +109,8 @@
   border-top: 1px solid rgb(196, 201, 204);
   background-color: rgb(248, 249, 248);
   color: #444;
-  font-family: Open Sans,Helvetica,Arial,sans-serif;
-  font-size: 12px;
+  font-family: "Lucida Sans", "DejaVu Sans", "Lucida Grande", "Segoe UI", Verdana, Helvetica, sans-serif;
+  font-size: 11px;
   -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
@@ -182,8 +182,8 @@
   padding: 3px 6px;
   border: 1px solid #999;
   background-color: #fff;
-  font-family: Open Sans,Helvetica,Arial,sans-serif;
-  font-size: 12px;
+  font-family: "Lucida Sans", "DejaVu Sans", "Lucida Grande", "Segoe UI", Verdana, Helvetica, sans-serif;
+  font-size: 11px;
   line-height: 170%;
   -webkit-user-select: none;
   -moz-user-select: none;
@@ -215,8 +215,8 @@
 
 table.profvis-table {
   border-collapse: collapse;
-  font-family: Open Sans,Helvetica,Arial,sans-serif;
-  font-size: 12px;
+  font-family: "Lucida Sans", "DejaVu Sans", "Lucida Grande", "Segoe UI", Verdana, Helvetica, sans-serif;
+  font-size: 11px;
   width: 100%;
   text-align: left;
   cursor: default;
@@ -453,8 +453,8 @@ table.profvis-table .membar-right-cell > .membar {
   color: #f8f8f8;
   background-color: #333;
   padding: 5px 10px;
-  font-family: Open Sans,Helvetica,Arial,sans-serif;
-  font-size: 12px;
+  font-family: "Lucida Sans", "DejaVu Sans", "Lucida Grande", "Segoe UI", Verdana, Helvetica, sans-serif;
+  font-size: 11px;
   line-height: 100%;
   pointer-events: none;
   min-width: 280px;
@@ -486,8 +486,8 @@ table.profvis-table .membar-right-cell > .membar {
   -ms-flex-align: center;
   -webkit-align-items: center;
   align-items: center;
-  font-family: Open Sans,Helvetica,Arial,sans-serif;
-  font-size: 12px;
+  font-family: "Lucida Sans", "DejaVu Sans", "Lucida Grande", "Segoe UI", Verdana, Helvetica, sans-serif;
+  font-size: 11px;
 }
 
 .profvis-message div {
@@ -507,8 +507,8 @@ table.profvis-table .membar-right-cell > .membar {
   overflow: hidden;
   font: 10px sans-serif;
   color: #161616;
-  font-family: Open Sans,Helvetica,Arial,sans-serif;
-  font-size: 12px;
+  font-family: "Lucida Sans", "DejaVu Sans", "Lucida Grande", "Segoe UI", Verdana, Helvetica, sans-serif;
+  font-size: 11px;
   overflow-y: auto;
 }
 
@@ -587,6 +587,11 @@ table.profvis-table .membar-right-cell > .membar {
 
 .profvis-treetable .label-text {
   display: inline-block;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 
 .profvis-treetable .path {
