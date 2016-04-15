@@ -1324,6 +1324,21 @@ profvis = (function() {
         .attr("colspan", "2")
         .text("Time (ms)");
 
+      // Retrieve all nodes (n), recursevely, where check(n) == true.
+      function allTopNodes(nodes, check) {
+        vavr included = [];
+        nodes.forEach(nodes, function(e) {
+          if (check(e))
+            included.push(e);
+        });
+        return included;
+      }
+
+      // Is there one node (n), including root, where check(n) == true?
+      function oneNode(root, check) {
+        return check(root);
+      }
+
       function updateLabelCells(labelCell) {
         labelCell
           .attr("nowrap", "true")
@@ -1336,7 +1351,9 @@ profvis = (function() {
 
             var collapsed = d.collapsed;
             if (collapsed === undefined) {
-              vis.profTable = vis.profTable.concat(d.sumChildren);
+              vis.profTable = vis.profTable.concat(allTopNodes(d.sumChildren, function(c1) {
+                return c1.depthCollapsed != null;
+              }));
               d.collapsed = false;
             }
             else if (collapsed) {
@@ -1353,7 +1370,7 @@ profvis = (function() {
             if (d.sumChildren) {
               d.sumChildren.forEach(function(c) {
                 if (c.sumChildren.length > 0)
-                  if (!vis.hideInternals || c.depthCollapsed !== null)
+                  if (!vis.hideInternals || oneNode(c, function(c1) { return c1.depthCollapsed !== null; }))
                     d.canExpand = true;
               });
             }
