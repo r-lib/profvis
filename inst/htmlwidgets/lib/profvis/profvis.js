@@ -1221,6 +1221,7 @@ profvis = (function() {
       return {
         el: el,
         onResize: onResize,
+        onUpdateInternals: onResize,
         redrawImmediate: redrawImmediate,
         redrawZoom: redrawZoom,
         redrawCollapse: redrawCollapse,
@@ -1326,24 +1327,41 @@ profvis = (function() {
 
       // Retrieve all nodes (n), recursevely, where check(n) == true.
       function allTopNodes(nodes, check) {
-        vavr included = [];
-        nodes.forEach(nodes, function(e) {
-          if (check(e))
-            included.push(e);
-        });
+        var included = [];
+        var nodes = nodes.slice();
+
+        while (nodes.length > 0) {
+          var node = nodes.shift();
+
+          if (check(node))
+            included.push(node);
+          else {
+            node.sumChildren.forEach(function(c1) {
+              nodes.unshift(c1);
+            });
+          }
+        }
         return included;
       }
 
       // Is there one node (n), including root, where check(n) == true?
       function oneNode(root, check) {
-        return check(root);
+        nodes = [root];
+
+        while (nodes.length > 0) {
+          var n = nodes.shift();
+          if (check(n))
+            return true;
+        }
+
+        return false;
       }
 
       function updateLabelCells(labelCell) {
         labelCell
           .attr("nowrap", "true")
           .style("padding-left", function(d){
-            return (8 + 15 * (d.depth - 1)) + "px";
+            return (8 + 15 * (d.visualDepth - 1)) + "px";
           })
           .on("click", function(d) {
             if (!d.canExpand)
@@ -1351,9 +1369,15 @@ profvis = (function() {
 
             var collapsed = d.collapsed;
             if (collapsed === undefined) {
-              vis.profTable = vis.profTable.concat(allTopNodes(d.sumChildren, function(c1) {
-                return c1.depthCollapsed != null;
-              }));
+              var childNodes = allTopNodes(d.sumChildren, function(c1) {
+                return !vis.hideInternals || c1.depthCollapsed != null;
+              });
+
+              childNodes.forEach(function(n) {
+                n.visualDepth = d.visualDepth + 1;
+              });
+
+              vis.profTable = vis.profTable.concat(childNodes);
               d.collapsed = false;
             }
             else if (collapsed) {
@@ -1578,12 +1602,18 @@ profvis = (function() {
       }
 
       vis.profTable = buildProfTable(vis.profTree);
+      vis.profTable.forEach(function(e) {
+        e.visualDepth = 1;
+      });
 
       updateRows();
 
       return {
         el: el,
         onResize: updateRows,
+        onUpdateInternals: function() {
+
+        },
         useMemoryResults: useMemoryResults
       };
     }
