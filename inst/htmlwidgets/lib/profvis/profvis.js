@@ -1313,7 +1313,8 @@ profvis = (function() {
 
       headerRows.append("th")
         .attr("class", "count")
-        .text("Calls");
+        .text("Calls")
+        .attr("title", "Calls are approximate since this is a sample-based profile")
 
       headerRows.append("th")
         .attr("class", "treetable-memory memory")
