@@ -1352,15 +1352,34 @@ profvis = (function() {
           var n = nodes.shift();
           if (check(n))
             return true;
+
+          nodes.unshift(n.sumChildren);
         }
 
         return false;
       }
 
+      function updateRowsDisplay(d) {
+        if (vis.hideInternals && d.isInternal)
+          return "none";
+        else if (!vis.hideInternals && d.isDescendant)
+          return "none";
+
+        var collapsed = false;
+        while (d.parent) {
+          d = d.parent;
+          if (d.collapsed) {
+            collapsed = true;
+            break;
+          }
+        }
+        return collapsed ? "none" : "";
+      }
+
       function updateLabelCells(labelCell) {
         labelCell
           .attr("nowrap", "true")
-          .style("padding-left", function(d){
+          .style("padding-left", function(d) {
             return (8 + 15 * (d.visualDepth - 1)) + "px";
           })
           .on("click", function(d) {
@@ -1369,12 +1388,48 @@ profvis = (function() {
 
             var collapsed = d.collapsed;
             if (collapsed === undefined) {
-              var childNodes = allTopNodes(d.sumChildren, function(c1) {
-                return !vis.hideInternals || c1.depthCollapsed != null;
+              // Create a copy since we might insert the same node twice: once
+              // for the normal leaf the other one for a collapsed node.
+              var sumChildren = d.sumChildren.map(function(x) {
+                return jQuery.extend({}, x);
               });
+
+              var childNodes = sumChildren.filter(function(x) {
+                return x.depthCollapsed !== null; 
+              });
+
+              childNodes.forEach(function(x) {
+                x.isInternal = d.isInternal ? d.isInternal : false;
+                x.isDescendant = d.isDescendant ? d.isDescendant : false;
+              });
+
+              var internalChildNodes = sumChildren.filter(function(x) {
+                return x.depthCollapsed === null; 
+              });
+
+              internalChildNodes.forEach(function(x) {
+                x.isInternal = true;
+                x.isDescendant = false;
+              });
+
+              var notInternalDescendantNodes = [];
+              if (!d.isInternal) {
+                notInternalDescendantNodes = allTopNodes(internalChildNodes, function(x) {
+                  return x.depthCollapsed != null && d.depth < x.depth;
+                });
+              }
+
+              notInternalDescendantNodes.forEach(function(x) {
+                x.isInternal = false;
+                x.isDescendant = true;
+              });
+
+              childNodes = childNodes.concat(internalChildNodes);
+              childNodes = childNodes.concat(notInternalDescendantNodes);
 
               childNodes.forEach(function(n) {
                 n.visualDepth = d.visualDepth + 1;
+                n.parent = d;
               });
 
               vis.profTable = vis.profTable.concat(childNodes);
@@ -1417,20 +1472,7 @@ profvis = (function() {
           .remove();
 
         var updatedRows = rows
-          .style("display", function(d) {
-            if (vis.hideInternals && d.depthCollapsed === null)
-              return "none";
-
-            var collapsed = false;
-            while (d.parent) {
-              d = d.parent;
-              if (d.collapsed) {
-                collapsed = true;
-                break;
-              }
-            }
-            return collapsed ? "none" : "";
-          });
+          .style("display", updateRowsDisplay);
 
         var updatedLabelCells = updatedRows.selectAll("td.label");
         updateLabelCells(updatedLabelCells);
@@ -1449,7 +1491,8 @@ profvis = (function() {
 
             this.style.backgroundColor = "rgb(241, 241, 241)";
             notifySourceFileMessage(d, "select");
-          });
+          })
+          .style("display", updateRowsDisplay);
 
         newRows
           .attr("class", "treetable-row");
