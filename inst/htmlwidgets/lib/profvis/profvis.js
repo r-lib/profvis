@@ -1354,7 +1354,9 @@ profvis = (function() {
           if (check(n))
             return true;
 
-          nodes.unshift(n.sumChildren);
+          n.sumChildren.forEach(function(x) {
+            nodes.unshift(x);
+          });
         }
 
         return false;
