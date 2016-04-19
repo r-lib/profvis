@@ -1221,6 +1221,7 @@ profvis = (function() {
       return {
         el: el,
         onResize: onResize,
+        onUpdateInternals: onResize,
         redrawImmediate: redrawImmediate,
         redrawZoom: redrawZoom,
         redrawCollapse: redrawCollapse,
@@ -1312,7 +1313,8 @@ profvis = (function() {
 
       headerRows.append("th")
         .attr("class", "count")
-        .text("Calls");
+        .text("Calls")
+        .attr("title", "Calls are approximate since this is a sample-based profile")
 
       headerRows.append("th")
         .attr("class", "treetable-memory memory")
@@ -1324,10 +1326,64 @@ profvis = (function() {
         .attr("colspan", "2")
         .text("Time (ms)");
 
+      // Retrieve all nodes (n), recursevely, where check(n) == true.
+      function allTopNodes(nodes, check) {
+        var included = [];
+        var nodes = nodes.slice();
+
+        while (nodes.length > 0) {
+          var node = nodes.shift();
+
+          if (check(node))
+            included.push(node);
+          else {
+            node.sumChildren.forEach(function(c1) {
+              nodes.unshift(c1);
+            });
+          }
+        }
+        return included;
+      }
+
+      // Is there one node (n), including root, where check(n) == true?
+      function oneNode(root, check) {
+        nodes = [root];
+
+        while (nodes.length > 0) {
+          var n = nodes.shift();
+          if (check(n))
+            return true;
+
+          n.sumChildren.forEach(function(x) {
+            nodes.unshift(x);
+          });
+        }
+
+        return false;
+      }
+
+      function updateRowsDisplay(d) {
+        if (vis.hideInternals && d.isInternal)
+          return "none";
+        else if (!vis.hideInternals && d.isDescendant)
+          return "none";
+
+        var collapsed = false;
+        while (d.parent) {
+          d = d.parent;
+          if (d.collapsed) {
+            collapsed = true;
+            break;
+          }
+        }
+        return collapsed ? "none" : "";
+      }
+
       function updateLabelCells(labelCell) {
         labelCell
-          .style("padding-left", function(d){
-            return (8 + 15 * (d.depth - 1)) + "px";
+          .attr("nowrap", "true")
+          .style("padding-left", function(d) {
+            return (8 + 15 * (d.visualDepth - 1)) + "px";
           })
           .on("click", function(d) {
             if (!d.canExpand)
@@ -1335,7 +1391,51 @@ profvis = (function() {
 
             var collapsed = d.collapsed;
             if (collapsed === undefined) {
-              vis.profTable = vis.profTable.concat(d.sumChildren);
+              // Create a copy since we might insert the same node twice: once
+              // for the normal leaf the other one for a collapsed node.
+              var sumChildren = d.sumChildren.map(function(x) {
+                return jQuery.extend({}, x);
+              });
+
+              var childNodes = sumChildren.filter(function(x) {
+                return x.depthCollapsed !== null; 
+              });
+
+              childNodes.forEach(function(x) {
+                x.isInternal = d.isInternal ? d.isInternal : false;
+                x.isDescendant = d.isDescendant ? d.isDescendant : false;
+              });
+
+              var internalChildNodes = sumChildren.filter(function(x) {
+                return x.depthCollapsed === null; 
+              });
+
+              internalChildNodes.forEach(function(x) {
+                x.isInternal = true;
+                x.isDescendant = false;
+              });
+
+              var notInternalDescendantNodes = [];
+              if (!d.isInternal) {
+                notInternalDescendantNodes = allTopNodes(internalChildNodes, function(x) {
+                  return x.depthCollapsed != null && d.depth < x.depth;
+                });
+              }
+
+              notInternalDescendantNodes.forEach(function(x) {
+                x.isInternal = false;
+                x.isDescendant = true;
+              });
+
+              childNodes = childNodes.concat(internalChildNodes);
+              childNodes = childNodes.concat(notInternalDescendantNodes);
+
+              childNodes.forEach(function(n) {
+                n.visualDepth = d.visualDepth + 1;
+                n.parent = d;
+              });
+
+              vis.profTable = vis.profTable.concat(childNodes);
               d.collapsed = false;
             }
             else if (collapsed) {
@@ -1352,7 +1452,7 @@ profvis = (function() {
             if (d.sumChildren) {
               d.sumChildren.forEach(function(c) {
                 if (c.sumChildren.length > 0)
-                  if (!vis.hideInternals || c.depthCollapsed !== null)
+                  if (!vis.hideInternals || oneNode(c, function(c1) { return c1.depthCollapsed !== null; }))
                     d.canExpand = true;
               });
             }
@@ -1375,20 +1475,7 @@ profvis = (function() {
           .remove();
 
         var updatedRows = rows
-          .style("display", function(d) {
-            if (vis.hideInternals && d.depthCollapsed === null)
-              return "none";
-
-            var collapsed = false;
-            while (d.parent) {
-              d = d.parent;
-              if (d.collapsed) {
-                collapsed = true;
-                break;
-              }
-            }
-            return collapsed ? "none" : "";
-          });
+          .style("display", updateRowsDisplay);
 
         var updatedLabelCells = updatedRows.selectAll("td.label");
         updateLabelCells(updatedLabelCells);
@@ -1407,7 +1494,8 @@ profvis = (function() {
 
             this.style.backgroundColor = "rgb(241, 241, 241)";
             notifySourceFileMessage(d, "select");
-          });
+          })
+          .style("display", updateRowsDisplay);
 
         newRows
           .attr("class", "treetable-row");
@@ -1560,12 +1648,18 @@ profvis = (function() {
       }
 
       vis.profTable = buildProfTable(vis.profTree);
+      vis.profTable.forEach(function(e) {
+        e.visualDepth = 1;
+      });
 
       updateRows();
 
       return {
         el: el,
         onResize: updateRows,
+        onUpdateInternals: function() {
+
+        },
         useMemoryResults: useMemoryResults
       };
     }
