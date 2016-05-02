@@ -82,7 +82,7 @@ parse_rprof <- function(path = "Rprof.out", expr_source = NULL) {
     memalloc <- 0
     if (has_memory) {
       # Memory is defined as: small:big:nodes:dupes
-      memalloc <- sum(as.integer(sample[1:3])) / 1024 ^ 2
+      memalloc <- sum(as.integer(sample[1:2])) / 1024 ^ 2
       sample <- sample[-4:-1]
     }
 
