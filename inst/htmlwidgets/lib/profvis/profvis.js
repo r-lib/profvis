@@ -1252,7 +1252,9 @@ profvis = (function() {
           "<tr><td class='infobox-title'>Label</td><td>" + escapeHTML(label) + "</td></tr>" +
           "<tr><td class='infobox-title'>Called from</td><td>" + escapeHTML(ref) + "</td></tr>" +
           "<tr><td class='infobox-title'>Total time</td><td>" + (d.endTime - d.startTime) + "ms</td></tr>" +
-          "<tr><td class='infobox-title'>Total memory</td><td>" + (Math.round(d.sumMem * 100) / 100) + "MB</td></tr>" +
+          "<tr><td class='infobox-title'>Total memory</td><td>" +
+            roundOneDecimal(d.sumMemDealloc) + " / " + roundOneDecimal(d.sumMemAlloc) +
+            " MB</td></tr>" +
           "<tr><td class='infobox-title'>Agg. total time</td><td>" + vis.aggLabelTimes[label] + "ms</td></tr>" +
           "<tr><td class='infobox-title'>Call stack depth</td><td>" + d.depth + "</td></tr>" +
           "</table>";
@@ -1398,7 +1400,7 @@ profvis = (function() {
               });
 
               var childNodes = sumChildren.filter(function(x) {
-                return x.depthCollapsed !== null; 
+                return x.depthCollapsed !== null;
               });
 
               childNodes.forEach(function(x) {
@@ -1407,7 +1409,7 @@ profvis = (function() {
               });
 
               var internalChildNodes = sumChildren.filter(function(x) {
-                return x.depthCollapsed === null; 
+                return x.depthCollapsed === null;
               });
 
               internalChildNodes.forEach(function(x) {
