@@ -3,6 +3,7 @@ Title: Visualize profiling data
 Version: 0.2.0
 Authors@R: c(
     person("Chang", "Winston", email = "winston@rstudio.com", role = c("aut", "cre")),
+    person("Luraschi", "Javier", email = "javier@rstudio.com", role = "aut"),
     person(family = "RStudio", role = "cph"),
     person(family = "jQuery Foundation", role = "cph", comment = "jQuery library"),
     person(family = "jQuery contributors", role = c("ctb", "cph"), comment = "jQuery library; authors listed in inst/www/shared/jquery-AUTHORS.txt"),
