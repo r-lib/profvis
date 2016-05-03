@@ -4,8 +4,7 @@
 \alias{print.profvis}
 \title{Print a profvis object}
 \usage{
-\method{print}{profvis}(x, ..., width = NULL, height = NULL, split = NULL,
-  viewer = FALSE)
+\method{print}{profvis}(x, ..., width = NULL, height = NULL, split = NULL)
 }
 \arguments{
 \item{x}{The object to print.}
@@ -19,10 +18,6 @@
 \item{split}{Direction of split. Either \code{"v"} (the default) for
 vertical, or \code{"h"} for horizontal. This is the orientation of the
 split bar.}
-
-\item{viewer}{If \code{FALSE} (the default), display in an external web
-browser. If \code{TRUE}, attempt to display in the RStudio viewer pane.
-This can be useful for publishing profvis visualizations.}
 }
 \description{
 Print a profvis object

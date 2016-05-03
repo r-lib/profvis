@@ -137,14 +137,9 @@ profvis <- function(expr = NULL, interval = 0.01, prof_output = NULL,
 #'
 #' @inheritParams profvis
 #' @param x The object to print.
-#' @param viewer If \code{FALSE} (the default), display in an external web
-#'   browser. If \code{TRUE}, attempt to display in the RStudio viewer pane.
-#'   This can be useful for publishing profvis visualizations.
 #' @param ... Further arguments to passed on to other print methods.
 #' @export
-print.profvis <- function(x, ..., width = NULL, height = NULL,
-                          split = NULL, viewer = FALSE)
-{
+print.profvis <- function(x, ..., width = NULL, height = NULL, split = NULL) {
 
   if (!is.null(split)) {
     split <- match.arg(split, c("h", "v"))
@@ -153,16 +148,11 @@ print.profvis <- function(x, ..., width = NULL, height = NULL,
   if (!is.null(width)) x$width <- width
   if (!is.null(height)) x$height <- height
 
-  if (viewer) {
-    getS3method("print", "htmlwidget")(x, ...)
+  f <- getOption("profvis.print")
+  if (is.function(f)) {
+    f(x, ...)
   } else {
-    f <- getOption("profvis.print")
-    if (is.function(f)) {
-      f(x, ...)
-    }
-    else {
-      NextMethod()
-    }
+    NextMethod()
   }
 }
 
