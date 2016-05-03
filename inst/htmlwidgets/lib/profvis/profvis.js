@@ -69,8 +69,8 @@ profvis = (function() {
         '<div class="info-block"><span class="info-label">Sample Interval: ' +
           vis.interval + 'ms</span></div>' +
         '<div class="info-block-right">' +
-        '<span class="info-label" title="Peak memory allocation">' + (Math.round(vis.totalMem * 100) / 100) + 'MB</span>' +
-        ' / ' +
+        // '<span class="info-label" title="Peak memory allocation">' + (Math.round(vis.totalMem * 100) / 100) + 'MB</span>' +
+        // ' / ' +
         '<span class="info-label" title="Total time">' + vis.totalTime + 'ms</span>' +
         '</div>';
 
@@ -1316,6 +1316,7 @@ profvis = (function() {
       headerRows.append("th")
         .attr("class", "count")
         .text("Calls")
+        .style("display", "none")
         .attr("title", "Calls are approximate since this is a sample-based profile");
 
       headerRows.append("th")
@@ -1479,7 +1480,7 @@ profvis = (function() {
         var updatedRows = rows
           .style("display", updateRowsDisplay);
 
-        var updatedLabelCells = updatedRows.selectAll("td.label");
+        var updatedLabelCells = updatedRows.selectAll("td.code-label");
         updateLabelCells(updatedLabelCells);
 
         var newRows = rows.enter()
@@ -1524,6 +1525,7 @@ profvis = (function() {
 
         newRows.append("td")
           .attr("class", "count")
+          .style("display", "none")
           .text(function(d) {
             return d.sumCount;
           });

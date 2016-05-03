@@ -600,6 +600,7 @@ table.profvis-table .membar-right-cell > .membar {
 
 .profvis-treetable .expand > div {
 	display: inline-block;
+	width: 15px;
 }
 
 .profvis-treetable .expand > div > div{
@@ -614,6 +615,7 @@ table.profvis-table .membar-right-cell > .membar {
 
 .profvis-treetable .collapse > div {
 	display: inline-block;
+	width: 15px;
 }
 
 .profvis-treetable .collapse > div > div {
