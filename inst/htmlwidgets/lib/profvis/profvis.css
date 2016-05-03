@@ -576,7 +576,7 @@ table.profvis-table .membar-right-cell > .membar {
   text-align: center;
 }
 
-.profvis-treetable th.label {
+.profvis-treetable th.code-label {
   text-align: left;
   padding-left: 5px;
 }

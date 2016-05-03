@@ -1306,7 +1306,7 @@ profvis = (function() {
       var headerRows = tableBody.append("tr");
 
       headerRows.append("th")
-        .attr("class", "label")
+        .attr("class", "code-label")
         .text("Code");
 
       headerRows.append("th")
@@ -1463,7 +1463,7 @@ profvis = (function() {
             if (d.canExpand)
               collapsedClass = d.collapsed === undefined ? "expand" : d.collapsed ? "expand" : "collapse";
 
-            return "label " + (d.canExpand ? "label-pointer " + collapsedClass : "");
+            return "code-label " + (d.canExpand ? "label-pointer " + collapsedClass : "");
           });
       }
 
