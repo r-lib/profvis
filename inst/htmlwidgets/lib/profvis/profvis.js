@@ -1286,8 +1286,6 @@ profvis = (function() {
       table.append("col")
         .style("width", "120px");
       table.append("col")
-        .style("width", "50px");
-      table.append("col")
         .style("width", "50px")
         .attr("class", "treetable-memory");
       table.append("col")
@@ -1312,12 +1310,6 @@ profvis = (function() {
       headerRows.append("th")
         .attr("class", "path")
         .text("File");
-
-      headerRows.append("th")
-        .attr("class", "count")
-        .text("Calls")
-        .style("display", "none")
-        .attr("title", "Calls are approximate since this is a sample-based profile");
 
       headerRows.append("th")
         .attr("class", "treetable-memory memory")
@@ -1521,13 +1513,6 @@ profvis = (function() {
               return d.filename.substr(lastSlash + 1);
 
             return d.filename;
-          });
-
-        newRows.append("td")
-          .attr("class", "count")
-          .style("display", "none")
-          .text(function(d) {
-            return d.sumCount;
           });
 
         newRows.append("td")
