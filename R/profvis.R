@@ -40,7 +40,7 @@
 #' @export
 profvis <- function(expr = NULL, interval = 0.01, prof_output = NULL,
                     prof_input = NULL, width = NULL, height = NULL,
-                    split = c("v", "h"), torture = 0)
+                    split = c("h", "v"), torture = 0)
 {
   split <- match.arg(split)
   expr_q <- substitute(expr)

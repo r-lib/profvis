@@ -5,7 +5,7 @@
 \title{Profile an R expression and visualize profiling data}
 \usage{
 profvis(expr = NULL, interval = 0.01, prof_output = NULL,
-  prof_input = NULL, width = NULL, height = NULL, split = c("v", "h"),
+  prof_input = NULL, width = NULL, height = NULL, split = c("h", "v"),
   torture = 0)
 }
 \arguments{
