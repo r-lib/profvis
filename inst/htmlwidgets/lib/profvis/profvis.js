@@ -45,7 +45,7 @@ profvis = (function() {
         $(".info-block").removeClass("result-block-active");
         $(".info-block").addClass("result-block");
         e.addClass("result-block-active");
-      }
+      };
 
       $el.find("#flameGraphButton").on("click", function() {
         setStatusBarButtons($(this));
@@ -256,7 +256,7 @@ profvis = (function() {
         .attr("class", "table-memory memory")
         .attr("title", "Memory deallocation (MB)")
         .attr("data-pseudo-content",
-              function(d) { return roundOneDecimal(d.sumMemDealloc) != 0 ? roundOneDecimal(d.sumMemDealloc) : ""; });
+              function(d) { return roundOneDecimal(d.sumMemDealloc) !== 0 ? roundOneDecimal(d.sumMemDealloc) : ""; });
 
       rows.append("td")
         .attr("class", "table-memory membar-left-cell")
@@ -284,13 +284,13 @@ profvis = (function() {
         .attr("class", "table-memory memory memory-right")
         .attr("title", "Memory allocation (MB)")
         .attr("data-pseudo-content",
-              function(d) { return roundOneDecimal(d.sumMemAlloc) != 0 ? roundOneDecimal(d.sumMemAlloc) : ""; });
+              function(d) { return roundOneDecimal(d.sumMemAlloc) !== 0 ? roundOneDecimal(d.sumMemAlloc) : ""; });
 
       rows.append("td")
         .attr("class", "time")
         .attr("title", "Total time (ms)")
         .attr("data-pseudo-content",
-              function(d) { return Math.round(d.sumTime * 100) != 0 ? (Math.round(d.sumTime * 100) / 100) : ""; });
+              function(d) { return Math.round(d.sumTime * 100) !== 0 ? (Math.round(d.sumTime * 100) / 100) : ""; });
 
       rows.append("td")
         .attr("class", "timebar-cell")
@@ -1314,7 +1314,7 @@ profvis = (function() {
       headerRows.append("th")
         .attr("class", "count")
         .text("Calls")
-        .attr("title", "Calls are approximate since this is a sample-based profile")
+        .attr("title", "Calls are approximate since this is a sample-based profile");
 
       headerRows.append("th")
         .attr("class", "treetable-memory memory")
@@ -1329,7 +1329,7 @@ profvis = (function() {
       // Retrieve all nodes (n), recursevely, where check(n) == true.
       function allTopNodes(nodes, check) {
         var included = [];
-        var nodes = nodes.slice();
+        nodes = nodes.slice();
 
         while (nodes.length > 0) {
           var node = nodes.shift();
@@ -1347,7 +1347,7 @@ profvis = (function() {
 
       // Is there one node (n), including root, where check(n) == true?
       function oneNode(root, check) {
-        nodes = [root];
+        var nodes = [root];
 
         while (nodes.length > 0) {
           var n = nodes.shift();
@@ -1398,7 +1398,7 @@ profvis = (function() {
               });
 
               var childNodes = sumChildren.filter(function(x) {
-                return x.depthCollapsed !== null; 
+                return x.depthCollapsed !== null;
               });
 
               childNodes.forEach(function(x) {
@@ -1407,7 +1407,7 @@ profvis = (function() {
               });
 
               var internalChildNodes = sumChildren.filter(function(x) {
-                return x.depthCollapsed === null; 
+                return x.depthCollapsed === null;
               });
 
               internalChildNodes.forEach(function(x) {
@@ -1418,7 +1418,7 @@ profvis = (function() {
               var notInternalDescendantNodes = [];
               if (!d.isInternal) {
                 notInternalDescendantNodes = allTopNodes(internalChildNodes, function(x) {
-                  return x.depthCollapsed != null && d.depth < x.depth;
+                  return x.depthCollapsed !== null && d.depth < x.depth;
                 });
               }
 
@@ -1625,7 +1625,7 @@ profvis = (function() {
           }
 
           return childrenSum;
-        }
+        };
 
         var id = 0;
         while (nodes.length > 0) {
@@ -1641,7 +1641,7 @@ profvis = (function() {
         }
 
         return head.sumChildren;
-      }
+      };
 
       function useMemoryResults() {
         d3.selectAll(".treetable-memory").style("display", vis.hideMemory ? "none" : "");
@@ -1983,7 +1983,7 @@ profvis = (function() {
       panel1.style.display = "none";
       panel2.style.display = "none";
       treetableEl.style.display = "none";
-    }
+    };
 
     var toggleViews = function(view) {
       hideViews();
@@ -2029,7 +2029,7 @@ profvis = (function() {
 
           vis.activeViews.forEach(function(e) {
             if (e.onResize) e.onResize();
-          })
+          });
 
           break;
         }
