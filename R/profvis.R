@@ -23,14 +23,14 @@
 #' @param split Direction of split. Either \code{"v"} (the default) for
 #'   vertical, or \code{"h"} for horizontal. This is the orientation of the
 #'   split bar.
-#' @param torture Triggers garbage collection after every \code{torture}
-#' memory allocation call.
+#' @param torture Triggers garbage collection after every \code{torture} memory
+#'   allocation call.
 #'
-#' Note that memory allocation is only approximate due to the nature of the
-#' sampling profiler and garbage collection: when garbage collection triggers,
-#' memory allocations will be attributed to different lines of code.
-#' Using \code{torture = steps} helps prevent this, by making R trigger garbage
-#' collection afer every \code{torture} memory allocation step.
+#'   Note that memory allocation is only approximate due to the nature of the
+#'   sampling profiler and garbage collection: when garbage collection triggers,
+#'   memory allocations will be attributed to different lines of code. Using
+#'   \code{torture = steps} helps prevent this, by making R trigger garbage
+#'   collection afer every \code{torture} memory allocation step.
 #'
 #' @seealso \code{\link{print.profvis}} for printing options.
 #' @seealso \code{\link{Rprof}} for more information about how the profiling
