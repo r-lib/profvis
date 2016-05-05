@@ -91,10 +91,35 @@ parse_rprof <- function(path = "Rprof.out", expr_source = NULL) {
       # several hundred MB due to busy waits of pause that trigger significant
       # creation of expressions that is not enterily useful to the end user.
       memalloc <- sum(as.integer(sample[1:2])) / 1024 ^ 2
-      # The memory allocation numbers from the profiler need to be multiplied by
-      # the pointer size to yield the size in bytes.
-      memalloc <- memalloc * .Machine$sizeof.pointer
 
+      # get_current_mem provides the results as either R_SmallVallocSize or R_LargeVallocSize
+      # which are internal untis of allocation.
+      # https://github.com/wch/r-source/blob/tags/R-3-0-0/src/main/memory.c#L2291.
+      #
+      # R_SmallVallocSize maps to alloc_size; alloc_size is assigned from size, which depending on
+      # the type gets calculated with a macro, for instance, using FLOAT2VEC.
+      # https://github.com/wch/r-source/blob/tags/R-3-0-0/src/main/memory.c#L2374
+      #
+      # FLOAT2VEC and similar functions always divide by sizeof(VECREC).
+      # https://github.com/wch/r-source/blob/tags/R-3-0-0/src/include/Defn.h#L400
+      #
+      # VECREC is defined as follows:
+      # typedef struct {
+      #   union {
+      #     SEXP     backpointer;
+      #     double   align;
+      #   } u;
+      # } VECREC, *VECP;
+      #
+      # SEXP is defined as typedef struct SEXPREC { ... } SEXPREC, *SEXP;
+      # Therefore, SEXP being a pointer if of variable length across different platforms.
+      # https://svn.r-project.org/R/trunk/src/include/Rinternals.h
+      #
+      # On the other hand, align is always a double of 64 bits for both, 64 and 32bit platforms.
+      #
+      # Therefore, this results needs to be multiplied by 8 bytes.
+      memalloc <- memalloc * 8
+      
       sample <- sample[-4:-1]
     }
 
