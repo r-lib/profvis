@@ -95,15 +95,17 @@ profvis = (function() {
 
       // Toggle the appearance of a checkbox and return the new checked state.
       function toggleCheckbox($checkbox) {
-        var checked = $checkbox.data("checked");
+        // Use attr() instead of data(), because the latter tries to coerce to
+        // numbers, which complicates our comparisons.
+        var checked = $checkbox.attr("data-checked");
 
         if (checked === "0") {
-          $checkbox.data("checked", "1");
+          $checkbox.attr("data-checked", "1");
           $checkbox.html("&#x2612;");
           return true;
 
         } else {
-          $checkbox.data("checked", "0");
+          $checkbox.attr("data-checked", "0");
           $checkbox.html("&#x2610;");
           return false;
         }
