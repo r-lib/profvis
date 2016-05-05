@@ -387,7 +387,20 @@ There are many ways to install a package with source refs. Here are some example
 
 Once a package is loaded or installed with source refs, profvis visualizations will display source code for that package. For example, the visualization below has yellow blocks for both user code and for code in ggplot2, and it contains ggplot2 code in the code panel:
 
-```{r fig.show="hide"}
+```{r echo=FALSE, eval=FALSE}
+# This code block is what we actually run. It must be run manually each time
+# this is updated.
+# The next block is what we show to the readers.
+library(ggplot2)
+p <- profvis({
+  g <- ggplot(diamonds, aes(carat, price)) + geom_point(size = 1, alpha = 0.2)
+  print(g)
+})
+p$x$message$split <- "v"
+saveRDS(p, "vignettes/ggplot2.rds")
+```
+
+```{r eval=FALSE}
 library(ggplot2)
 profvis({
   g <- ggplot(diamonds, aes(carat, price)) + geom_point(size = 1, alpha = 0.2)
@@ -395,10 +408,16 @@ profvis({
 })
 ```
 
+```{r echo=FALSE}
+# This block loads the data from the first block and shows the correct output
+# for the readers.
+readRDS("ggplot2.rds")
+```
+
 
 ### Why does the flame graph hide some function calls for Shiny apps?
 
-When profiling [Shiny](http://shiny.rstudio.com/) applications, the profvis flame graph will hide many function calls by default. They're hidden because they aren't particularly informative for optimizing code, and they add visual complexity. This feature requires Shiny 0.12.2.9006 or greater and profvis 0.1.0.9001 or greater.
+When profiling [Shiny](http://shiny.rstudio.com/) applications, the profvis flame graph will hide many function calls by default. They're hidden because they aren't particularly informative for optimizing code, and they add visual complexity. This feature requires Shiny 0.13.0 or greater.
 
 If you want to see these hidden blocks, uncheck **Settings** -> **Hide internal function calls**:
 
@@ -410,6 +429,8 @@ library(shiny)
 p <- profvis({
   runExample("06_tabsets", display.mode = "normal")
 })
+p$x$message$split <- "v"
+
 saveRDS(p, "vignettes/shinyapp.rds")
 ```
 
