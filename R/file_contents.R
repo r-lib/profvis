@@ -5,9 +5,6 @@ get_file_contents <- function(filenames, expr_source) {
     if (filename == "<expr>") {
       return(expr_source)
     }
-    if (filename == "<text>") {
-      return(NULL)
-    }
 
     filehandle <- tryCatch(
       file(filename, 'rb'),
