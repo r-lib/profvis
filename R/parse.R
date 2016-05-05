@@ -82,14 +82,19 @@ parse_rprof <- function(path = "Rprof.out", expr_source = NULL) {
     memalloc <- 0
     if (has_memory) {
       # See memory allocation on r-sources (memory.c):
-      #   https://github.com/wch/r-source/blob/tags/R-3-0-0/src/main/memory.c#L1845
-      # Memory is defined as: small:big:nodes:dupes. Originally, we tracked sample[1:3]
-      # to include 'nodes' which track expression allocations. However, this 3rd parameter
-      # it's internal to the r execution engine since it tracks all expressions references
-      # and can yield unexpected memory insights to users. For instance, profiling
-      # profvis::pause(1) can yield several hundred MB due to bussy waits of pause that trigger
-      # significant creation of expressions that is not enterily useful to the end user.
+      # https://github.com/wch/r-source/blob/tags/R-3-0-0/src/main/memory.c#L1845
+      # Memory is defined as: small:big:nodes:dupes. Originally, we tracked
+      # sample[1:3] to include 'nodes' which track expression allocations.
+      # However, the 3rd parameter is internal to the R execution engine since
+      # it tracks all expression references and can yield information that's
+      # confusing to users. For instance, profiling profvis::pause(1) can yield
+      # several hundred MB due to busy waits of pause that trigger significant
+      # creation of expressions that is not enterily useful to the end user.
       memalloc <- sum(as.integer(sample[1:2])) / 1024 ^ 2
+      # The memory allocation numbers from the profiler need to be multiplied by
+      # the pointer size to yield the size in bytes.
+      memalloc <- memalloc * .Machine$sizeof.pointer
+
       sample <- sample[-4:-1]
     }
 
