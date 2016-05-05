@@ -1,6 +1,8 @@
 get_file_contents <- function(filenames, expr_source) {
   names(filenames) <- filenames
 
+  srcref_cache <- new.env(parent = emptyenv())
+
   file_contents <- lapply(filenames, function(filename) {
     if (filename == "<expr>") {
       return(expr_source)
@@ -13,7 +15,7 @@ get_file_contents <- function(filenames, expr_source) {
     )
     # If we can't read file, attempt to extract using source refs
     if (is.null(filehandle)) {
-      return(extract_source_from_srcref(filename))
+      return(extract_source_from_srcref(filename, srcref_cache))
     }
     on.exit( close(filehandle) )
 
@@ -23,20 +25,30 @@ get_file_contents <- function(filenames, expr_source) {
   drop_nulls(file_contents)
 }
 
+
 # Given a filename, try to get the source code from source refs. This looks
 # inside a package namespace to try to get the source code.
 # `filename` will be something like:
 #   "/tmp/Rtmp6W0MLC/R.INSTALL1a531f3beb59/ggplot2/R/aes.r"
-extract_source_from_srcref <- function(filename) {
+extract_source_from_srcref <- function(filename, srcref_cache) {
   # Filename must have format "xxx/yyy/R/zzz.r", where the "xxx" part can be
   # anything.
   if (!grepl(".*/([^/]+)/R/[^/]+", filename)) {
     return(NULL)
   }
 
-  # Name of package containing filename
-  pkg <- sub(".*/([^/]+)/R/[^/]+", "\\1", filename)
+  # If it's not already cached, add it.
+  if (is.null(srcref_cache[[filename]])) {
+    # Name of package containing filename
+    pkg <- sub(".*/([^/]+)/R/[^/]+", "\\1", filename)
+    load_pkg_into_cache(pkg, srcref_cache)
+  }
 
+  srcref_cache[[filename]]
+}
+
+
+load_pkg_into_cache <- function(pkg, srcref_cache) {
   # Now grab an arbitrary function from that package
   ns <- asNamespace(pkg)
 
@@ -94,5 +106,6 @@ extract_source_from_srcref <- function(filename) {
     file_contents
   }
 
-  full_src_to_file_contents(src)[[filename]]
+  file_contents <- full_src_to_file_contents(src)
+  list2env(file_contents, envir = srcref_cache)
 }
