@@ -45,6 +45,14 @@ profvis <- function(expr = NULL, interval = 0.01, prof_output = NULL,
   split <- match.arg(split)
   expr_q <- substitute(expr)
 
+  # Change the srcfile to add "<expr>" as the filename. Code executed from the
+  # console will have "" here, and code executed in a knitr code block will have
+  # "<text>". This value is used by the profiler as the filename listed in the
+  # profiler output. We need to do this to distinguish code that was run in the
+  # profvis({}) code block from code that was run outside of it. See
+  # https://github.com/rstudio/profvis/issues/57
+  attr(expr_q, "srcfile")$filename <- "<expr>"
+
   if (is.null(prof_input) && is.null(expr_q)) {
     stop("profvis must be called with `expr` or `prof_input` ")
   }

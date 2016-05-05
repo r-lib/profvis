@@ -164,12 +164,6 @@ parse_rprof <- function(path = "Rprof.out", expr_source = NULL) {
 
   # Add filenames
   prof_data$filename <- labels$path[prof_data$filenum]
-  # Rename "" files to "<expr>". Code executed from the console is labeled as
-  # a file named "".
-  prof_data$filename[prof_data$filename == ""] <- "<expr>"
-  # Rename "<text>" to "<expr>". Code executed in knitr blocks is labeled as
-  # a file named "<text>"
-  prof_data$filename[prof_data$filename == "<text>"] <- "<expr>"
 
   # Get code file contents ---------------------------
   filenames <- unique(prof_data$filename)
@@ -200,10 +194,6 @@ parse_rprof <- function(path = "Rprof.out", expr_source = NULL) {
   # Add labels for where there's a srcref but no function on the call stack.
   # This can happen for frames at the top level.
   prof_data <- insert_code_line_labels(prof_data, file_contents)
-
-  # Remove references to <expr> when the source for a given exprression was
-  # outside of the profvis({}) call.
-  prof_data <- prune_expr_mismatch(prof_data, file_contents[["<expr>"]])
 
   # Convert file_contents to a format suitable for client
   file_contents <- mapply(names(file_contents), file_contents, normpaths,
@@ -254,63 +244,4 @@ trim_filenames <- function(filenames) {
   filenames <- sub("^.*?([^/]+/(R|inst)/.*\\.R$)", "\\1", filenames, ignore.case = TRUE)
 
   filenames
-}
-
-# Some rows of data will have <expr> as the source ref, but the source they
-# refer to was actually outside of the profvis({}) call, so we don't have
-# access to the source. We'll filter out those rows by using this heuristic: if
-# the label on that row is not found in the line of <expr> text, then we don't
-# have the expr for it. This isn't perfect, but it should be right in the vast
-# majority of cases, and it's probably the best we can do.
-# https://github.com/rstudio/profvis/issues/15
-prune_expr_mismatch <- function(prof_data, expr_source) {
-  if (is.null(expr_source)) {
-    expr_source <- ""
-  }
-  expr <- strsplit(expr_source, "\n")[[1]]
-
-  # Only look at entries from <expr>, pull out relevant columns, and
-  # deduplicate.
-  p <- prof_data[!is.na(prof_data$filename) & prof_data$filename == "<expr>",
-                 c("label", "linenum", "filename")]
-  p <- unique(p)
-
-  # Allow profiles with no sources and no <exprs> to be parsed
-  if (nrow(p) == 0) {
-    return (prof_data)
-  }
-
-  # Now make sure that each entry actually matches text in expr. This isn't
-  # perfect - there can be false negatives, as in the times_10_lazy example
-  # in the vignette.
-  p$match <- NA
-  for (i in seq_len(nrow(p))) {
-
-    if (p$linenum[i] > length(expr)) {
-      # If the line number is outside of what expr contains, this is because
-      # it's code that the user ran outside of profvis({}).
-      p$match[i] <- FALSE
-
-    } else {
-      # If the label is "<Anonymous>", don't check for a string match in the
-      # code, because we don't know exactly how it was invoked; be lenient.
-      # Also be a little lenient and allow expr to be on next line - this can
-      # happen when flow control statements are used without curly braces, like:
-      # if (TRUE)
-      #   pause(0.1)
-      label <- p$label[i]
-      expr_line <- expr[p$linenum[i]]
-      next_line <- expr[p$linenum[i] + 1]
-
-      p$match[i] <- label == "<Anonymous>" ||
-                    grepl(label, expr_line, fixed = TRUE) ||
-                    grepl(label, next_line, fixed = TRUE)
-    }
-  }
-
-  # Merge back with original data. The match column now tells us which rows we
-  # we don't actually have source references for.
-  p <- merge(prof_data, p, all.x = TRUE, sort = FALSE)
-  p[!is.na(p$match) & p$match == FALSE, c("linenum", "filename", "filenum")] <- NA
-  p
 }
