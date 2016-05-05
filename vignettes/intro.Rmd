@@ -13,6 +13,12 @@ vignette: >
 
 ```{r echo = FALSE}
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+
+# Use vertical split by default in this Rmd document
+knit_print.htmlwidget <- function(x, ...) {
+  x$x$message$split <- "v"
+  htmlwidgets:::knit_print.htmlwidget(x, ...)
+}
 ```
 
 <style type="text/css">
@@ -48,13 +54,7 @@ As R users, many, perhaps most, of us have had times where we've wanted our code
 
 ## Getting started
 
-To install profvis, first make sure you have the devtools package installed, then run:
-
-```{r eval=FALSE}
-devtools::install_github("rstudio/profvis")
-```
-
-Here's an example of profvis in use. We'll create a scatter plot of the `diamonds` data set, which has about 54,000 rows, fit a linear model, and draw a line for the model. (The plot isn't displayed in this document, though.) If you copy and paste this code into your R console, it'll open a new web browser with the same profvis interface that you see in this HTML document.
+Below is an example of profvis in use. We'll create a scatter plot of the `diamonds` data set, which has about 54,000 rows, fit a linear model, and draw a line for the model. (The plot isn't displayed in this document, though.) If you copy and paste this code into your R console, it'll open a window with the same profvis interface that you see in this HTML document.
 
 ```{r fig.show="hide"}
 library(profvis)
@@ -65,14 +65,17 @@ profvis({
   plot(price ~ carat, data = diamonds)
   m <- lm(price ~ carat, data = diamonds)
   abline(m, col = "red")
-}, height = "250px")
+}, height = "250px") # The height argument controls the display in this R Markdown document.
 ```
 
-In the profvis interface, on the left is the code, and on the right is a flame graph. If the panels are too narrow, using a wider browser window will help. In the flame graph, the horizontal direction represents time in milliseconds, and the vertical direction represents the call stack. Looking at the bottom-most items on the stack, most of the time, about 2 seconds, is spent in `plot`, and then a much smaller amount of time is spent in `lm`, and almost no time at all is spent in `abline` -- it doesn't even show up on the flame graph.
+On the left is the code, and on the right is a flame graph. In the flame graph, the horizontal direction represents time in milliseconds, and the vertical direction represents the call stack. Looking at the bottom-most items on the stack, most of the time, about 2 seconds, is spent in `plot`, and then a much smaller amount of time is spent in `lm`, and almost no time at all is spent in `abline` -- it doesn't even show up on the flame graph.
 
 Traveling up the stack, `plot` called `plot.formula`, which called `do.call`, and so on. Going up a few more levels, we can see that `plot.default` called a number of functions: first `deparse`, and later, `plot.xy`. Similarly, `lm` calls a number of different functions.
 
 On the left, we can see the amount of time spent on each line of code. This tells us, unsurprisingly, that most of the time is spent on the line with `plot`, and a little bit is spent on the line with `lm`.
+
+The code panel also shows memory allocation and deallocation. Interpreting this information can be a little tricky, because it does not necessarily reflect memory allocated and deallcated *at* that line of code. The sampling profiler records information about memory allocations that happen between the previous sample and the current one. This means that the allocation/deallocation values on that line may have actually occurred in a previous line of code.
+
 
 ### Navigating profvis
 
@@ -126,7 +129,9 @@ profvis({
 }, height = "400px")
 ```
 
-Most of the time is spent in the `apply` call, so that's the best candidate for a first pass at optimization. `apply` calls `as.matrix` and `aperm`. These two functions convert the data frame to a matrix and transpose it -- so even before we've done any useful computations, we've spent a large amount of time transforming the data.
+Most of the time is spent in the `apply` call, so that's the best candidate for a first pass at optimization. We can also see that the `apply` results in a lot of memory being allocated and deallocated. Memory "churning" is often a cause for performance problems.
+
+Looking at the flame graph, we can see that `apply` calls `as.matrix` and `aperm`. These two functions convert the data frame to a matrix and transpose it -- so even before we've done any useful computations, we've spent a large amount of time transforming the data.
 
 We could try to speed this up in a number of ways. One possibility is that we could simply leave the data in matrix form (instead of putting it in a data frame in line 4). That would remove the need for the `as.matrix` call, but it would still require `aperm` to transpose the data. It would also lose the connection of each row to the `id` column, which is undesirable. In any case, using `apply` over columns looks like it will be expensive because of the call to `aperm`.
 
@@ -146,6 +151,8 @@ profvis({
 `colMeans` is about 6x faster than using `apply` with `mean`, but it looks like it's still using `as.matrix`, which takes a significant amount of time. `lapply`/`vapply`are faster yet -- about 10x faster than `apply`. `lapply` returns the values in a list, while `vapply` returns the values in a numeric vector, which is the form that we want, so it looks like `vapply` is the way to go for this part.
 
 (If you want finer-grained comparisons of code performance, you can use the [microbenchmark](https://cran.r-project.org/web/packages/microbenchmark/index.html) package. There's more information about microbenchmark in the  [profiling](http://adv-r.had.co.nz/Profiling.html#code-organisation) chapter of Hadley Wickham's book, *Advanced R*.)
+
+You can also see that the faster methods also result in less memory allocation and deallocation. This is not a coincidence -- allocating and deallocating memory can be expensive.
 
 Let's take the original code and replace `apply` with `vapply`:
 
@@ -204,11 +211,13 @@ This takes over 2 seconds to calculate the cumulative sum of 30,000 items. That'
 
 Almost all the time is spent in one line of code, line 6. Although this is just one line of code, many different functions that are called on that line.
 
+That line also results in a large amount of memory being allocated and deallocated, which is somewhat suprising: just looking at the code, that line *appears* to just modify the data in-place, but that's not actually what's happening internally.
+
 In the flame graph, you'll see that some of the flame graph blocks have the label `$`, which means that those samples were spent in the `$` function for indexing into an object (in R, the expression `x$y` is equivalent to `` `$`(x, "y")``).
 
 Because `$` is a *generic* function, it calls the corresponding *method* for the object, in this case `$.data.frame`. This function in turn calls `[[`, which calls `[[.data.frame`. (Zoom in to see this more clearly.)
 
-Other flame graph cells have the label `$<-`. The usual syntax for calling this function is `x$y <- z`; this is equivalent to `` `$<-`(x, "y", z)``. (Assignment with indexing, as in `x$y[i] <- z` is actually a bit [more complicated](http://adv-r.had.co.nz/Functions.html#replacement-functions).)
+Other flame graph cells have the label `$<-`. The usual syntax for calling this function is `x$y <- z`; this is equivalent to `` `$<-`(x, "y", z)``. (Assignment with indexing, as in `x$y[i] <- z` is actually a bit [more complicated](http://adv-r.had.co.nz/Functions.html#replacement-functions), and it turns out that this is the cause of the excessive memory allocation and deallocation.)
 
 Finally, many of the flame graph cells contain the entire expression from line 6. This can mean one of two things:
 
@@ -239,7 +248,7 @@ It may appear that no functions are called from line 7, but that's not quite tru
 * The `[` and `[<-` functions don't appear in the flame graph. They are internal R functions which contain C code to handle indexing into atomic vectors, and are not dispatched to methods. (Contrast this with the first version of the code, where `$` was dispatched to `$.data.frame`).
 * The `-` and `+` functions can show up in a flame graph, but they are very fast so the sampling profiler may or may not happen to take a sample when they're on the call stack.
 
-You probably have noticed the gray blocks labeled `<GC>`. These represent times where R is doing *garbage collection* -- that is, when it is freeing chunks of memory that were allocated but no longer needed. If R is spending a lot of time freeing memory, that suggests that R is also spending a lot of time allocating memory. This is another common source of slowness in R code.
+The code panel shows that there is still a large amount of memory being allocated in the `csum` function. In the flame graph. you probably have noticed the gray blocks labeled `<GC>`. These represent times where R is doing *garbage collection* -- that is, when it is freeing (deallocating) chunks of memory that were allocated but no longer needed. If R is spending a lot of time freeing memory, that suggests that R is also spending a lot of time allocating memory. This is another common source of slowness in R code.
 
 In the `csum` function, `sum` starts as a length-1 vector, and then grows, in a loop, to be the same length as `x`. Every time a vector grows, R allocates a new block of memory for the new, larger vector, and then copies the contents over. The memory allocated for the old vector is no longer needed, and will later be garbage collected.
 
@@ -261,7 +270,7 @@ profvis({
 }, height = "350px")
 ```
 
-This version of the code, with `csum2`, is around 60x faster than our original code. These performance improvements were possible by avoiding calls to `$` and `$<-`, and by avoiding unnecessary memory allocation and copying from growing a vector in a loop.
+This version of the code, with `csum2`, is around 60x faster than our original code, and requires almost no memory allocation. These performance improvements were possible by avoiding calls to `$` and `$<-`, and by avoiding unnecessary memory allocation and copying from growing a vector in a loop.
 
 
 ## Frequently asked questions
@@ -276,25 +285,17 @@ In some cases the side-effects of these functions can be seen in the flamegraph.
 
 Right now the easiest way to do this is to run `profvis` in RStudio, and publish to [RPubs](http://rpubs.com/).
 
-Normally profvis displays in a web browser, but in order to publish to RPubs, you'll need to make it display in the RStudio viewer. You can do this with `print(p, viewer = TRUE)`:
+Once the profile shows up in the RStudio IDE, click on the **Publish** button to send it to RPubs. You can see an example [here](http://rpubs.com/wch/178493). If you don't already have an account on RPubs, you'll need to set one up.
+
+![Publishing to RPubs](profvis-rpubs.png)
+
+Another way to publish a profvis visualization is to save the HTML output file using `htmlwidgets::saveWidget`, and put that on any web hosting service:
 
 ```{r eval=FALSE}
 p <- profvis({
   # Interesting code here
 })
 
-# Open with RStudio viewer
-print(p, viewer = TRUE)
-```
-
-Once it shows up in the viewer pane, click on the **Publish** button to send it to RPubs. You can see an example [here](http://rpubs.com/wch/124655). If you don't already have an account on RPubs, you'll need to set one up.
-
-![Publishing to RPubs](profvis-rpubs.png)
-
-Another way to publish a profvis visualization is to save the HTML output file and put that on any web hosting service. You can save it from your web browser, or you can use `htmlwidgets::saveWidget`:
-
-
-```{r eval=FALSE}
 htmlwidgets::saveWidget(p, "profile.html")
 ```
 
@@ -329,7 +330,7 @@ profvis({
 }, height = "350px")
 ```
 
-Similarly, functions that are accessed with `::` or `$` will also appear as `<Anonymous>`. The form `package::function()` is a common way to explicitly use a namespace to find a function. The form `x$fun()` is a common way to call functions that are contained in a list, environment, reference class, or R6 object.
+Similarly, in versions of R before 3.3.0, functions that are accessed with `::` or `$` will also appear as `<Anonymous>`. The form `package::function()` is a common way to explicitly use a namespace to find a function. The form `x$fun()` is a common way to call functions that are contained in a list, environment, reference class, or R6 object. As of R 3.3.0, these will display as `package::function`, or `x$fun`.
 
 Those are equivalent to `` `::`(package, function)`` and `` `$`(x, "fun")``, respectively. These calls return anonymous functions, and so R's internal profiling code labels these as `<Anonymous>`. If you want labels in the profiler to have a different label, you can assign the value to a temporary variable (like `adder2` above), and then invoke that.
 
@@ -486,6 +487,7 @@ It's not only the call stack that has a surprising order with `times_10_lazy` --
 
 Keep in mind that lazy evaluation may result in counterintuitive results in the flame graph. If you want to avoid some of the possible confusion from lazy evaluation, you can use intermediate variables to force the evaluation of arguments at specific locations in your code, as we did in `times_10`.
 
+
 ### Why does profvis tell me the the wrong line is taking time?
 
 In some cases, multi-line expressions will report that the first line of the expression is the one that takes all the time. In the example below, there are two `for` loops: one with curly braces, and one without. In the loop with curly braces, it reports that line 3, containing the `pause` is the one that takes all the time. In the loop without curly braces, it reports that line 6, containing `for`, is the one that takes all the time, even though the time is really spent on line 7, with the `pause`.
@@ -503,6 +505,37 @@ profvis({
 ```
 
 For code that contains multi-line expressions like these, using curly braces will allow the profiler to identify the correct line where code is running.
+
+
+### How do I interpret memory profiling information?
+
+The memory profiling information can be somewhat tricky to interpret, for two reasons. The first reason is that, compared to call stack information, memory usage information is collected with different temporal characteristics: call stack information is recorded instantaneously at each sample, while memory information is recorded between each sample.
+
+The second reason that is that memory deallocations happen somewhat randomly, and may happen long after the point where the memory was no longer needed. The deallocations occur in garbage collection (`<GC>`) events.
+
+For these reasons, it might look like a particular line of code (or function call in the flame graph) is responsible for memory allocation or deallocation, when in reality the memory use is due to a previous line of code.
+
+If a section of code results in a large amount of allocation and deallocation, it means that it's "churning" through memory and using a large amonut of temporary memory storage. This can be seen in Example 1 above. In these cases, it may be possible to optimize the code so that it doesn't use as much temporary memory.
+
+If a section of code results in a large amount of allocation but does not have a large amount of deallocation, then it means the memory is not being released. This could be because the code genuinely requires that extra memory, but it could also be a sign of a memory leak.
+
+
+### How do I split the panes vertically instead of horizontally?
+
+The profvis examples in this document have a vertical split, but by default, profvis visualizations have a horizontal split. In order to split them vertically, use `split="v"`, as in
+
+```{r eval=FALSE}
+profvis({
+  # Code here
+}, split = "v")
+
+
+# Also possible to control the split when calling print()
+p <- profvis({
+  # Code here
+})
+print(p, split = "v")
+```
 
 
 ### How do I get source code to show with `Rscript`?
