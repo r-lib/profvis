@@ -37,6 +37,7 @@
 #'   data is collected.
 #'
 #' @import htmlwidgets
+#' @importFrom utils Rprof
 #' @export
 profvis <- function(expr = NULL, interval = 0.01, prof_output = NULL,
                     prof_input = NULL, width = NULL, height = NULL,
