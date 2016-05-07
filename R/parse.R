@@ -45,12 +45,12 @@ parse_rprof <- function(path = "Rprof.out", expr_source = NULL) {
   # to
   #  "foo",2#8
   prof_data <- gsub('" (\\d+#\\d+)', '",\\1', prof_data)
-  # But if the line starts with <GC>, it shouldn't be joined like that.
+  # But if it's a <GC>, it shouldn't be joined like that.
   # Convert:
   #  <GC>,1#7 "foo"
   # back to
   #  <GC> 1#7 "foo"
-  prof_data <- gsub('^"<GC>",', '"<GC>" ', prof_data)
+  prof_data <- gsub('"<GC>",', '"<GC>" ', prof_data)
 
   # Remove frames related to profvis itself, and all frames below it on the
   # stack. Right now the bottom item can be `profvis`, `profvis::profvis`, or
