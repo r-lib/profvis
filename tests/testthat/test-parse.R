@@ -10,7 +10,7 @@ test_that("parsing prof files", {
 
   expect_identical(p$prof$time, c(1L, 2L, 2L, 3L, 3L, 3L))
   expect_identical(p$prof$depth, c(1L, 2L, 1L, 3L, 2L, 1L))
-  expect_identical(p$prof$label, c("test", "line 2", "test", "<GC>", "line 2", "test"))
+  expect_identical(p$prof$label, c("test space", "line 2", "test", "<GC>", "line 2", "test"))
   expect_identical(p$prof$filenum, c(1L, 1L, 1L, NA, 1L, 1L))
   expect_identical(p$prof$linenum, c(1L, 2L, 1L, NA, 2L, 1L))
   # Memory sizes in the test-parse.prof file were chosen to create these values
