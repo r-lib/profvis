@@ -23,6 +23,7 @@ License: GPL-3 | file LICENSE
 Suggests:
     knitr,
     ggplot2,
-    rmarkdown
+    rmarkdown,
+    testthat
 VignetteBuilder: knitr
 RoxygenNote: 5.0.1
