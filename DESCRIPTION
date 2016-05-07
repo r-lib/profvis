@@ -1,6 +1,6 @@
 Package: profvis
 Title: Visualize profiling data
-Version: 0.2.4
+Version: 0.2.5
 Authors@R: c(
     person("Chang", "Winston", email = "winston@rstudio.com", role = c("aut", "cre")),
     person("Luraschi", "Javier", email = "javier@rstudio.com", role = "aut"),
