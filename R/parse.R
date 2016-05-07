@@ -182,7 +182,7 @@ parse_rprof <- function(path = "Rprof.out", expr_source = NULL) {
       memalloc = if (nonzero) memalloc else numeric(0),
       stringsAsFactors = FALSE
     )
-  }, SIMPLIFY = FALSE)
+  }, SIMPLIFY = FALSE, USE.NAMES = FALSE)
 
   prof_data <- do.call(rbind, prof_data)
 
