@@ -37,20 +37,25 @@ parse_rprof <- function(path = "Rprof.out", expr_source = NULL) {
   # Memory profiles start with ':'
   has_memory <- length(prof_data) > 0 && substr(prof_data[[1]], 1, 1) == ":"
 
-  # Remove trailing memory marker from ':m1:m2:m3:d:"c1" "c2" "c3"'
-  prof_data <- gsub("^:", "", prof_data)
+  # Extract memory data from ':m1:m2:m3:d:"c1" "c2" "c3"', and remove the memory
+  # stuff from the prof_data strings.
+  if (has_memory) {
+    mem_data <- gsub("^:(\\d+:\\d+:\\d+:\\d+):.*", "\\1", prof_data)
+    mem_data <- str_split(mem_data, ":")
+    prof_data <- gsub("^:\\d+:\\d+:\\d+:\\d+:", "\\1", prof_data)
+  }
 
   # Convert frames with srcrefs from:
   #  "foo" 2#8
   # to
   #  "foo",2#8
   prof_data <- gsub('" (\\d+#\\d+)', '",\\1', prof_data)
-  # But if it's a <GC>, it shouldn't be joined like that.
+  # But if the line starts with a <GC>, it shouldn't be joined like that.
   # Convert:
   #  <GC>,1#7 "foo"
   # back to
   #  <GC> 1#7 "foo"
-  prof_data <- gsub('"<GC>",', '"<GC>" ', prof_data)
+  prof_data <- gsub('^"<GC>",', '"<GC>" ', prof_data)
 
   # Remove frames related to profvis itself, and all frames below it on the
   # stack. Right now the bottom item can be `profvis`, `profvis::profvis`, or
@@ -62,35 +67,28 @@ parse_rprof <- function(path = "Rprof.out", expr_source = NULL) {
     '', prof_data, perl = TRUE
   )
 
-  # Split by ':' for memory header or ' ' for callstack
-  prof_data <- str_split(prof_data, " ")
-  if (has_memory) {
-    prof_data <- lapply(prof_data, function(prof_row) {
-      c(str_split(prof_row[1], ":")[[1]], prof_row[-1])
-    })
-  }
-
-  # Replace empty strings with character(0); otherwise causes incorrect output
-  # later.
-  prof_data <- lapply(prof_data, function(s) {
-    if (identical(s, "")) character(0)
-    else s
-  })
+  # # Split by ' ' for call stack
+  # prof_data <- str_split(prof_data, " ")
+  #
+  # prof_data <- lapply(prof_data, function(s) {
+  #   if (identical(s, "")) character(0)
+  #   else s
+  # })
 
   # Parse each line into a separate data frame
-  prof_data <- mapply(prof_data, seq_along(prof_data), FUN = function(sample, time) {
+  prof_data <- mapply(prof_data, mem_data, seq_along(prof_data), FUN = function(line, mem, time) {
     memalloc <- 0
     if (has_memory) {
       # See memory allocation on r-sources (memory.c):
       # https://github.com/wch/r-source/blob/tags/R-3-0-0/src/main/memory.c#L1845
       # Memory is defined as: small:big:nodes:dupes. Originally, we tracked
-      # sample[1:3] to include 'nodes' which track expression allocations.
+      # mem[1:3] to include 'nodes' which track expression allocations.
       # However, the 3rd parameter is internal to the R execution engine since
       # it tracks all expression references and can yield information that's
       # confusing to users. For instance, profiling profvis::pause(1) can yield
       # several hundred MB due to busy waits of pause that trigger significant
       # creation of expressions that is not enterily useful to the end user.
-      memalloc <- sum(as.integer(sample[1:2])) / 1024 ^ 2
+      memalloc <- sum(as.integer(mem[1:2])) / 1024 ^ 2
 
       # get_current_mem provides the results as either R_SmallVallocSize or R_LargeVallocSize
       # which are internal untis of allocation.
@@ -119,40 +117,69 @@ parse_rprof <- function(path = "Rprof.out", expr_source = NULL) {
       #
       # Therefore, this results needs to be multiplied by 8 bytes.
       memalloc <- memalloc * 8
-      
-      sample <- sample[-4:-1]
     }
 
-    labels <- sample
-    labels <- sub('",\\d+#\\d+$', '"', labels)
-    labels <- sub('^"', '', labels)
-    labels <- sub('"$', '', labels)
-    # If it's just a bare srcref without label, it doesn't actually refer to
-    # a function call on the call stack -- instead, it just means that the
-    # line of code is being evaluated.
-    # Note how the first lineprof() call differs from the ones in the loop:
-    # https://github.com/wch/r-source/blob/be7197f/src/main/eval.c#L228-L244
-    # In this case, we'll use NA as the label for new, and later insert the
-    # line of source code.
-    idx <- grepl("^\\d+#\\d+$", sample)
-    labels[idx] <- NA
+    # Replace empty strings with character(0); otherwise causes incorrect output
+    # later.
+    if (identical(line, ""))
+      line <- character(0)
 
-    refs <- sample
-    refs <- sub('^".*"[,]?', '', refs)
-    refs[!nzchar(refs)] <- NA
-    filenum <- as.integer(sub('#.*', '', refs))
-    linenum <- as.integer(sub('.*#', '', refs))
+    labels <- scan(text = line, what = character(0), quiet = TRUE)
+
+    # If an element in `labels` is just a bare srcref without label, it doesn't
+    # actually refer to a function call on the call stack -- instead, it just
+    # means that the line of code is being evaluated. This can happen in either
+    # of the first 2 elements in `labels`, because it could be "3#19", or it
+    # could be "<GC> 3#19" -- the <GC> doesn't count as a real label.
+    #
+    # Note how the first lineprof() call differs from the ones in the loop:
+    # https://github.com/wch/r-source/blob/be7197f/src/main/eval.c#L228-L244 In
+    # this case, we'll use NA as the label for now, and later insert the line of
+    # source code.
+    bare_srcref_idx <- grep("^\\d+#\\d+$", labels[1:2])
+
+    # If found the bare srcref, insert an NA before it.
+    if (length(bare_srcref_idx) > 0) {
+      after_idx <- seq.int(bare_srcref_idx, length(labels))
+      labels <- c(labels[-after_idx], NA_character_, labels[after_idx])
+    }
+
+    # Extract the srcrefs. These have the form ",3#12", or "3#12" if it was the
+    # first item on the line.
+    ref_idx <- grep('^,?\\d+#\\d+$', labels)
+
+    # The number of calls on the stack
+    n_calls <- length(labels) - length(ref_idx)
+
+    # Create char vector with srcref strings, of form "3#12" or ",3#12".
+    ref_strs <- rep(NA_character_, n_calls)
+    ref_strs[ref_idx - seq_along(ref_idx)] <- labels[ref_idx]
+
+    # Remove srcref text from `labels`
+    labels <- labels[-ref_idx]
+
+    # Get file and line numbers
+    ref_strs <- sub('^,', '', ref_strs)
+    filenum <- as.integer(sub('#.*', '', ref_strs))
+    linenum <- as.integer(sub('.*#', '', ref_strs))
 
     # Flag for special case of zero entries on this row
-    nonzero <- length(sample) != 0
+    nonzero <- length(labels) != 0
 
     data.frame(
       time = if (nonzero) time else numeric(0),
-      depth = if (nonzero) seq(length(sample), 1) else integer(0),
+      depth = if (nonzero) seq(length(labels), 1) else integer(0),
       label = labels,
       filenum = filenum,
       linenum = linenum,
-      memalloc = memalloc,
+      # Using numeric(0) for memalloc can be slightly erroneous because memory
+      # could have been allocated here due to stuff that happened in the part of
+      # the stack that got trimmed off earlier. But there's another way to
+      # represent memory usage because it's not associated with a line or
+      # function label, only a time stamp, and profvis doesn't record memory
+      # usage by time alone -- it must be associated with a function call and
+      # optionally, a line of code.
+      memalloc = if (nonzero) memalloc else numeric(0),
       stringsAsFactors = FALSE
     )
   }, SIMPLIFY = FALSE)
