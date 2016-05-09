@@ -163,12 +163,13 @@ parse_rprof <- function(path = "Rprof.out", expr_source = NULL) {
     filenum <- as.integer(sub('#.*', '', ref_strs))
     linenum <- as.integer(sub('.*#', '', ref_strs))
 
-    # Flag for special case of zero entries on this row
-    nonzero <- length(labels) != 0
-
-    data.frame(
-      time = if (nonzero) time else numeric(0),
-      depth = if (nonzero) seq(length(labels), 1) else integer(0),
+    nrows <- length(labels)
+    # Return what is essentially a data frame, but in list format because R is
+    # slow at creating data frames here, and slow at rbinding them later. Doing
+    # it with lists is about 4-5x faster than with data frames.
+    list(
+      time = rep(time, nrows),
+      depth = if (nrows != 0) seq(length(labels), 1) else integer(0),
       label = labels,
       filenum = filenum,
       linenum = linenum,
@@ -179,12 +180,26 @@ parse_rprof <- function(path = "Rprof.out", expr_source = NULL) {
       # function label, only a time stamp, and profvis doesn't record memory
       # usage by time alone -- it must be associated with a function call and
       # optionally, a line of code.
-      memalloc = if (nonzero) memalloc else numeric(0),
-      stringsAsFactors = FALSE
+      memalloc = rep(memalloc, nrows)
     )
   }, SIMPLIFY = FALSE, USE.NAMES = FALSE)
 
-  prof_data <- do.call(rbind, prof_data)
+
+  extract_vector <- function(x, name) {
+    vecs <- lapply(x, `[[`, name)
+    do.call(c, vecs)
+  }
+
+  # Bind all the pseudo data-frames together, into a real data frame.
+  prof_data <- data.frame(
+    time = extract_vector(prof_data, "time"),
+    depth = extract_vector(prof_data, "depth"),
+    label = extract_vector(prof_data, "label"),
+    filenum = extract_vector(prof_data, "filenum"),
+    linenum = extract_vector(prof_data, "linenum"),
+    memalloc = extract_vector(prof_data, "memalloc"),
+    stringsAsFactors = FALSE
+  )
 
   # Compute memory changes
   prof_data$meminc <- append(0, diff(prof_data$memalloc))
