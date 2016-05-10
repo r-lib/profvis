@@ -520,7 +520,14 @@ profvis = (function() {
         getDepth: null
       };
 
-      scales.getDepth = function(d) { return vis.hideInternals ? d.depthCollapsed : d.depth; };
+      function useCollapsedDepth() {
+        scales.getDepth = function(d) { return d.depthCollapsed; };
+      }
+      function useUncollapsedDepth() {
+        scales.getDepth = function(d) { return d.depth; };
+      }
+
+      useCollapsedDepth();
 
       // SVG container objects ------------------------------------------------
       var svg = d3.select(el).append('svg');
@@ -1229,6 +1236,8 @@ profvis = (function() {
         redrawCollapse: redrawCollapse,
         redrawUncollapse: redrawUncollapse,
         savePrevScales: savePrevScales,
+        useCollapsedDepth: useCollapsedDepth,
+        useUncollapsedDepth: useUncollapsedDepth,
         addLockHighlight: addLockHighlight,
         clearLockHighlight: clearLockHighlight,
         addActiveHighlight: addActiveHighlight,
@@ -1648,6 +1657,7 @@ profvis = (function() {
       return {
         el: el,
         onResize: updateRows,
+        onOptionsChange: updateRows,
         onUpdateInternals: function() {
 
         },
@@ -2012,14 +2022,15 @@ profvis = (function() {
 
           vis.hideInternals = checked;
           if (checked) {
+            vis.flameGraph.useCollapsedDepth();
             vis.flameGraph.redrawCollapse(400, 400);
           } else {
-
+            vis.flameGraph.useUncollapsedDepth();
             vis.flameGraph.redrawUncollapse(400, 250);
           }
 
           vis.activeViews.forEach(function(e) {
-            if (e.onResize) e.onResize();
+            if (e.onOptionsChange) e.onOptionsChange();
           });
 
           break;
