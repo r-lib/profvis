@@ -2055,6 +2055,7 @@ profvis = (function() {
         case "split": {
           vis.splitDir = checked ? "h" : "v";
           initResizing();
+          vis.flameGraph.onResize();
           break;
         }
         case "internals": {
