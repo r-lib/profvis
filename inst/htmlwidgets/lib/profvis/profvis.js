@@ -83,6 +83,11 @@ profvis = (function() {
       var $el = $(el);
 
       el.innerHTML =
+        '<div role="button" class="split-horizontal">' +
+          '<span class="options-checkbox" data-checked="1">' +
+          (vis.splitDir === "h" ? '&#x2612;' : '&#x2610;') +
+          '</span> Split horizontally' +
+        '</div>' +
         '<div role="button" class="hide-internal">' +
           '<span class="options-checkbox" data-checked="1">&#x2612;</span> Hide internal function calls' +
         '</div>' +
@@ -110,6 +115,12 @@ profvis = (function() {
           return false;
         }
       }
+
+      $el.find(".split-horizontal")
+        .on("click", function() {
+          var checked = toggleCheckbox($(this).find(".options-checkbox"));
+          onOptionsChange("split", checked);
+        });
 
       $el.find(".hide-internal")
         .on("click", function() {
@@ -1677,14 +1688,39 @@ profvis = (function() {
 
 
     // Set up resizing --------------------------------------------------------
-    // Resize left and right sides to 50% of available space and add callback
+
+    // This is used as a jQuery event namespace so that we can remove the window
+    // resize handler on subsequent calls to initResizing(). Not elegant, but it
+    // gets the job done.
+    var resizeCallbackNamespace = randomString(10);
+
+    // Resize panel1 and panel2 to 50% of available space and add callback
     // for window resizing.
-    function initResizing(splitDir) {
+    function initResizing() {
       var $el = $(vis.el);
       var $panel1 = $el.children(".profvis-panel1");
       var $panel2 = $el.children(".profvis-panel2");
       var $splitBar = $el.children(".profvis-splitbar");
       var $statusBar = $el.children(".profvis-status-bar");
+
+      // Clear any existing positioning that may have happened from previous
+      // calls to this function and the callbacks that it sets up.
+      $panel1.removeAttr("style");
+      $panel2.removeAttr("style");
+      $splitBar.removeAttr("style");
+      $statusBar.removeAttr("style");
+
+      // CSS class suffix for split direction
+      var splitClass = (vis.splitDir === "h") ? "horizontal" : "vertical";
+
+      // Remove existing horizontal/vertical class and add the correct class back.
+      $panel1.removeClass("profvis-panel1-horizontal profvis-panel1-vertical");
+      $panel2.removeClass("profvis-panel2-horizontal profvis-panel2-vertical");
+      $splitBar.removeClass("profvis-splitbar-horizontal profvis-splitbar-vertical");
+      $panel1.addClass("profvis-panel1-" + splitClass);
+      $panel2.addClass("profvis-panel2-" + splitClass);
+      $splitBar.addClass("profvis-splitbar-" + splitClass);
+
 
       var splitBarGap;
       var margin;
@@ -1692,7 +1728,7 @@ profvis = (function() {
       // needed when we resize the window to preserve the same proportions.
       var lastSplitProportion;
 
-      if (splitDir === "v") {
+      if (vis.splitDir === "v") {
         // Record the gap between the split bar and the objects to left and right
         splitBarGap = {
           left: $splitBar.offset().left - offsetRight($panel1),
@@ -1705,7 +1741,7 @@ profvis = (function() {
           right: $el.innerWidth() - positionRight($panel2)
         };
 
-      } else if (splitDir === "h") {
+      } else if (vis.splitDir === "h") {
         splitBarGap = {
           top: $splitBar.offset().top - offsetBottom($panel1),
           bottom: $panel2.offset().top - offsetBottom($splitBar)
@@ -1723,7 +1759,7 @@ profvis = (function() {
         if (!splitProportion)
           splitProportion = lastSplitProportion;
 
-        if (splitDir === "v") {
+        if (vis.splitDir === "v") {
           var innerWidth = offsetRight($panel2) - $panel1.offset().left;
 
           $splitBar.offset({
@@ -1736,7 +1772,7 @@ profvis = (function() {
                              margin.left);
           $panel2.offset({ left: offsetRight($splitBar) + splitBarGap.right });
 
-        } else if (splitDir === "h") {
+        } else if (vis.splitDir === "h") {
           var innerHeight = offsetBottom($panel2) - $panel1.offset().top;
 
           $splitBar.offset({
@@ -1758,26 +1794,30 @@ profvis = (function() {
       // because this happens before the flame graph is generated.
       resizePanels(0.5);
 
-      $(window).resize(
-        debounce(function() {
-          resizePanels(lastSplitProportion);
-          vis.activeViews.forEach(function(e) {
-            if (e.onResize) e.onResize();
-          });
-        }, 250)
-      );
+      var resizePanelsDebounced = debounce(function() {
+        resizePanels(lastSplitProportion);
+        vis.activeViews.forEach(function(e) {
+          if (e.onResize) e.onResize();
+        });
+      }, 250);
+
+      // Clear old resize handler and add new one. We use a namespace for this
+      // visualization to make sure not to delete handlers for other profvis
+      // visualizations on the same page (this can happen with Rmd documents).
+      $(window).off("resize.profvis." + resizeCallbackNamespace);
+      $(window).on("resize.profvis." + resizeCallbackNamespace, resizePanelsDebounced);
 
       // Get current proportional position of split bar
       function splitProportion() {
         var splitCenter;
 
-        if (splitDir === "v") {
+        if (vis.splitDir === "v") {
           splitCenter = $splitBar.offset().left - $panel1.offset().left +
                             $splitBar.outerWidth()/2;
           var innerWidth = offsetRight($panel2) - $panel1.offset().left;
           return splitCenter / innerWidth;
 
-        } else if (splitDir === "h") {
+        } else if (vis.splitDir === "h") {
           splitCenter = $splitBar.offset().top - $panel1.offset().top +
                             $splitBar.outerHeight()/2;
           var innerHeight = offsetBottom($panel2) - $panel1.offset().top;
@@ -1817,8 +1857,8 @@ profvis = (function() {
 
           $splitBar.css("opacity", "");
 
-          if ((splitDir === "v" && e.pageX - startDragX === 0) ||
-              (splitDir === "h" && e.pageY - startDragY === 0)) {
+          if ((vis.splitDir === "v" && e.pageX - startDragX === 0) ||
+              (vis.splitDir === "h" && e.pageY - startDragY === 0)) {
             return;
           }
 
@@ -1834,7 +1874,7 @@ profvis = (function() {
 
           $splitBar.css("opacity", 0.75);
 
-          if (splitDir === "v") {
+          if (vis.splitDir === "v") {
             startDragX = e.pageX;
             startOffsetLeft = $splitBar.offset().left;
           } else {
@@ -1850,7 +1890,7 @@ profvis = (function() {
           if (!dragging) return;
           pauseEvent(e);
 
-          if (splitDir === "v") {
+          if (vis.splitDir === "v") {
             var dx = e.pageX - startDragX;
             if (dx === 0)
               return;
@@ -1858,7 +1898,7 @@ profvis = (function() {
             // Move the split bar
             $splitBar.offset({ left: startOffsetLeft + dx });
 
-          } else if (splitDir === "h") {
+          } else if (vis.splitDir === "h") {
             var dy = e.pageY - startDragY;
             if (dy === 0)
               return;
@@ -1877,7 +1917,9 @@ profvis = (function() {
           return false;
         }
 
-        $splitBar[0].addEventListener("mousedown", startDrag);
+        // Remove existing event listener from previous calls to initResizing().
+        $splitBar.off("mousedown.profvis");
+        $splitBar.on("mousedown.profvis", startDrag);
       })();
 
 
@@ -1914,19 +1956,12 @@ profvis = (function() {
       enableScroll: enableScroll,
       disableScroll: disableScroll,
 
+      splitDir: message.split,
       hideInternals: true,
       hideMemory: false,
 
       resizePanels: null
     };
-
-
-    // CSS class suffix for split direction
-    var splitClass;
-    if (message.split === "h")
-      splitClass = "horizontal";
-    else
-      splitClass = "vertical";
 
 
     // Render the objects ---------------------------------------------
@@ -1937,15 +1972,15 @@ profvis = (function() {
 
     // Container panels - top/bottom or left/right
     var panel1 = document.createElement("div");
-    panel1.className = "profvis-panel1 profvis-panel1-" + splitClass;
+    panel1.className = "profvis-panel1";
     vis.el.appendChild(panel1);
 
     var panel2 = document.createElement("div");
-    panel2.className = "profvis-panel2 profvis-panel2-" + splitClass;
+    panel2.className = "profvis-panel2";
     vis.el.appendChild(panel2);
 
     var splitBarEl = document.createElement("div");
-    splitBarEl.className = "profvis-splitbar profvis-splitbar-" + splitClass;
+    splitBarEl.className = "profvis-splitbar";
     vis.el.appendChild(splitBarEl);
 
     var footerEl = document.createElement("div");
@@ -1976,7 +2011,7 @@ profvis = (function() {
 
     // Efficient to properly size panels before the code + flamegraph are
     // rendered, so that we don't have to re-render.
-    var resize = initResizing(message.split);
+    var resize = initResizing();
     vis.resizePanels = resize.resizePanels;
 
     var hideViews = function() {
@@ -2017,6 +2052,11 @@ profvis = (function() {
     var onOptionsChange = function(option, checked) {
       switch (option)
       {
+        case "split": {
+          vis.splitDir = checked ? "h" : "v";
+          initResizing();
+          break;
+        }
         case "internals": {
           vis.flameGraph.savePrevScales();
 
@@ -2517,6 +2557,14 @@ profvis = (function() {
         f.apply(context, args);
       }, delay);
     };
+  }
+
+  function randomString(length) {
+    var chars = 'abcdefghijklmnopqrstuvwxyz';
+    var result = '';
+    for (var i = length; i > 0; --i)
+      result += chars[Math.floor(Math.random() * chars.length)];
+    return result;
   }
 
   var getNormPath = function(files, filename) {

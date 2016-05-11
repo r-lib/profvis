@@ -169,7 +169,7 @@ parse_rprof <- function(path = "Rprof.out", expr_source = NULL) {
     # it with lists is about 4-5x faster than with data frames.
     list(
       time = rep(time, nrows),
-      depth = if (nrows != 0) seq(length(labels), 1) else integer(0),
+      depth = if (nrows == 0) integer(0) else seq(nrows, 1),
       label = labels,
       filenum = filenum,
       linenum = linenum,
