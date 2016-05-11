@@ -1688,6 +1688,12 @@ profvis = (function() {
 
 
     // Set up resizing --------------------------------------------------------
+
+    // This is used as a jQuery event namespace so that we can remove the window
+    // resize handler on subsequent calls to initResizing(). Not elegant, but it
+    // gets the job done.
+    var resizeCallbackNamespace = randomString(10);
+
     // Resize panel1 and panel2 to 50% of available space and add callback
     // for window resizing.
     function initResizing() {
@@ -1795,7 +1801,11 @@ profvis = (function() {
         });
       }, 250);
 
-      $(window).resize(resizePanelsDebounced);
+      // Clear old resize handler and add new one. We use a namespace for this
+      // visualization to make sure not to delete handlers for other profvis
+      // visualizations on the same page (this can happen with Rmd documents).
+      $(window).off("resize.profvis." + resizeCallbackNamespace);
+      $(window).on("resize.profvis." + resizeCallbackNamespace, resizePanelsDebounced);
 
       // Get current proportional position of split bar
       function splitProportion() {
@@ -1907,7 +1917,9 @@ profvis = (function() {
           return false;
         }
 
-        $splitBar[0].addEventListener("mousedown", startDrag);
+        // Remove existing event listener from previous calls to initResizing().
+        $splitBar.off("mousedown.profvis");
+        $splitBar.on("mousedown.profvis", startDrag);
       })();
 
 
@@ -2545,6 +2557,14 @@ profvis = (function() {
         f.apply(context, args);
       }, delay);
     };
+  }
+
+  function randomString(length) {
+    var chars = 'abcdefghijklmnopqrstuvwxyz';
+    var result = '';
+    for (var i = length; i > 0; --i)
+      result += chars[Math.floor(Math.random() * chars.length)];
+    return result;
   }
 
   var getNormPath = function(files, filename) {
