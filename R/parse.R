@@ -155,8 +155,10 @@ parse_rprof <- function(path = "Rprof.out", expr_source = NULL) {
     ref_strs <- rep(NA_character_, n_calls)
     ref_strs[ref_idx - seq_along(ref_idx)] <- labels[ref_idx]
 
-    # Remove srcref text from `labels`
-    labels <- labels[-ref_idx]
+    # Remove srcref text from `labels`. Make sure length is >0 because if length
+    # is 0, labels[-integer(0)] will drop all entries.
+    if (length(ref_idx) > 0)
+      labels <- labels[-ref_idx]
 
     # Get file and line numbers
     ref_strs <- sub('^,', '', ref_strs)
