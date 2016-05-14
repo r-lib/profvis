@@ -1,6 +1,6 @@
 Package: profvis
 Title: Visualize profiling data
-Version: 0.2.7
+Version: 0.2.8
 Authors@R: c(
     person("Chang", "Winston", email = "winston@rstudio.com", role = c("aut", "cre")),
     person("Luraschi", "Javier", email = "javier@rstudio.com", role = "aut"),
@@ -27,3 +27,4 @@ Suggests:
     testthat
 VignetteBuilder: knitr
 RoxygenNote: 5.0.1
+URL: https://rstudio.github.io/profvis/
