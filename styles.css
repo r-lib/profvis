@@ -1,0 +1,25 @@
+/* Sizing for knitr documents */
+.main-container {
+  max-width: 100% !important;
+}
+
+.main-container > .navbar {
+  max-width: 100%;
+}
+
+.main-container .section {
+  max-width: 100%;
+}
+
+.main-container > *, .main-container .section > * {
+  max-width: 910px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.main-container .profvis {
+  border: 1px solid rgb(196, 201, 204);
+  border-radius: 3px;
+  max-width: 100%;
+  margin-bottom: 10px;
+}

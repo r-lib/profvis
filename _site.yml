@@ -1,0 +1,19 @@
+name: "profvis"
+output_dir: '.'
+navbar:
+  title: "Profvis"
+  left:
+    - text: "Introduction"
+      href: index.html
+    - text: "Examples"
+      href: examples.html
+    - text: "FAQ"
+      href: faq.html
+  right:
+    - icon: fa-github fa-lg
+      href: https://github.com/rstudio/profvis/
+output:
+  html_document:
+    theme: cosmo
+    highlight: textmate
+    css: styles.css

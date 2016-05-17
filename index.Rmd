@@ -1,0 +1,75 @@
+---
+title: "Introduction to profvis"
+---
+
+```{r echo = FALSE}
+library(profvis)
+
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+
+# Use vertical split by default in this Rmd document
+knit_print.htmlwidget <- function(x, ...) {
+  # Get the chunk height
+  height <- knitr::opts_current$get("height")
+  if (length(height) > 0 && height != FALSE)
+    x$height <- height
+
+  x$x$message$split <- "v"
+  htmlwidgets:::knit_print.htmlwidget(x, ...)
+}
+```
+
+[Profvis](https://github.com/rstudio/profvis) is a tool for helping you to understand how R spends its time. It provides a interactive graphical interface for visualizing data from `Rprof`, R's built-in tool for collecting profiling data.
+
+Most R users have had times where we've wanted our code to run faster. However, it's not always clear how to accomplish this. A common approach is to rely on intuition, and on wisdom from the broader R community about speeding up R code. One drawback to this is it can lead to a focus on optimizing things that actually take a small proportion of the overall running time. Suppose you make a loop run 5 times faster. That sounds like a huge improvement, but if that loop only takes 10% of the total time, it's still only a 8% speedup overall. Another drawback is that, although many of the commonly-held beliefs are true (for example, preallocating memory can speed things up), some are not (e.g., that `*apply` functions are inherently faster than `for` loops). This can lead us to spend time doing "optimizations" that don't really help. To make slow code faster, we need accurate information about what is making our code slow.
+
+## Getting started
+
+To install profvis:
+
+```{r eval=FALSE}
+install.packages("profvis")
+```
+
+Below is an example of profvis in use. The code creates a scatter plot of the `diamonds` data set, which has about 54,000 rows, fits a linear model, and draws a line for the model. (The plot isn't displayed in this document, though.) If you copy and paste this code into your R console, it'll open a window with the same profvis interface that you see in this HTML document.
+
+```{r fig.show="hide", height=260}
+library(profvis)
+
+profvis({
+  data(diamonds, package = "ggplot2")
+
+  plot(price ~ carat, data = diamonds)
+  m <- lm(price ~ carat, data = diamonds)
+  abline(m, col = "red")
+})
+```
+
+On the left is the code, and on the right is a flame graph. In the flame graph, the horizontal direction represents time in milliseconds, and the vertical direction represents the call stack. Looking at the bottom-most items on the stack, most of the time, about 2 seconds, is spent in `plot`, and then a much smaller amount of time is spent in `lm`, and almost no time at all is spent in `abline` -- it doesn't even show up on the flame graph.
+
+Traveling up the stack, `plot` called `plot.formula`, which called `do.call`, and so on. Going up a few more levels, we can see that `plot.default` called a number of functions: first `deparse`, and later, `plot.xy`. Similarly, `lm` calls a number of different functions.
+
+On the left, we can see the amount of time spent on each line of code. This tells us, unsurprisingly, that most of the time is spent on the line with `plot`, and a little bit is spent on the line with `lm`.
+
+The code panel also shows memory allocation and deallocation. Interpreting this information can be a little tricky, because it does not necessarily reflect memory allocated and deallcated *at* that line of code. The sampling profiler records information about memory allocations that happen between the previous sample and the current one. This means that the allocation/deallocation values on that line may have actually occurred in a previous line of code.
+
+### Navigating profvis
+
+Profvis is interactive. You can try the following:
+
+* As you mouse over the flame graph, information about each block will show in the info box.
+* Yellow flame graph blocks have corresponding lines of code on the left. (White blocks represent code where profvis doesn't have the source code -- for example, in base R and in R packages. But see [this FAQ](#how-do-i-get-code-from-an-r-package-to-show-in-the-code-panel) if you want package code to show up in the code panel.) If you mouse over a yellow block, the corresponding line of code will be highlighted. Note that the highlighted line of code is where the yellow function is called *from*, not the content of that function.
+* If you mouse over a line of code, all flame graph blocks that were called from that line will be highlighted.
+* Click on a block or line of code to lock the current highlighting. Click on the background, or again on that same item to unlock the highlighting. Click on another item to lock on that item.
+* Use the mouse scroll wheel or trackpad's scroll gesture to zoom in or out in the x direction.
+* Click and drag on the flame graph to pan up, down, left, right.
+* Double-click on the background to zoom the x axis to its original extent.
+* Double-click on a flamegraph block to zoom the x axis the width of that block.
+
+Each *block* in the flame graph represents a call to a function, or possibly multiple calls to the same function. The width of the block is proportional to the amount of time spent in that function. When a function calls another function, another block is added on top of it in the flame graph.
+
+The profiling data has some limitations: some internal R functions don't show up in the flame graph, and it offers no insight into code that's implemented in languages other than R (e.g. C, C++, or Fortran).
+
+### How profiling data is collected
+
+Profvis uses data collected by `Rprof`, which is part of the base R distribution. At each time interval (`profvis` uses a default interval of 10ms), the profiler stops the R interpreter, looks at the current function call stack, and records it to a file. Because it works by *sampling*, the result isn't deterministic. Each time you profile your code, the result will be slightly different.
