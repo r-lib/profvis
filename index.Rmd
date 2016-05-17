@@ -32,6 +32,8 @@ To install profvis:
 install.packages("profvis")
 ```
 
+The RStudio IDE includes integrated support for profiling with profvis. These features are available in the current [Preview Release of RStudio](https://www.rstudio.com/products/rstudio/download/preview/).
+
 Below is an example of profvis in use. The code creates a scatter plot of the `diamonds` data set, which has about 54,000 rows, fits a linear model, and draws a line for the model. (The plot isn't displayed in this document, though.) If you copy and paste this code into your R console, it'll open a window with the same profvis interface that you see in this HTML document.
 
 ```{r fig.show="hide"}
@@ -46,11 +48,11 @@ profvis({
 })
 ```
 
-On the left is the code, and on the right is a flame graph. In the flame graph, the horizontal direction represents time in milliseconds, and the vertical direction represents the call stack. Looking at the bottom-most items on the stack, most of the time, about 2 seconds, is spent in `plot`, and then a much smaller amount of time is spent in `lm`, and almost no time at all is spent in `abline` -- it doesn't even show up on the flame graph.
+On top is the code, and on the bottom is a flame graph. In the flame graph, the horizontal direction represents time in milliseconds, and the vertical direction represents the call stack. Looking at the bottom-most items on the stack, most of the time, about 2 seconds, is spent in `plot`, and then a much smaller amount of time is spent in `lm`, and almost no time at all is spent in `abline` -- it doesn't even show up on the flame graph.
 
 Traveling up the stack, `plot` called `plot.formula`, which called `do.call`, and so on. Going up a few more levels, we can see that `plot.default` called a number of functions: first `deparse`, and later, `plot.xy`. Similarly, `lm` calls a number of different functions.
 
-On the left, we can see the amount of time spent on each line of code. This tells us, unsurprisingly, that most of the time is spent on the line with `plot`, and a little bit is spent on the line with `lm`.
+On top, we can see the amount of time spent on each line of code. This tells us, unsurprisingly, that most of the time is spent on the line with `plot`, and a little bit is spent on the line with `lm`.
 
 The code panel also shows memory allocation and deallocation. Interpreting this information can be a little tricky, because it does not necessarily reflect memory allocated and deallcated *at* that line of code. The sampling profiler records information about memory allocations that happen between the previous sample and the current one. This means that the allocation/deallocation values on that line may have actually occurred in a previous line of code.
 
