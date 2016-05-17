@@ -219,7 +219,12 @@ parse_rprof <- function(path = "Rprof.out", expr_source = NULL) {
 
   # Trim filenames to make output a bit easier to interpret
   prof_data$filename <- trim_filenames(prof_data$filename)
-  suppressWarnings(normpaths <- normalizePath(names(file_contents)))
+  normpaths <- normalizePath(names(file_contents), winslash = "/", mustWork = FALSE)
+  # Workaround for different behavior of normalizePath on Windows. Need to convert
+  # "C:/path/to/file/<expr>" back to just "<expr>".
+  if (.Platform$OS.type == "windows") {
+    normpaths <- sub(file.path(getwd(), "<expr>"), "<expr>", normpaths, fixed = TRUE)
+  }
   names(file_contents) <- trim_filenames(names(file_contents))
 
   # Remove srcref info from the prof_data in cases where no file is present.
