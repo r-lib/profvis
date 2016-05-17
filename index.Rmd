@@ -73,6 +73,13 @@ Each *block* in the flame graph represents a call to a function, or possibly mul
 
 The profiling data has some limitations: some internal R functions don't show up in the flame graph, and it offers no insight into code that's implemented in languages other than R (e.g. C, C++, or Fortran).
 
-### How profiling data is collected
+### The data view
+
+In addition to the flame graph view, profvis provides a *data view*, which can be seen by clicking on the Data tab. It provides a top-down tabular view of the profile. Click the **code** column to expand the call stack under investigation and the following columns to reason about resource allocation:
+
+* Memory: Memory allocated or deallocated (for negative numbers) for a given call stack. This is represented in megabytes and aggregated over all the call stacks over the code in the given row.
+* Time: Time spent in milliseconds. This field is also aggregated over all the call stacks executed over the code in the given row.
+
+## How profiling data is collected
 
 Profvis uses data collected by `Rprof`, which is part of the base R distribution. At each time interval (`profvis` uses a default interval of 10ms), the profiler stops the R interpreter, looks at the current function call stack, and records it to a file. Because it works by *sampling*, the result isn't deterministic. Each time you profile your code, the result will be slightly different.
