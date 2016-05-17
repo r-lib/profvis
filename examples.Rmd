@@ -16,8 +16,9 @@ knit_print.htmlwidget <- function(x, ...) {
   height <- knitr::opts_current$get("height")
   if (length(height) > 0 && height != FALSE)
     x$height <- height
+  else
+    x$height <- "450px"
 
-  x$x$message$split <- "v"
   htmlwidgets:::knit_print.htmlwidget(x, ...)
 }
 ```
@@ -30,7 +31,7 @@ Below are some examples of profvis in use. Keep in mind that R's sampling profil
 
 In this first example, we'll work with a data frame that has 151 columns. One of the columns contains an ID, and the other 150 columns contain numeric values. What we will do is, for each numeric column, take the mean and subtract it from the column, so that the new mean value of the column is zero.
 
-```{r, height=420}
+```{r}
 # Generate data
 times <- 4e5
 cols <- 150
@@ -58,7 +59,7 @@ We could try to speed this up in a number of ways. One possibility is that we co
 
 An obvious alternative is to use the `colMeans` function. But there's also another possibility. Data frames are implemented as lists of vectors, where each column is one vector, so we could use `lapply` or `vapply` to apply the `mean` function over each column. Let's compare the speed of these four different ways of getting column means. 
 
-```{r, height=300}
+```{r}
 profvis({
   data1 <- data
   # Four different ways of getting column means
@@ -77,7 +78,7 @@ You can also see that the faster methods also result in less memory allocation a
 
 Let's take the original code and replace `apply` with `vapply`:
 
-```{r, height=300}
+```{r}
 profvis({
   data1 <- data
   means <- vapply(data1[, names(data1) != "id"], mean, numeric(1))
@@ -92,7 +93,7 @@ Our code is about 3x faster than the original version. Most of the time is now s
 
 In this case, it's useful to take a step back and think about the broader problem. We want to normalize each column. Couldn't we we apply a function over the columns that does both steps, taking the mean and subtracting it? Because a data frame is a list, and we want to assign a list of values into the data frame, we'll need to use `lapply`.
 
-```{r, height=350}
+```{r}
 profvis({
   data1 <- data
 
@@ -117,7 +118,7 @@ This example addresses some more advanced issues. This time, it will be hard to 
 
 Suppose you have a data frame that contains a column for which you'd like to take a cumulative sum (and you don't know about R's built-in `cumsum` function). Here's one way to do it:
 
-```{r, height=300}
+```{r}
 profvis({
   data <- data.frame(value = runif(3e4))
 
@@ -147,7 +148,7 @@ Finally, many of the flame graph cells contain the entire expression from line 6
 
 This profiling data tells us that much of the time is spent in `$` and `$<-`. Maybe avoiding these functions entirely will speed things up. To do that, instead of operating on data frame columns, we can operate on temporary vectors. As it turns out, writing a function that takes a vector as input and returns a vector as output is not only convenient; it provides a natural way of creating temporary variables so that we can avoid calling `$` and `$<-` in a loop.
 
-```{r, height=320}
+```{r}
 profvis({
   csum <- function(x) {
     if (length(x) < 2) return(x)
@@ -175,7 +176,7 @@ In the `csum` function, `sum` starts as a length-1 vector, and then grows, in a 
 
 To avoid all that memory allocation, copying, and garbage collection, we can pre-allocate a correctly-sized vector for `sum`. For this data, that will result in 29,999 fewer allocations, copies, and deallocations.
 
-```{r, height=350}
+```{r}
 profvis({
   csum2 <- function(x) {
     if (length(x) < 2) return(x)

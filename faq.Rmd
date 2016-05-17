@@ -16,8 +16,9 @@ knit_print.htmlwidget <- function(x, ...) {
   height <- knitr::opts_current$get("height")
   if (length(height) > 0 && height != FALSE)
     x$height <- height
+  else
+    x$height <- "450px"
 
-  x$x$message$split <- "v"
   htmlwidgets:::knit_print.htmlwidget(x, ...)
 }
 ```
@@ -63,7 +64,7 @@ First, we'll run `make_adder(1)(10)`. The call `make_adder(1)` returns a functio
 
 Next, we'll call `make_adder(2)` but this time, we'll save the result in a variable, `adder2`. Then we'll call `adder2(10)`. When we do it this way, the profiler records that the function label is `adder2`.
 
-```{r, height=350}
+```{r, height="400px"}
 profvis({
   make_adder <- function(n) {
     function(x) {
@@ -149,8 +150,7 @@ p <- profvis({
   g <- ggplot(diamonds, aes(carat, price)) + geom_point(size = 1, alpha = 0.2)
   print(g)
 })
-p$x$message$split <- "v"
-saveRDS(p, "vignettes/ggplot2.rds")
+saveRDS(p, "ggplot2.rds")
 ```
 
 ```{r eval=FALSE}
@@ -161,7 +161,7 @@ profvis({
 })
 ```
 
-```{r echo=FALSE}
+```{r echo=FALSE, height="800px"}
 # This block loads the data from the first block and shows the correct output
 # for the readers.
 readRDS("ggplot2.rds")
@@ -184,7 +184,7 @@ p <- profvis({
 })
 p$x$message$split <- "v"
 
-saveRDS(p, "vignettes/shinyapp.rds")
+saveRDS(p, "shinyapp.rds")
 ```
 
 ```{r eval=FALSE}
@@ -195,7 +195,7 @@ profvis({
 })
 ```
 
-```{r echo=FALSE}
+```{r echo=FALSE, height="700px"}
 # This block loads the data from the first block and shows the correct output
 # for the readers.
 readRDS("shinyapp.rds")
@@ -208,7 +208,7 @@ To make the hiding work, Shiny has special functions called `..stacktraceon..` a
 
 The R profiler doesn't provide any data when R makes a system call. If, for example, you call `Sys.sleep(5)`, the R process will pause for 5 seconds, but you probably won't see any instances of `Sys.sleep` in the profvis visualization -- it won't even take any horizontal space. For these examples, we've used the `pause` function instead, which is part of the profvis package. It's similar to `Sys.sleep`, except that it does show up in the profiling data. For example:
 
-```{r, height=250}
+```{r, height="350px"}
 profvis({
   # Does not show in the flame graph
   Sys.sleep(0.25)
@@ -227,7 +227,7 @@ One of the unusual features of R as a programming language is that it has *lazy 
 
 The result of this is that sometimes the stack can look like it's in the wrong order. In this example below, we call `times_10` and `times_10_lazy`. They both call `times_5()` and `times_2()`, but the "regular" version uses an intermediate variable `y`, while the lazy version nests the calls, with `times_2(times_5(x))`.
 
-```{r, height=350}
+```{r}
 profvis({
   times_5 <- function(x) {
     pause(0.5)
@@ -266,7 +266,7 @@ Keep in mind that lazy evaluation may result in counterintuitive results in the 
 
 In some cases, multi-line expressions will report that the first line of the expression is the one that takes all the time. In the example below, there are two `for` loops: one with curly braces, and one without. In the loop with curly braces, it reports that line 3, containing the `pause` is the one that takes all the time. In the loop without curly braces, it reports that line 6, containing `for`, is the one that takes all the time, even though the time is really spent on line 7, with the `pause`.
 
-```{r, height=250}
+```{r, height="350px"}
 profvis({
   for (i in 1:3) {
     pause(0.1)
