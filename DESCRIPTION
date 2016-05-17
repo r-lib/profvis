@@ -1,5 +1,5 @@
 Package: profvis
-Title: Visualize profiling data
+Title: Interactive Visualizations for Profiling R Code
 Version: 0.2.8
 Authors@R: c(
     person("Chang", "Winston", email = "winston@rstudio.com", role = c("aut", "cre")),
@@ -23,6 +23,5 @@ Suggests:
     ggplot2,
     rmarkdown,
     testthat
-VignetteBuilder: knitr
 RoxygenNote: 5.0.1
 URL: https://rstudio.github.io/profvis/
