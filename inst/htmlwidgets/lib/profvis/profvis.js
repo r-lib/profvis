@@ -199,9 +199,13 @@ profvis = (function() {
       }
     }
 
+    function roundOneDecimalNum(number, decimals) {
+      return parseFloat(Math.round(number * 100) / 100);
+    }
+
     function roundOneDecimal(number, decimals) {
       if (!number) return 0;
-      return parseFloat(Math.round(number * 100) / 100).toFixed(1);
+      return roundOneDecimalNum(number).toFixed(1);
     }
 
     // Generate the code table ----------------------------------------
@@ -269,7 +273,7 @@ profvis = (function() {
         .attr("class", "table-memory memory")
         .attr("title", "Memory deallocation (MB)")
         .attr("data-pseudo-content",
-              function(d) { return roundOneDecimal(d.sumMemDealloc) !== 0 ? roundOneDecimal(d.sumMemDealloc) : ""; });
+              function(d) { return roundOneDecimalNum(d.sumMemDealloc) !== 0 ? roundOneDecimal(d.sumMemDealloc) : ""; });
 
       rows.append("td")
         .attr("class", "table-memory membar-left-cell")
@@ -280,7 +284,7 @@ profvis = (function() {
             var p = Math.min(Math.abs(Math.min(Math.round(d.propMemDealloc * 100), 0)), 100);
 
             // 8% is the minimal size that looks visually appealing while drawing an almost empty bar
-            p = roundOneDecimal(d.sumMemDealloc) !== 0 ? Math.max(p, 8) : 0;
+            p = roundOneDecimalNum(d.sumMemDealloc) !== 0 ? Math.max(p, 8) : 0;
             return p + "%";
           })
           // Add the equivalent of &nbsp; to be added with CSS content
@@ -295,7 +299,7 @@ profvis = (function() {
             var p = Math.min(Math.max(Math.round(d.propMemAlloc * 100), 0), 100);
 
             // 4% is the minimal size that looks visually appealing while drawing an almost empty bar
-            p = roundOneDecimal(d.sumMemAlloc) !== 0 ? Math.max(p, 4) : 0;
+            p = roundOneDecimalNum(d.sumMemAlloc) !== 0 ? Math.max(p, 4) : 0;
             return p + "%";
           })
           // Add the equivalent of &nbsp; to be added with CSS content
@@ -305,7 +309,7 @@ profvis = (function() {
         .attr("class", "table-memory memory memory-right")
         .attr("title", "Memory allocation (MB)")
         .attr("data-pseudo-content",
-              function(d) { return roundOneDecimal(d.sumMemAlloc) !== 0 ? roundOneDecimal(d.sumMemAlloc) : ""; });
+              function(d) { return roundOneDecimalNum(d.sumMemAlloc) !== 0 ? roundOneDecimal(d.sumMemAlloc) : ""; });
 
       rows.append("td")
         .attr("class", "time")
