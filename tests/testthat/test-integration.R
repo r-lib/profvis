@@ -5,7 +5,7 @@ test_that("description file has compatible fields", {
   # Therefore, worth validating the DESCRIPTION field is backwards compatiable for
   # them to build against older versions of R.
 
-  descriptionFile <- yaml::yaml.load_file(file.path("..", "..", "DESCRIPTION"))
+  descriptionFile <- yaml::yaml.load_file(system.file(package = "profvis", "DESCRIPTION"))
 
   expect_false(identical(descriptionFile[["Author"]], NULL))
   expect_false(identical(descriptionFile[["Maintainer"]], NULL))
