@@ -598,12 +598,12 @@ table.profvis-table .membar-right-cell > .membar {
   text-align: left;
 }
 
-.profvis-treetable .expand > div {
+.profvis-treetable .treetable-expand > div {
 	display: inline-block;
 	width: 15px;
 }
 
-.profvis-treetable .expand > div > div{
+.profvis-treetable .treetable-expand > div > div{
   width: 0px;
   height: 0px;
   margin-left: 3px;
@@ -613,12 +613,12 @@ table.profvis-table .membar-right-cell > .membar {
 	border-bottom: 4px solid transparent;
 }
 
-.profvis-treetable .collapse > div {
+.profvis-treetable .treetable-collapse > div {
 	display: inline-block;
 	width: 15px;
 }
 
-.profvis-treetable .collapse > div > div {
+.profvis-treetable .treetable-collapse > div > div {
   width: 0px;
   height: 0px;
   margin-left: 3px;

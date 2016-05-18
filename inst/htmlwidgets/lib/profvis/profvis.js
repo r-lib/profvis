@@ -1476,7 +1476,7 @@ profvis = (function() {
 
             var collapsedClass = "";
             if (d.canExpand)
-              collapsedClass = d.collapsed === undefined ? "expand" : d.collapsed ? "expand" : "collapse";
+              collapsedClass = d.collapsed === undefined ? "treetable-expand" : d.collapsed ? "treetable-expand" : "treetable-collapse";
 
             return "code-label " + (d.canExpand ? "label-pointer " + collapsedClass : "");
           });
