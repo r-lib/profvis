@@ -7,6 +7,8 @@ navbar:
       href: index.html
     - text: "Examples"
       href: examples.html
+    - text: "RStudio"
+      href: rstudio.html
     - text: "FAQ"
       href: faq.html
   right:
