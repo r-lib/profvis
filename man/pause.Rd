@@ -15,4 +15,9 @@ This function pauses an R process for some amount of time. It differs from
 profiler data. Another difference is that \code{pause} uses up 100% of a CPU,
 whereas \code{Sys.sleep} does not.
 }
+\examples{
+# Wait for 0.5 seconds
+pause(0.5)
+
+}
 
