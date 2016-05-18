@@ -277,7 +277,9 @@ profvis = (function() {
           .attr("class", "membar")
           .attr("title", percentMemTooltip)
           .style("width", function(d) {
-            return Math.min(Math.abs(Math.min(Math.round(d.propMemDealloc * 100), 0)), 100) + "%";
+            var p = Math.min(Math.abs(Math.min(Math.round(d.propMemDealloc * 100), 0)), 100);
+            p = roundOneDecimal(d.sumMemDealloc) !== 0) ? Math.max(p, 1) : 0;
+            return p + "%";
           })
           // Add the equivalent of &nbsp; to be added with CSS content
           .attr("data-pseudo-content", "\u00a0");
@@ -288,7 +290,9 @@ profvis = (function() {
           .attr("class", "membar")
           .attr("title", percentMemTooltip)
           .style("width", function(d) {
-            return Math.min(Math.max(Math.round(d.propMemAlloc * 100), 0), 100) + "%";
+            var p = Math.min(Math.max(Math.round(d.propMemAlloc * 100), 0), 100);
+            p = roundOneDecimal(d.sumMemAlloc) !== 0 ? Math.max(p, 1) : 0;
+            return p + "%";
           })
           // Add the equivalent of &nbsp; to be added with CSS content
           .attr("data-pseudo-content", "\u00a0");
