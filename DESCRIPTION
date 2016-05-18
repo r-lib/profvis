@@ -1,6 +1,6 @@
 Package: profvis
 Title: Interactive Visualizations for Profiling R Code
-Version: 0.3.0
+Version: 0.3.1
 Authors@R: c(
     person("Chang", "Winston", email = "winston@rstudio.com", role = c("aut", "cre")),
     person("Luraschi", "Javier", email = "javier@rstudio.com", role = "aut"),
