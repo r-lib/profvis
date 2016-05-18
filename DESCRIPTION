@@ -11,8 +11,6 @@ Authors@R: c(
     person(family = "D3 contributors", role = "ctb", comment = "D3 library"),
     person("Ivan", "Sagalaev", role = c("ctb", "cph"), comment = "highlight.js library")
     )
-Author: Winston Chang
-Maintainer: Winston Chang <winston@rstudio.com>
 Description: Interactive visualizations for profiling R code.
 Depends:
     R (>= 3.0)
