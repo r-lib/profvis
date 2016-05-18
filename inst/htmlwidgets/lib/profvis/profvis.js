@@ -200,7 +200,7 @@ profvis = (function() {
     }
 
     function roundOneDecimalNum(number, decimals) {
-      return Math.round(number * 100) / 100;
+      return Math.round(number * 10) / 10;
     }
 
     function roundOneDecimal(number, decimals) {
