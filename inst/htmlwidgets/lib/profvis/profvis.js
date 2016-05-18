@@ -278,7 +278,9 @@ profvis = (function() {
           .attr("title", percentMemTooltip)
           .style("width", function(d) {
             var p = Math.min(Math.abs(Math.min(Math.round(d.propMemDealloc * 100), 0)), 100);
-            p = roundOneDecimal(d.sumMemDealloc) !== 0) ? Math.max(p, 1) : 0;
+
+            // 8% is the minimal size that looks visually appealing while drawing an almost empty bar
+            p = roundOneDecimal(d.sumMemDealloc) !== 0 ? Math.max(p, 8) : 0;
             return p + "%";
           })
           // Add the equivalent of &nbsp; to be added with CSS content
@@ -291,7 +293,9 @@ profvis = (function() {
           .attr("title", percentMemTooltip)
           .style("width", function(d) {
             var p = Math.min(Math.max(Math.round(d.propMemAlloc * 100), 0), 100);
-            p = roundOneDecimal(d.sumMemAlloc) !== 0 ? Math.max(p, 1) : 0;
+
+            // 4% is the minimal size that looks visually appealing while drawing an almost empty bar
+            p = roundOneDecimal(d.sumMemAlloc) !== 0 ? Math.max(p, 4) : 0;
             return p + "%";
           })
           // Add the equivalent of &nbsp; to be added with CSS content
