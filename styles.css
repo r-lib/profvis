@@ -9,3 +9,9 @@ img {
   margin-top: 5px;
   margin-bottom: 15px;
 }
+
+#overview-image {
+  border: none;
+  box-shadow: none;
+  margin-left: 15px;
+}
