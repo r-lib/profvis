@@ -220,7 +220,7 @@ profvis({
 
 Your Shiny application will launch, and after interacting and closing the app a profile will be generated.
 
-[]: profvis.gif
+![](profvis-shiny-demo.gif)
 
 ```{r,echo=FALSE}
 # This block loads the data from the first block and shows the correct output
@@ -231,6 +231,6 @@ readRDS("shinyapp.rds")
 
 
 
-The profile for Shiny applications automatically hides functions that Shiny runs behind the scenes. More information is available in the [FAQ](). The profile automatically colors outputs in blue. In this example, you can identify each time `output$plot` was called to re-create the plot.
+The profile for Shiny applications automatically hides functions that Shiny runs behind the scenes. More information is available in the [FAQ](http://rstudio.github.io/profvis/faq.html#why-does-the-flame-graph-hide-some-function-calls-for-shiny-apps). The profile automatically colors outputs in blue. In this example, you can identify each time `output$plot` was called to re-create the plot.
 
 Profiling a Shiny application is particularly helpful for understanding reactive dependencies. For more information, checkout this [video](https://www.rstudio.com/resources/videos/profiling-and-performance/).
