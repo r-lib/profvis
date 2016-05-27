@@ -197,13 +197,13 @@ This version of the code, with `csum2`, is around 60x faster than our original c
 
 ### Example 3 - Profiling a Shiny Application
 
-In addition to R code, you can also profile [Shiny](shiny.rstudio.com) applications. To do this, simply execute the `runApp()` command inside of `profvis`. For instance, we can run one of shiny's default examples using the `runExample` command (which is a wrapper for `runApp`).
+In addition to R code, you can also profile [Shiny](http://shiny.rstudio.com) applications. To do this, simply execute the `runApp()` command inside of `profvis`. For instance, we can run one of shiny's built-in examples using the `runExample` command (which is a wrapper for `runApp`).
 
 ```{r,eval=FALSE, echo=FALSE}
 #This code block is what we run, it must be manually run each time
 library(shiny)
 p<-profvis({
-  runExample(example = '06_tabsets', display.mode ="normal")
+  runExample(example = "06_tabsets", display.mode = "normal")
 })
 saveRDS(p, "shinyapp.rds")
 
@@ -213,7 +213,7 @@ saveRDS(p, "shinyapp.rds")
 ```{r,eval=FALSE}
 library(shiny)
 profvis({
-  runExample(example = '06_tabsets', display.mode ="normal")
+  runExample(example = "06_tabsets", display.mode = "normal")
 })
 ```
 
