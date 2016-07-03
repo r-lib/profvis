@@ -43,6 +43,8 @@ parse_rprof <- function(path = "Rprof.out", expr_source = NULL) {
     mem_data <- gsub("^:(\\d+:\\d+:\\d+:\\d+):.*", "\\1", prof_data)
     mem_data <- str_split(mem_data, ":")
     prof_data <- gsub("^:\\d+:\\d+:\\d+:\\d+:", "\\1", prof_data)
+  } else {
+    mem_data <- rep(NA_character_, length(prof_data))
   }
 
   # Convert frames with srcrefs from:
