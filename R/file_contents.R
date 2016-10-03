@@ -39,9 +39,14 @@ extract_source_from_srcref <- function(filename, srcref_cache) {
 
   # If it's not already cached, add it.
   if (is.null(srcref_cache[[filename]])) {
-    # Name of package containing filename
+    # Name of package containing filename.
     pkg <- sub(".*/([^/]+)/R/[^/]+", "\\1", filename)
-    load_pkg_into_cache(pkg, srcref_cache)
+
+    # We may have mis-inferred the package name. Attempt to
+    # load the package's namespace; if that succeeds then we
+    # can cache the package's srcrefs.
+    if (requireNamespace(pkg, quietly = TRUE))
+      load_pkg_into_cache(pkg, srcref_cache)
   }
 
   srcref_cache[[filename]]
