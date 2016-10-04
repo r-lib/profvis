@@ -40,13 +40,14 @@ extract_source_from_srcref <- function(filename, srcref_cache) {
   # If it's not already cached, add it.
   if (is.null(srcref_cache[[filename]])) {
     # Name of package containing filename.
-    pkg <- sub(".*/([^/]+)/R/[^/]+", "\\1", filename)
+    pkgdir <- sub(".*/([^/]+)/R/[^/]+", "\\1", filename)
 
-    # We may have mis-inferred the package name. Attempt to
-    # load the package's namespace; if that succeeds then we
-    # can cache the package's srcrefs.
-    if (requireNamespace(pkg, quietly = TRUE))
-      load_pkg_into_cache(pkg, srcref_cache)
+    # Try to infer the package name from the package directory.
+    pkg <- infer_package_name(pkgdir)
+    if (is.null(pkg)) {
+      return(NULL)
+    }
+    load_pkg_into_cache(pkg, srcref_cache)
   }
 
   srcref_cache[[filename]]
@@ -113,4 +114,63 @@ load_pkg_into_cache <- function(pkg, srcref_cache) {
 
   file_contents <- full_src_to_file_contents(src)
   list2env(file_contents, envir = srcref_cache)
+}
+
+
+# Given a string like "webshot" or "wch-webshot-d5979a2", try to infer the name
+# of the package. `devtools::install_github()` will result in names like
+# "wch-webshot-d5979a2", but downloading a zip file from GitHub's web interface
+# will result in "webshot-master" or "webshot-feature-branch". So the possible
+# formats include: "xxx-pkgname-yyy", "pkgname-xxx-yyy", and "pkgname-xxx", and
+# possibly others. After guessing what the name is, this function checks that a
+# package by that name is installed. If so, it will return it. If this function
+# can't infer the name (a package must be installed with the inferred name), it
+# returns NULL.
+infer_package_name <- function(str) {
+  parts <- strsplit(str, "-", fixed = TRUE)[[1]]
+
+  # str was something like "webshot".
+  if (length(parts) == 1) {
+    if (is_installed(str)) {
+      return(str)
+    } else {
+      message("Unable to infer package name from directory named '", str, "'")
+      return(NULL)
+    }
+  }
+
+  # If there's a single "-", the format is probably "pkgname-xxx", though we'll
+  # try "xxx-pkgname" also.
+  if (length(parts) == 2) {
+    if (is_installed(parts[1])) {
+      return(parts[1])
+    } else if (is_installed(parts[2])) {
+      return(parts[2])
+    } else {
+      message("Unable to infer package name from directory named '", str, "'")
+      return(NULL)
+    }
+  }
+
+  # If there are two "-", then the format could be "xxx-pkgname-yyy" or
+  # "pkgname-xxx-yyy". The first is most likely (because devtools uses it), so
+  # we'll try it first.
+  if (length(parts) == 3) {
+    if (is_installed(parts[2]))
+      return(parts[2])
+
+    if (is_installed(parts[1]))
+      return(parts[1])
+  }
+
+  # None of the above matched, so it could be "xxx-yyy-pkgname", or there could
+  # be more parts. We'll just try each piece.
+  for (i in seq(3, length(parts))) {
+    if (is_installed(parts[i]))
+      return(parts[i])
+  }
+
+  # If we got here, nothing worked.
+  message("Unable to infer package name from directory named '", str, "'")
+  NULL
 }
