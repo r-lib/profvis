@@ -6,12 +6,37 @@ get_file_contents <- function(filenames, expr_source) {
   srcfile_cache[["<expr>"]] <- expr_source
 
   file_contents <- lapply(filenames, function(filename) {
-    srcfile_cache[[filename]]
+    fetch_cached(filename, srcfile_cache)
   })
 
   drop_nulls(file_contents)
 }
 
+# Fetch a file from the cache, if present. If not already present, read the file
+# from disk and add it to the cache.
+fetch_cached <- function(filename, srcfile_cache) {
+  # If in the cache, simply return it
+  if (!is.null(srcfile_cache[[filename]])) {
+    return(srcfile_cache[[filename]])
+  }
+
+  # If not in the cache, try to read the file
+  filehandle <- tryCatch(
+    file(filename, 'rb'),
+    error = function(e) NULL,
+    warning = function(e) NULL
+  )
+  # If we can't read file, give up
+  if (is.null(filehandle)) {
+    return(NULL)
+  }
+  on.exit( close(filehandle) )
+
+  # Add it to the cache
+  srcfile_cache[[filename]] <- readChar(filename, file.info(filename)$size,
+                                        useBytes = TRUE)
+  srcfile_cache[[filename]]
+}
 
 build_srcfile_cache <- function(pkgs = loadedNamespaces()) {
   srcfile_cache <- new.env(parent = emptyenv())
