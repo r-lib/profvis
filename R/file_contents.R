@@ -93,7 +93,7 @@ get_pkg_srcrefs <- function(pkg) {
   for (name in ns_names) {
     x <- ns_env[[name]]
     if (is.function(x)) {
-      srcref <- getSrcref(x)
+      srcref <- utils::getSrcref(x)
 
       # If any function lacks source refs, then no functions in the package will
       # have them. Quit early to save time.
@@ -129,34 +129,4 @@ get_pkg_srcrefs <- function(pkg) {
   }
 
   files
-}
-
-
-# Looks at all loaded namespaces, and returns a data frame that has mappings
-# between filenames and the package they belong to.
-package_map <- function(loaded_ns = loadedNamespaces()) {
-
-  # Helper to extract captures
-  regcaptures <- function(x, m) {
-    ind <- !is.na(m) & m > -1L
-    so <- attr(m, "capture.start")[ind]
-    eo <- so + attr(m, "capture.length")[ind] - 1L
-    substring(x[ind], so, eo)
-  }
-
-  res <- lapply(loaded_ns, function(ns) {
-    src_lines <- extract_source_from_namespace(ns)
-
-    if (!is.null(src_lines)) {
-      # Find and extract the line directives
-      m <- regexpr("^#line \\d+ \"(.*)\"$", src_lines, perl = TRUE)
-      regcaptures(src_lines, m)
-    }
-  })
-
-  data.frame(
-    filename = unlist(res),
-    package = rep(loaded_ns, times = lengths(res)),
-    stringsAsFactors = FALSE
-  )
 }

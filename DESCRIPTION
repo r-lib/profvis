@@ -22,6 +22,7 @@ Suggests:
     knitr,
     ggplot2,
     rmarkdown,
-    testthat
+    testthat,
+    devtools
 RoxygenNote: 5.0.1
 URL: https://rstudio.github.io/profvis/

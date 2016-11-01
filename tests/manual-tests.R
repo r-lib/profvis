@@ -30,10 +30,14 @@ if (interactive()) {
 
 
   # Directories in source file path are not exactly the same as the package
-  # name.
-  devtools::install_github("csgillespie/efficient",
-    args = "--with-keep.source", force = TRUE)
-  profvis::profvis({efficient::simulate_monopoly(100)})
+  # name. For example, a file name might be "tidyverse-ggplot2-9f7b08c/R/plot.r"
+  devtools::install_github("tidyverse/ggplot2", args = "--with-keep.source",
+    force = TRUE)
+  library(ggplot2)
+  profvis({
+    g <- ggplot(mtcars, aes(wt, mpg)) + geom_point()
+    print(g)
+  })
 
 
   # Should show source for files loaded with load_all()
@@ -42,6 +46,5 @@ if (interactive()) {
     g <- ggplot(mtcars, aes(wt, mpg)) + geom_point()
     print(g)
   })
-
 
 }
