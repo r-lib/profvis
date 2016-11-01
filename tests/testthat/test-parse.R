@@ -10,7 +10,7 @@ test_that("parsing prof files", {
   # ":"
   #
   # (The last line is empty)
-  p <- parse_rprof("test-parse.prof", expr_source = "line 1\nline 2")
+  p <- parse_rprof(test_path("test-parse.prof"), expr_source = "line 1\nline 2")
 
   expect_identical(p$prof$time, c(1L, 2L, 2L, 3L, 3L, 3L, 4L, 4L, 5L))
   expect_identical(p$prof$depth, c(1L, 2L, 1L, 3L, 2L, 1L, 2L, 1L, 1L))
