@@ -20,6 +20,13 @@ fetch_cached <- function(filename, srcfile_cache) {
     return(srcfile_cache[[filename]])
   }
 
+  # Exit if file doesn't exist locally. In some cases (e.g. a URL like
+  # "http://xyz.com/" ) the `file()` call below can return a filehandle even
+  # when the file is not local, and then it will error when `readChar()` is
+  # called on the file. See https://github.com/rstudio/profvis/issues/73
+  if (!file.exists(filename))
+    return(NULL)
+
   # If not in the cache, try to read the file
   filehandle <- tryCatch(
     file(filename, 'rb'),
