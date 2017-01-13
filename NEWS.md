@@ -1,4 +1,4 @@
-profvis 0.3.2.9000
+profvis 0.3.3
 ==================
 
 * Fixed [#68](https://github.com/rstudio/profvis/issues/68): Profvis threw an error when a package was installed using `devtools::install_github(args = "--with-keep.source")`.
