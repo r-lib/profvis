@@ -1,6 +1,6 @@
 dependencies:
   - name: jquery
-    version: 1.11.3
+    version: 1.12.4
     src: "htmlwidgets/lib/jquery"
     script:
       - jquery.min.js
