@@ -1647,8 +1647,14 @@ profvis = (function() {
             childrenSum.push(nameMap[label]);
           }
 
+          // Sort by time descending
+          childrenSum.sort(function(a, b) { return b.sumTime - a.sumTime });
           return childrenSum;
         };
+
+        function addToNodesAt(c, i) {
+          nodes.splice(i, 0, c);
+        }
 
         var id = 0;
         while (nodes.length > 0) {
@@ -1658,9 +1664,9 @@ profvis = (function() {
           id = id + 1;
 
           node.sumChildren = aggregateChildren(node);
-          node.sumChildren.forEach(function(c) {
-            nodes.unshift(c);
-          });
+
+          // Processing in order is important to preserve order of IDs!
+          node.sumChildren.forEach(addToNodesAt);
         }
 
         return head.sumChildren;
