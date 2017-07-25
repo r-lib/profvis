@@ -1408,74 +1408,76 @@ profvis = (function() {
         return collapsed ? "none" : "";
       }
 
+      function toggleTreeNode(d) {
+        if (!d.canExpand)
+          return;
+
+        var collapsed = d.collapsed;
+        if (collapsed === undefined) {
+          // Create a copy since we might insert the same node twice: once
+          // for the normal leaf the other one for a collapsed node.
+          var sumChildren = d.sumChildren.map(function(x) {
+            return jQuery.extend({}, x);
+          });
+
+          var childNodes = sumChildren.filter(function(x) {
+            return x.depthCollapsed !== null;
+          });
+
+          childNodes.forEach(function(x) {
+            x.isInternal = d.isInternal ? d.isInternal : false;
+            x.isDescendant = d.isDescendant ? d.isDescendant : false;
+          });
+
+          var internalChildNodes = sumChildren.filter(function(x) {
+            return x.depthCollapsed === null;
+          });
+
+          internalChildNodes.forEach(function(x) {
+            x.isInternal = true;
+            x.isDescendant = false;
+          });
+
+          var notInternalDescendantNodes = [];
+          if (!d.isInternal) {
+            notInternalDescendantNodes = allTopNodes(internalChildNodes, function(x) {
+              return x.depthCollapsed !== null && d.depth < x.depth;
+            });
+          }
+
+          notInternalDescendantNodes.forEach(function(x) {
+            x.isInternal = false;
+            x.isDescendant = true;
+          });
+
+          childNodes = childNodes.concat(internalChildNodes);
+          childNodes = childNodes.concat(notInternalDescendantNodes);
+
+          childNodes.forEach(function(n) {
+            n.visualDepth = d.visualDepth + 1;
+            n.parent = d;
+          });
+
+          vis.profTable = vis.profTable.concat(childNodes);
+          d.collapsed = false;
+        }
+        else if (collapsed) {
+          d.collapsed = false;
+        }
+        else {
+          d.collapsed = true;
+        }
+
+        updateRows();
+      }
+
       function updateLabelCells(labelCell) {
         labelCell
           .attr("nowrap", "true")
           .style("padding-left", function(d) {
             return (8 + 15 * (d.visualDepth - 1)) + "px";
           })
-          .on("click", function(d) {
-            if (!d.canExpand)
-              return;
-
-            var collapsed = d.collapsed;
-            if (collapsed === undefined) {
-              // Create a copy since we might insert the same node twice: once
-              // for the normal leaf the other one for a collapsed node.
-              var sumChildren = d.sumChildren.map(function(x) {
-                return jQuery.extend({}, x);
-              });
-
-              var childNodes = sumChildren.filter(function(x) {
-                return x.depthCollapsed !== null;
-              });
-
-              childNodes.forEach(function(x) {
-                x.isInternal = d.isInternal ? d.isInternal : false;
-                x.isDescendant = d.isDescendant ? d.isDescendant : false;
-              });
-
-              var internalChildNodes = sumChildren.filter(function(x) {
-                return x.depthCollapsed === null;
-              });
-
-              internalChildNodes.forEach(function(x) {
-                x.isInternal = true;
-                x.isDescendant = false;
-              });
-
-              var notInternalDescendantNodes = [];
-              if (!d.isInternal) {
-                notInternalDescendantNodes = allTopNodes(internalChildNodes, function(x) {
-                  return x.depthCollapsed !== null && d.depth < x.depth;
-                });
-              }
-
-              notInternalDescendantNodes.forEach(function(x) {
-                x.isInternal = false;
-                x.isDescendant = true;
-              });
-
-              childNodes = childNodes.concat(internalChildNodes);
-              childNodes = childNodes.concat(notInternalDescendantNodes);
-
-              childNodes.forEach(function(n) {
-                n.visualDepth = d.visualDepth + 1;
-                n.parent = d;
-              });
-
-              vis.profTable = vis.profTable.concat(childNodes);
-              d.collapsed = false;
-            }
-            else if (collapsed) {
-              d.collapsed = false;
-            }
-            else {
-              d.collapsed = true;
-            }
-
-            updateRows();
-          })
+          .on("click", toggleTreeNode)
           .attr("class", function(d) {
             d.canExpand = false;
             if (d.sumChildren) {
