@@ -1460,15 +1460,16 @@ profvis = (function() {
 
           vis.profTable = vis.profTable.concat(childNodes);
           d.collapsed = false;
-        }
-        else if (collapsed) {
-          d.collapsed = false;
+
+          updateRows();
+
+          // Nodes are sorted "heaviest first"
+          if (childNodes.length > 0) toggleTreeNode(childNodes[0]);
         }
         else {
-          d.collapsed = true;
+          d.collapsed = !collapsed;
+          updateRows();
         }
-
-        updateRows();
       }
 
       function updateLabelCells(labelCell) {
@@ -1684,6 +1685,7 @@ profvis = (function() {
       });
 
       updateRows();
+      if (vis.profTable.length > 0) toggleTreeNode(vis.profTable[0]);
 
       return {
         el: el,
