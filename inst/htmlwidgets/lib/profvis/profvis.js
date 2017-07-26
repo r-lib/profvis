@@ -1464,7 +1464,7 @@ profvis = (function() {
           updateRows();
 
           // Nodes are sorted "heaviest first"
-          if (childNodes.length > 0) toggleTreeNode(childNodes[0]);
+          if (childNodes.length == 1) toggleTreeNode(childNodes[0]);
         }
         else {
           d.collapsed = !collapsed;
