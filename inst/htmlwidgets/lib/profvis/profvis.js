@@ -1685,7 +1685,6 @@ profvis = (function() {
       });
 
       updateRows();
-      if (vis.profTable.length > 0) toggleTreeNode(vis.profTable[0]);
 
       return {
         el: el,
