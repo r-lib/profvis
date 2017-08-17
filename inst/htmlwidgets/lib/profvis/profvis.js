@@ -1619,24 +1619,24 @@ profvis = (function() {
             var nameMapEntry = nameMap[c.label];
             if (!nameMapEntry) {
               nameMapEntry = jQuery.extend({}, c);
-              nameMapEntry.sumTime = c.endTime - c.startTime;
+              nameMapEntry.sumTime     = c.endTime - c.startTime;
               nameMapEntry.sumChildren = [];
-              nameMapEntry.children = [];
-              nameMapEntry.parent = node;
-              nameMapEntry.sumCount = 1;
+              nameMapEntry.children    = [];
+              nameMapEntry.parent      = node;
+              nameMapEntry.sumCount    = 1;
             }
             else {
-              nameMapEntry.sumMem = nameMapEntry.sumMem + c.sumMem;
+              nameMapEntry.sumMem        = nameMapEntry.sumMem        + c.sumMem;
               nameMapEntry.sumMemDealloc = nameMapEntry.sumMemDealloc + c.sumMemDealloc;
-              nameMapEntry.sumMemAlloc = nameMapEntry.sumMemAlloc + c.sumMemAlloc;
-              nameMapEntry.sumTime = nameMapEntry.sumTime + (c.endTime - c.startTime);
-              nameMapEntry.sumCount = nameMapEntry.sumCount + 1;
+              nameMapEntry.sumMemAlloc   = nameMapEntry.sumMemAlloc   + c.sumMemAlloc;
+              nameMapEntry.sumTime       = nameMapEntry.sumTime       + (c.endTime - c.startTime);
+              nameMapEntry.sumCount      = nameMapEntry.sumCount      + 1;
             }
 
-            nameMapEntry.propMem = nameMapEntry.sumMem / vis.totalMem;
+            nameMapEntry.propMem        = nameMapEntry.sumMem        / vis.totalMem;
             nameMapEntry.propMemDealloc = nameMapEntry.sumMemDealloc / vis.totalMem;
-            nameMapEntry.propMemAlloc = nameMapEntry.sumMemAlloc / vis.totalMem;
-            nameMapEntry.propTime = nameMapEntry.sumTime / vis.totalTime;
+            nameMapEntry.propMemAlloc   = nameMapEntry.sumMemAlloc   / vis.totalMem;
+            nameMapEntry.propTime       = nameMapEntry.sumTime       / vis.totalTime;
 
             c.children.forEach(function(e) {
               nameMapEntry.children.push(e);
