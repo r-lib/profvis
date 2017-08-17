@@ -1483,9 +1483,10 @@ profvis = (function() {
             d.canExpand = false;
             if (d.sumChildren) {
               d.sumChildren.forEach(function(c) {
-                if (c.sumChildren.length > 0)
+                if (c.sumChildren.length > 0) {
                   if (!vis.hideInternals || oneNode(c, function(c1) { return c1.depthCollapsed !== null; }))
                     d.canExpand = true;
+                }
               });
             }
 
@@ -1518,7 +1519,7 @@ profvis = (function() {
             if (vis.hideInternals && d.depthCollapsed === null)
               return false;
 
-            return d.sumChildren.length > 0;
+            return true;
           })
           .on("click", function(d) {
             table.selectAll("tr")
