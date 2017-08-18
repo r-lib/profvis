@@ -1,6 +1,8 @@
 profvis 0.3.3.9000
 ==================
 
+Fixed [#86](https://github.com/rstudio/profvis/issues/86): In the data pane, toggling between horizontal/vertical view caused the flame graph to render on top of the tree view.
+
 Fixed [#84](https://github.com/rstudio/profvis/issues/84): In the data pane, leaf nodes (representing top-most calls on the stack) were not displayed.
 
 Addressed [#82](https://github.com/rstudio/profvis/issues/82): In the data pane, if a node has exactly one child, that child will automatically be expanded. This makes it more efficient to explore the data. ([#83](https://github.com/rstudio/profvis/pull/83))

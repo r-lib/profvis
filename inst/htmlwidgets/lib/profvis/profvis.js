@@ -2076,8 +2076,11 @@ profvis = (function() {
       {
         case "split": {
           vis.splitDir = checked ? "h" : "v";
-          initResizing();
-          vis.flameGraph.onResize();
+          // Check that flame graph is visible
+          if ($.inArray(vis.flameGraph, vis.activeViews) !== -1) {
+            initResizing();
+            vis.flameGraph.onResize();
+          }
           break;
         }
         case "internals": {
