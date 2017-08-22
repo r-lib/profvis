@@ -9,6 +9,12 @@ get_file_contents <- function(filenames, expr_source) {
     fetch_cached(filename, srcfile_cache)
   })
 
+  # If there's an <expr> entry, put it first.
+  if ("<expr>" %in% names(file_contents)) {
+    expr_idx <- (names(file_contents) == "<expr>")
+    file_contents <- c(file_contents[expr_idx], file_contents[!expr_idx])
+  }
+
   drop_nulls(file_contents)
 }
 

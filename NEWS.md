@@ -1,6 +1,8 @@
 profvis 0.3.3.9000
 ==================
 
+* Fixed [#77](https://github.com/rstudio/profvis/issues/77): The contents of `<expr>` are now always listed first.
+
 * Addressed [#85](https://github.com/rstudio/profvis/issues/85): The `pause()` function is now implemented in C, which reduces the amount of data generated.
 
 * Fixed [#86](https://github.com/rstudio/profvis/issues/86): In the data pane, toggling between horizontal/vertical view caused the flame graph to render on top of the tree view.
