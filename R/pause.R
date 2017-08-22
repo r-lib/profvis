@@ -10,13 +10,8 @@
 #' pause(0.5)
 #'
 #' @param seconds Number of seconds to pause.
+#' @useDynLib profvis, .registration = TRUE, .fixes = "c_"
 #' @export
 pause <- function(seconds) {
-  # Hide stuff inside of pause by default in flamegraph view
-  ..stacktraceoff..({
-    # Coerce time to numeric so that we have a nicer stack trace in the profiler
-    end <- as.numeric(Sys.time() + seconds)
-    while (as.numeric(Sys.time()) < end) {
-    }
-  })
+  .Call(c_profvis_pause, as.numeric(seconds))
 }
