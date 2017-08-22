@@ -16,4 +16,3 @@ renderProfvis(expr, env = parent.frame(), quoted = FALSE)
 \description{
 Widget render function for use in Shiny
 }
-

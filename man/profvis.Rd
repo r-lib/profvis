@@ -90,4 +90,3 @@ browseURL("profile.html")
 \code{\link{Rprof}} for more information about how the profiling
   data is collected.
 }
-

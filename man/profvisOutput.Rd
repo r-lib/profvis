@@ -16,4 +16,3 @@ profvisOutput(outputId, width = "100\%", height = "600px")
 \description{
 Widget output function for use in Shiny
 }
-

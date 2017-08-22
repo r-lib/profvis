@@ -22,4 +22,3 @@ split bar.}
 \description{
 Print a profvis object
 }
-

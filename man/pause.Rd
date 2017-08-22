@@ -20,4 +20,3 @@ whereas \code{Sys.sleep} does not.
 pause(0.5)
 
 }
-
