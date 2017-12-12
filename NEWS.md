@@ -1,5 +1,5 @@
-profvis 0.3.3.9000
-==================
+profvis 0.3.4
+=============
 
 * Fixed [#77](https://github.com/rstudio/profvis/issues/77): The contents of `<expr>` are now always listed first.
 
