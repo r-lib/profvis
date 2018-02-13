@@ -73,8 +73,12 @@ get_pkg_srcrefs <- function(pkg) {
   # Given a char vector with contents of an entire package, split out all
   # files into separate entries in a list.
   full_src_to_file_contents <- function(src) {
-    # Drop first line (simply contains package name)
-    src <- src[-1]
+    # Before R 2.5.0, the first line looked like this:
+    # .packageName <- "R6"
+    # As of 2.5.0, that line was dropped. If that line is present, remove it.
+    if (grepl("^\\.packageName <-", src[1])) {
+      src <- src[-1]
+    }
 
     # Lines which contain filenames. Have a format like:
     #   "#line 1 \"/tmp/Rtmp6W0MLC/R.INSTALL1a531f3beb59/ggplot2/R/aaa-.r\""
