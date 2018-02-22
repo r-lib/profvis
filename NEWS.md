@@ -1,4 +1,4 @@
-profvis 0.3.4.9000
+profvis 0.3.5
 =============
 
 * Fixed problem with development build of R where source refs are turned on by defaut (reported by Tomas Kalibera).
