@@ -321,7 +321,34 @@ Sometimes it it useful to profile just part of a Shiny application, instead of t
 
 If you are in RStudio, you can start your application, then select Profile->Start Profiling, interact with your application, and then select Profile->Stop Profiling. When you stop the profiling, the profvis viewer will come up.
 
-You can also do it by calling `Rprof()` to start and stop profiling (as described in [this answer](#can-i-profile-code-without-using-profvis)), and trigger it with an `actionButton`. For example, you could put this in your UI:
+Profivs also provides a [Shiny Module](http://shiny.rstudio.com/articles/modules.html) to initiate the profiling, and provides a UI to start, stop, view, and download profvis sessions. This is done with `profvis::profvis_server` and `profvis::profvis_ui`.
+
+For example, here's a small app that uses the module:
+
+```{r eval=FALSE}
+library(shiny)
+library(ggplot2)
+library(profvis)
+shinyApp(
+  fluidPage(
+    plotOutput("plot"),
+    actionButton("new", "New plot"),
+    profvis_ui("profiler")
+  ),
+  function(input, output, session) {
+    callModule(profvis_server, "profiler")
+  
+    output$plot <- renderPlot({
+      input$new
+      ggplot(diamonds, aes(carat, price)) + geom_point()
+    })
+  }
+)
+```
+
+In the server function, `callModule(profvis_server, "profiler")` sets up the profvis session, and in the UI `profvis_ui("profiler")` sets up a basic interface to start, stop, view, and download profvis sessions.
+
+You can create your own `profvis_server` and `profvis_ui` functions by calling `Rprof()` to start and stop profiling (as described in [this answer](#can-i-profile-code-without-using-profvis)), and trigger it with an `actionButton`. For example, you could put this in your UI:
 
 ```{r eval=FALSE}
   radioButtons("profile", "Profiling", c("off", "on"))
@@ -347,6 +374,25 @@ It will add radio buttons to turn profiling on and off. Turn it on, then interac
 ```{r eval=FALSE}
   profvis(prof_input = "2018-08-07-12-22-35.Rprof")
 ```
+
+
+## Can I profile a Shiny application running on a remote server?
+
+Yes. One option is to include the Profvis Shiny Module desribed in the [previous question](#-can-i-profile-just-part-of-a-shiny-application?).
+
+You can also set it up manually. The main idea is to start and stop profiling (as described in [this answer](#can-i-profile-code-without-using-profvis)). At the top of your app.R or server.R, you can add the following:
+
+```{r eval=FALSE}
+Rprof(strftime(Sys.time(), "%Y-%m-%d-%H-%M-%S.Rprof"),
+      interval = 0.01, line.profiling = TRUE,
+      gc.profiling = TRUE, memory.profiling = TRUE)
+
+onStop(function() {
+  Rprof(NULL)
+})
+```
+
+This will start profiling when the app starts, and stop when it exits. 
 
 ## Why does `Sys.sleep()` not show up in profiler data?
 
