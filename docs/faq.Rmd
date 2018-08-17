@@ -96,6 +96,79 @@ lapply
 ```
 
 
+## What does `cmpfun` mean?
+
+The first time we run `profvis` on a function in a clean 3.4.0 or greater R session, we'll see `compiler:::tryCmpfun`. For example, 
+
+```{r eval=FALSE, echo=FALSE}
+# This code block is what we actually run. It must be run manually each time
+# this is updated.
+# The next block is what we show to the readers.
+p <- profvis::profvis({
+  data <- data.frame(value = runif(5e4))
+  
+  csum <- function(x) {
+    if (length(x) < 2) return(x)
+
+    sum <- x[1]
+    for (i in seq(2, length(x))) {
+      sum[i] <- sum[i-1] + x[i]
+    }
+    sum
+  }
+  data$sum <- csum(data$value)
+})
+p$x$message$split <- "v"
+
+saveRDS(p, "cmpfun-profile1.rds")
+
+p <- profvis::profvis({
+  data <- data.frame(value = runif(5e4))
+  
+  csum <- function(x) {
+    if (length(x) < 2) return(x)
+
+    sum <- x[1]
+    for (i in seq(2, length(x))) {
+      sum[i] <- sum[i-1] + x[i]
+    }
+    sum
+  }
+  data$sum <- csum(data$value)
+})
+
+p$x$message$split <- "v"
+
+saveRDS(p, "cmpfun-profile2.rds")
+```
+```{r eval = FALSE}
+profvis({
+  data <- data.frame(value = runif(5e4))
+  
+  csum <- function(x) {
+    if (length(x) < 2) return(x)
+
+    sum <- x[1]
+    for (i in seq(2, length(x))) {
+      sum[i] <- sum[i-1] + x[i]
+    }
+    sum
+  }
+  data$sum <- csum(data$value)
+})
+```
+```{r echo=FALSE}
+readRDS("cmpfun-profile1.rds")
+```
+
+As of R 3.4.0, R attempts to compile functions when they are first ran to byte code. On subsequent function calls, instead of reinterpreting the body of the function, R executes the saved and compiled byte code. Typically, this results in faster execution times on later function calls. For example, let's profile `csum` a second time in the same R session:
+
+```{r echo=FALSE}
+readRDS("cmpfun-profile2.rds")
+```
+
+Now the flame graph shows that the function is no longer being compiled. And after compiling, `csum` is about 40 ms faster.
+
 ## How do I get code from an R package to show in the code panel?
 
 In typical use, only code written by the user is shown in the code panel. (This is code for which *source references* are available.) Yellow blocks in the flame graph have corresponding lines of code in the code panel, and when moused over, the line of code will be highlighted. White blocks in the flame graph don't have corresponding lines in the code panel. In most cases, the calls represented by the white blocks are to functions that are in base R and other packages.
