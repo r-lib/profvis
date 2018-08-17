@@ -178,6 +178,34 @@ readRDS("ggplot2.rds")
 ```
 
 
+## Can I profile code without calling `profvis()`?
+
+Yes. There are two ways to do it.
+
+If you are in RStudio, you can select Profile->Start Profiling, run your code, and then Profile->Stop Profiling. When you stop the profiling, the profvis viewer will come up.
+
+Another way is to start and stop the R profiler manually, then have profvis read in the recorded profiling data. To profile your code, run:
+
+```{r eval=FALSE}
+# Start profiler
+Rprof("data.Rprof", interval = 0.01, line.profiling = TRUE,
+      gc.profiling = TRUE, memory.profiling = TRUE)
+
+## Run your code here
+
+# Stop profiler
+Rprof(NULL)
+```
+
+Then you can load the data into profvis:
+
+```{r eval=FALSE}
+profvis(prof_input = "data.Rprof")
+```
+
+This technique can also be used to profile just one section of your code.
+
+
 ## Why does the flame graph hide some function calls for Shiny apps?
 
 When profiling [Shiny](http://shiny.rstudio.com/) applications, the profvis flame graph will hide many function calls by default. They're hidden because they aren't particularly informative for optimizing code, and they add visual complexity. This feature requires Shiny 0.13.0 or greater.
@@ -213,6 +241,39 @@ readRDS("shinyapp.rds")
 
 To make the hiding work, Shiny has special functions called `..stacktraceon..` and  `..stacktraceoff..`. Profvis goes up the stack, and when it sees a `..stacktraceoff..`, it will hide all function calls until it sees a corresponding `..stacktraceon..`. If there are nukltiple `..stacktraceoff..` calls in the stack, it requires an equal number of `..stacktraceon..` calls before it starts displaying function calls again.
 
+
+## Can I profile just part of a Shiny application?
+
+Sometimes it it useful to profile just part of a Shiny application, instead of the whole thing from start to finish.
+
+If you are in RStudio, you can start your application, then select Profile->Start Profiling, interact with your application, and then select Profile->Stop Profiling. When you stop the profiling, the profvis viewer will come up.
+
+You can also do it by calling `Rprof()` to start and stop profiling (as described in [this answer](#can-i-profile-code-without-using-profvis)), and trigger it with an `actionButton`. For example, you could put this in your UI:
+
+```{r eval=FALSE}
+  radioButtons("profile", "Profiling", c("off", "on"))
+```
+
+And put this in your server function:
+
+```{r eval=FALSE}
+  observe({
+    if (identical(input$profile, "off")) {
+      Rprof(NULL)
+    } else if (identical(input$profile, "on")){
+      Rprof(strftime(Sys.time(), "%Y-%m-%d-%H-%M-%S.Rprof"),
+            interval = 0.01, line.profiling = TRUE,
+            gc.profiling = TRUE, memory.profiling = TRUE)
+    }
+  })
+```
+
+
+It will add radio buttons to turn profiling on and off. Turn it on, then interact with your app, then turn it off. There will be a file with a name corresponding to the start time. You can view the profiler output with profvis, with something like this:
+
+```{r eval=FALSE}
+  profvis(prof_input = "2018-08-07-12-22-35.Rprof")
+```
 
 ## Why does `Sys.sleep()` not show up in profiler data?
 
