@@ -43,16 +43,11 @@ profvis_ui <- function(id) {
     z_index = 9000
   )
 
-  shiny::tagList(
-    shiny::fixedPanel(
-      top = 0, left = 200, width = "auto", height = "auto",
-      class = "profvis-module-container well", style = style, draggable = TRUE,
-      shiny::div(class = "btn-group",
-        shiny::actionButton(class = "btn-xs", ns("toggle"), "Start profiling", shiny::icon("play")),
-        shiny::actionButton(class = "btn-xs", ns("browse"), NULL, shiny::icon("list-ul"))
-      )
-    ),
-    shiny::includeScript(system.file("shinymodule/draggable-helper.js", package = "profvis"))
+  shiny::fixedPanel(
+    top = 0, left = -200, width = "auto", height = "auto",
+    class = "profvis-module-container well", style = style, draggable = TRUE,
+
+    shiny::uiOutput(ns("button_group"), class = "btn-group")
   )
 }
 
@@ -91,26 +86,82 @@ profvis_server <- function(input, output, session, dir = ".") {
   if (!requireNamespace("shiny", quietly = TRUE)) {
     stop('profvis_server requires the shiny package.')
   }
+  # Whether we're currently profiling
   profiling <- shiny::reactiveVal(FALSE)
+  # The current/most recent profile
+  current_profile <- shiny::reactiveVal(NULL)
 
-  shiny::setBookmarkExclude(c("toggle", "browse", "dl_rprof", "dl_profvis", "download"))
+  shiny::setBookmarkExclude(c("start_rprof", "browse", "dl_rprof", "dl_profvis", "download"))
 
-  shiny::observeEvent(input$toggle, {
+  observeEvent(input$start_rprof, {
     if (!profiling()) {
-      # Start profiling
-      Rprof(file.path(dir, strftime(Sys.time(), "%Y-%m-%d_%H-%M-%S.Rprof")),
-            interval = 0.01, line.profiling = TRUE,
-            gc.profiling = TRUE, memory.profiling = TRUE)
-
-      shiny::updateActionButton(session, "toggle", "Stop profiling", shiny::icon("stop"))
-
-    } else {
-      # Stop profiling
-      Rprof(NULL)
-      shiny::updateActionButton(session, "toggle", "Start profiling", shiny::icon("play"))
+      proffile <- file.path(dir, strftime(Sys.time(), "%Y-%m-%d_%H-%M-%S.Rprof"))
+      Rprof(proffile,
+        interval = 0.01, line.profiling = TRUE,
+        gc.profiling = TRUE, memory.profiling = TRUE)
+      current_profile(proffile)
+      profiling(TRUE)
     }
+  })
 
-    profiling(!profiling())
+  output$button_group <- renderUI({
+    profiling()
+
+    ns <- session$ns
+
+    isolate({
+      browseBtn <- shiny::actionButton(class = "btn-xs", ns("browse"), NULL, shiny::icon("list-ul"))
+
+      if (!profiling()) {
+        tagList(
+          shiny::actionButton(class = "btn-xs", ns("start_rprof"), "Start profiling", shiny::icon("play")),
+          browseBtn,
+          singleton(shiny::includeScript(system.file("shinymodule/draggable-helper.js", package = "profvis")))
+        )
+      } else {
+        # Register a URL for the "Stop Recording" button to go to.
+        # Requesting this URL will stop the current profiling session, update
+        # the profiling() reactiveVal, and return a new profvis.
+        url <- session$registerDataObj("stop_profvis_module", list(), function(data, req) {
+          isolate({
+            Rprof(NULL)
+            profiling(FALSE)
+
+            # profiling(FALSE) should cause a flushReact, but doesn't. This
+            # invalidateLater is a hack to force one (since it's inside an
+            # isolate, it otherwise has no effect).
+            invalidateLater(50)
+
+            if (!is.null(current_profile())) {
+              stop("Invalid state detected")
+            }
+
+            # Create a profvis and save it to a self-contained temp .html file
+            p <- profvis(prof_input = current_profile())
+            outfile <- tempfile("profvis", fileext = ".html")
+            htmlwidgets::saveWidget(p, outfile)
+
+            # Return as HTML. Since owned=TRUE, httpuv will take care of deleting
+            # the temp file when it's done streaming it to the client.
+            list(
+              status = 200L,
+              headers = list(
+                "Content-Type" = "text/html;charset=utf-8"
+              ),
+              body = list(
+                file = outfile,
+                owned = TRUE
+              )
+            )
+          })
+        })
+
+        tagList(
+          htmltools::tags$a(class = "btn btn-default btn-xs", target = "_blank", href = url, shiny::icon("stop"), "Stop profiling"),
+          browseBtn
+        )
+      }
+    })
   })
 
   shiny::observeEvent(input$browse, {
