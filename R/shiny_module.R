@@ -136,14 +136,21 @@ profvis_server <- function(input, output, session, dir = ".") {
     )
   })
 
+  # Validate input$download so we don't just let the user download whatever
+  # file they want from the server.
+  download <- reactive({
+    dl <- input$download
+    validate(need(isTRUE(dl %in% dir(dir, pattern = "\\.Rprof$")), "Illegal download or not found"))
+    dl
+  })
 
   output$dl_rprof <- shiny::downloadHandler(
     filename = function() {
-      file.path(dir, input$download)
+      file.path(dir, download())
     },
     content = function(file) {
       file.copy(
-        file.path(dir, input$download),
+        file.path(dir, download()),
         file
       )
     }
@@ -151,10 +158,10 @@ profvis_server <- function(input, output, session, dir = ".") {
 
   output$dl_profvis <- shiny::downloadHandler(
     filename = function() {
-      file.path(dir, sub("Rprof$", "html", input$download))
+      file.path(dir, sub("Rprof$", "html", download()))
     },
     content = function(file) {
-      p <- profvis(prof_input = input$download)
+      p <- profvis(prof_input = download())
       htmlwidgets::saveWidget(p, file)
     }
   )
