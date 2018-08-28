@@ -24,6 +24,7 @@ Suggests:
     rmarkdown,
     testthat,
     devtools,
-    shiny
+    shiny,
+    htmltools
 RoxygenNote: 6.1.0
 URL: https://rstudio.github.io/profvis/

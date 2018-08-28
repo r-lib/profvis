@@ -28,20 +28,31 @@
 #'
 #' @export
 profvis_ui <- function(id) {
-  # TODO: Make into floating panel, add hamburger menu for downloads?
-  # TODO: should this check for shiny, or add as Imports?
   if (!requireNamespace("shiny", quietly = TRUE)) {
     stop('profvis_ui requires the shiny package.')
   }
   ns <- shiny::NS(id)
 
-  shiny::wellPanel(
-    shiny::actionButton(ns("toggle"), "Start profiling", shiny::icon("play")),
-    shiny::br(),
-    shiny::br(),
-    shiny::uiOutput(ns("download_select")),
-    shiny::downloadButton(ns("dl_rprof"), "Download as Rprof"),
-    shiny::downloadButton(ns("dl_profvis"), "Download as profvis")
+  style <- htmltools::css(
+    padding = "6px",
+    white_space = "nowrap",
+    top = "-1px",
+    border_top_left_radius = "0",
+    border_top_right_radius = "0",
+    box_shadow = "none",
+    z_index = 9000
+  )
+
+  shiny::tagList(
+    shiny::fixedPanel(
+      top = 0, left = 200, width = "auto", height = "auto",
+      class = "profvis-module-container well", style = style, draggable = TRUE,
+      shiny::div(class = "btn-group",
+        shiny::actionButton(class = "btn-xs", ns("toggle"), "Start profiling", shiny::icon("play")),
+        shiny::actionButton(class = "btn-xs", ns("browse"), NULL, shiny::icon("list-ul"))
+      )
+    ),
+    shiny::includeScript(system.file("shinymodule/draggable-helper.js", package = "profvis"))
   )
 }
 
@@ -77,11 +88,12 @@ profvis_ui <- function(id) {
 #'
 #' @export
 profvis_server <- function(input, output, session, dir = ".") {
-  # TODO: should this check for shiny, or add as Imports?
   if (!requireNamespace("shiny", quietly = TRUE)) {
     stop('profvis_server requires the shiny package.')
   }
   profiling <- shiny::reactiveVal(FALSE)
+
+  shiny::setBookmarkExclude(c("toggle", "browse", "dl_rprof", "dl_profvis", "download"))
 
   shiny::observeEvent(input$toggle, {
     if (!profiling()) {
@@ -95,10 +107,20 @@ profvis_server <- function(input, output, session, dir = ".") {
     } else {
       # Stop profiling
       Rprof(NULL)
-      shiny::updateActionButton(session, "toggle", "Start profiling", icon("play"))
+      shiny::updateActionButton(session, "toggle", "Start profiling", shiny::icon("play"))
     }
 
     profiling(!profiling())
+  })
+
+  shiny::observeEvent(input$browse, {
+    ns <- session$ns
+
+    shiny::showModal(shiny::modalDialog(
+      shiny::uiOutput(ns("download_select")),
+      shiny::downloadButton(ns("dl_rprof"), "Download as Rprof", class = "btn-xs"),
+      shiny::downloadButton(ns("dl_profvis"), "Download as profvis", class = "btn-xs")
+    ))
   })
 
   shiny::onSessionEnded(function() {
