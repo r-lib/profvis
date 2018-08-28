@@ -93,7 +93,7 @@ profvis_server <- function(input, output, session, dir = ".") {
 
   shiny::setBookmarkExclude(c("start_rprof", "browse", "dl_rprof", "dl_profvis", "download"))
 
-  observeEvent(input$start_rprof, {
+  shiny::observeEvent(input$start_rprof, {
     if (!profiling()) {
       proffile <- file.path(dir, strftime(Sys.time(), "%Y-%m-%d_%H-%M-%S.Rprof"))
       Rprof(proffile,
@@ -104,33 +104,33 @@ profvis_server <- function(input, output, session, dir = ".") {
     }
   })
 
-  output$button_group <- renderUI({
+  output$button_group <- shiny::renderUI({
     profiling()
 
     ns <- session$ns
 
-    isolate({
+    shiny::isolate({
       browseBtn <- shiny::actionButton(class = "btn-xs", ns("browse"), NULL, shiny::icon("list-ul"))
 
       if (!profiling()) {
-        tagList(
+        htmltools::tagList(
           shiny::actionButton(class = "btn-xs", ns("start_rprof"), "Start profiling", shiny::icon("play")),
           browseBtn,
-          singleton(shiny::includeScript(system.file("shinymodule/draggable-helper.js", package = "profvis")))
+          shiny::singleton(shiny::includeScript(system.file("shinymodule/draggable-helper.js", package = "profvis")))
         )
       } else {
         # Register a URL for the "Stop Recording" button to go to.
         # Requesting this URL will stop the current profiling session, update
         # the profiling() reactiveVal, and return a new profvis.
         url <- session$registerDataObj("stop_profvis_module", list(), function(data, req) {
-          isolate({
+          shiny::isolate({
             Rprof(NULL)
             profiling(FALSE)
 
             # profiling(FALSE) should cause a flushReact, but doesn't. This
             # invalidateLater is a hack to force one (since it's inside an
             # isolate, it otherwise has no effect).
-            invalidateLater(50)
+            shiny::invalidateLater(50)
 
             if (!is.null(current_profile())) {
               stop("Invalid state detected")
@@ -156,7 +156,7 @@ profvis_server <- function(input, output, session, dir = ".") {
           })
         })
 
-        tagList(
+        htmltools::tagList(
           htmltools::tags$a(class = "btn btn-default btn-xs", target = "_blank", href = url, shiny::icon("stop"), "Stop profiling"),
           browseBtn
         )
@@ -189,9 +189,9 @@ profvis_server <- function(input, output, session, dir = ".") {
 
   # Validate input$download so we don't just let the user download whatever
   # file they want from the server.
-  download <- reactive({
+  download <- shiny::reactive({
     dl <- input$download
-    validate(need(isTRUE(dl %in% dir(dir, pattern = "\\.Rprof$")), "Illegal download or not found"))
+    shiny::validate(shiny::need(isTRUE(dl %in% dir(dir, pattern = "\\.Rprof$")), "Illegal download or not found"))
     dl
   })
 
