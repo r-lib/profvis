@@ -132,7 +132,7 @@ profvis_server <- function(input, output, session, dir = ".") {
             # isolate, it otherwise has no effect).
             shiny::invalidateLater(50)
 
-            if (!is.null(current_profile())) {
+            if (is.null(current_profile())) {
               stop("Invalid state detected")
             }
 
