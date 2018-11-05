@@ -2,21 +2,43 @@
 % Please edit documentation in R/shiny_module.R
 \name{profvis_ui}
 \alias{profvis_ui}
+\alias{profvis_server}
 \title{Profvis UI for Shiny Apps}
 \usage{
 profvis_ui(id)
+
+profvis_server(input, output, session, dir = ".")
 }
 \arguments{
 \item{id}{Output id from \code{profvis_server}.}
+
+\item{input, output, session}{Arguments provided by
+\code{\link[shiny]{callModule}}.}
+
+\item{dir}{Output directory to save Rprof files.}
 }
 \description{
-Provides the UI for the Profvis module in Shiny apps. This module creates a
-profvis interface to profile parts of a shiny app and save the profvis or
-Rprof output. Used with \code{\link{profvis_server}}. This function requires
-the \code{shiny} package.
+Use this Shiny module to inject Profvis controls into your Shiny app. The
+Profvis Shiny module injects UI that can be used to start and stop profiling,
+and either view the results in the Profvis UI or download the raw .Rprof
+data. It is highly recommended that this be used for testing and debugging
+only, and not included in production apps!
+}
+\details{
+The usual way to use Profvis with Shiny is to simply call
+`profvis(shiny::runApp())`, but this may not always be possible or desirable:
+first, if you only want to profile a particular interaction in the Shiny app
+and not capture all the calculations involved in starting up the app and
+getting it into the correct state; and second, if you're trying to profile an
+application that's been deployed to a server.
+
+For more details on how to invoke Shiny modules, see [this
+article](https://shiny.rstudio.com/articles/modules.html).
 }
 \examples{
 if(interactive()) {
+  library(shiny)
+  library(ggplot2)
   shinyApp(
     fluidPage(
       plotOutput("plot"),

@@ -1,14 +1,27 @@
 #' Profvis UI for Shiny Apps
 #'
-#' Provides the UI for the Profvis module in Shiny apps. This module creates a
-#' profvis interface to profile parts of a shiny app and save the profvis or
-#' Rprof output. Used with \code{\link{profvis_server}}. This function requires
-#' the \code{shiny} package.
+#' Use this Shiny module to inject Profvis controls into your Shiny app. The
+#' Profvis Shiny module injects UI that can be used to start and stop profiling,
+#' and either view the results in the Profvis UI or download the raw .Rprof
+#' data. It is highly recommended that this be used for testing and debugging
+#' only, and not included in production apps!
+#'
+#' The usual way to use Profvis with Shiny is to simply call
+#' `profvis(shiny::runApp())`, but this may not always be possible or desirable:
+#' first, if you only want to profile a particular interaction in the Shiny app
+#' and not capture all the calculations involved in starting up the app and
+#' getting it into the correct state; and second, if you're trying to profile an
+#' application that's been deployed to a server.
+#'
+#' For more details on how to invoke Shiny modules, see [this
+#' article](https://shiny.rstudio.com/articles/modules.html).
 #'
 #' @param id Output id from \code{profvis_server}.
 #'
 #' @examples
 #' if(interactive()) {
+#'   library(shiny)
+#'   library(ggplot2)
 #'   shinyApp(
 #'     fluidPage(
 #'       plotOutput("plot"),
@@ -51,36 +64,11 @@ profvis_ui <- function(id) {
   )
 }
 
-#' Profvis Server for Shiny Apps
-#'
-#' Provides the server for the Profvis module in Shiny apps. This module creates
-#' a profvis interface to profile parts of a shiny app and save the profvis or
-#' Rprof output. Used with \code{\link{profvis_ui}}. This function requires the
-#' \code{shiny} package.
-#'
-#' @param input,output,session Arguments used by
+#' @param input,output,session Arguments provided by
 #'   \code{\link[shiny]{callModule}}.
 #' @param dir Output directory to save Rprof files.
 #'
-#' @examples
-#' if(interactive()) {
-#'   shinyApp(
-#'     fluidPage(
-#'       plotOutput("plot"),
-#'       actionButton("new", "New plot"),
-#'       profvis_ui("profiler")
-#'     ),
-#'     function(input, output, session) {
-#'       callModule(profvis_server, "profiler")
-#'
-#'       output$plot <- renderPlot({
-#'         input$new
-#'         ggplot(diamonds, aes(carat, price)) + geom_point()
-#'       })
-#'     }
-#'   )
-#' }
-#'
+#' @rdname profvis_ui
 #' @export
 profvis_server <- function(input, output, session, dir = ".") {
   if (!requireNamespace("shiny", quietly = TRUE)) {
