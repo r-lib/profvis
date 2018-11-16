@@ -36,6 +36,9 @@ For more details on how to invoke Shiny modules, see [this
 article](https://shiny.rstudio.com/articles/modules.html).
 }
 \examples{
+# In order to avoid "Hit <Return> to see next plot" prompts,
+# run this example with `example(profvis_ui, ask=FALSE)`
+
 if(interactive()) {
   library(shiny)
   library(ggplot2)

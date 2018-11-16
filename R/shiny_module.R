@@ -19,6 +19,9 @@
 #' @param id Output id from \code{profvis_server}.
 #'
 #' @examples
+#' # In order to avoid "Hit <Return> to see next plot" prompts,
+#' # run this example with `example(profvis_ui, ask=FALSE)`
+#'
 #' if(interactive()) {
 #'   library(shiny)
 #'   library(ggplot2)
