@@ -96,6 +96,79 @@ lapply
 ```
 
 
+## What does `cmpfun` mean?
+
+The first time we run `profvis` on a function in a clean 3.4.0 or greater R session, we'll see `compiler:::tryCmpfun`. For example, 
+
+```{r eval=FALSE, echo=FALSE}
+# This code block is what we actually run. It must be run manually each time
+# this is updated.
+# The next block is what we show to the readers.
+p <- profvis::profvis({
+  data <- data.frame(value = runif(5e4))
+  
+  csum <- function(x) {
+    if (length(x) < 2) return(x)
+
+    sum <- x[1]
+    for (i in seq(2, length(x))) {
+      sum[i] <- sum[i-1] + x[i]
+    }
+    sum
+  }
+  data$sum <- csum(data$value)
+})
+p$x$message$split <- "v"
+
+saveRDS(p, "cmpfun-profile1.rds")
+
+p <- profvis::profvis({
+  data <- data.frame(value = runif(5e4))
+  
+  csum <- function(x) {
+    if (length(x) < 2) return(x)
+
+    sum <- x[1]
+    for (i in seq(2, length(x))) {
+      sum[i] <- sum[i-1] + x[i]
+    }
+    sum
+  }
+  data$sum <- csum(data$value)
+})
+
+p$x$message$split <- "v"
+
+saveRDS(p, "cmpfun-profile2.rds")
+```
+```{r eval = FALSE}
+profvis({
+  data <- data.frame(value = runif(5e4))
+  
+  csum <- function(x) {
+    if (length(x) < 2) return(x)
+
+    sum <- x[1]
+    for (i in seq(2, length(x))) {
+      sum[i] <- sum[i-1] + x[i]
+    }
+    sum
+  }
+  data$sum <- csum(data$value)
+})
+```
+```{r echo=FALSE}
+readRDS("cmpfun-profile1.rds")
+```
+
+As of R 3.4.0, R attempts to compile functions when they are first ran to byte code. On subsequent function calls, instead of reinterpreting the body of the function, R executes the saved and compiled byte code. Typically, this results in faster execution times on later function calls. For example, let's profile `csum` a second time in the same R session:
+
+```{r echo=FALSE}
+readRDS("cmpfun-profile2.rds")
+```
+
+Now the flame graph shows that the function is no longer being compiled. And after compiling, `csum` is about 40 ms faster.
+
 ## How do I get code from an R package to show in the code panel?
 
 In typical use, only code written by the user is shown in the code panel. (This is code for which *source references* are available.) Yellow blocks in the flame graph have corresponding lines of code in the code panel, and when moused over, the line of code will be highlighted. White blocks in the flame graph don't have corresponding lines in the code panel. In most cases, the calls represented by the white blocks are to functions that are in base R and other packages.
@@ -178,6 +251,34 @@ readRDS("ggplot2.rds")
 ```
 
 
+## Can I profile code without calling `profvis()`?
+
+Yes. There are two ways to do it.
+
+If you are in RStudio, you can select Profile->Start Profiling, run your code, and then Profile->Stop Profiling. When you stop the profiling, the profvis viewer will come up.
+
+Another way is to start and stop the R profiler manually, then have profvis read in the recorded profiling data. To profile your code, run:
+
+```{r eval=FALSE}
+# Start profiler
+Rprof("data.Rprof", interval = 0.01, line.profiling = TRUE,
+      gc.profiling = TRUE, memory.profiling = TRUE)
+
+## Run your code here
+
+# Stop profiler
+Rprof(NULL)
+```
+
+Then you can load the data into profvis:
+
+```{r eval=FALSE}
+profvis(prof_input = "data.Rprof")
+```
+
+This technique can also be used to profile just one section of your code.
+
+
 ## Why does the flame graph hide some function calls for Shiny apps?
 
 When profiling [Shiny](http://shiny.rstudio.com/) applications, the profvis flame graph will hide many function calls by default. They're hidden because they aren't particularly informative for optimizing code, and they add visual complexity. This feature requires Shiny 0.13.0 or greater.
@@ -213,6 +314,85 @@ readRDS("shinyapp.rds")
 
 To make the hiding work, Shiny has special functions called `..stacktraceon..` and  `..stacktraceoff..`. Profvis goes up the stack, and when it sees a `..stacktraceoff..`, it will hide all function calls until it sees a corresponding `..stacktraceon..`. If there are nukltiple `..stacktraceoff..` calls in the stack, it requires an equal number of `..stacktraceon..` calls before it starts displaying function calls again.
 
+
+## Can I profile just part of a Shiny application?
+
+Sometimes it it useful to profile just part of a Shiny application, instead of the whole thing from start to finish.
+
+If you are in RStudio, you can start your application, then select Profile->Start Profiling, interact with your application, and then select Profile->Stop Profiling. When you stop the profiling, the profvis viewer will come up.
+
+Profivs also provides a [Shiny Module](http://shiny.rstudio.com/articles/modules.html) to initiate the profiling, and provides a UI to start, stop, view, and download profvis sessions. This is done with `profvis::profvis_server` and `profvis::profvis_ui`.
+
+For example, here's a small app that uses the module:
+
+```{r eval=FALSE}
+library(shiny)
+library(ggplot2)
+library(profvis)
+shinyApp(
+  fluidPage(
+    plotOutput("plot"),
+    actionButton("new", "New plot"),
+    profvis_ui("profiler")
+  ),
+  function(input, output, session) {
+    callModule(profvis_server, "profiler")
+  
+    output$plot <- renderPlot({
+      input$new
+      ggplot(diamonds, aes(carat, price)) + geom_point()
+    })
+  }
+)
+```
+
+In the server function, `callModule(profvis_server, "profiler")` sets up the profvis session, and in the UI `profvis_ui("profiler")` sets up a basic interface to start, stop, view, and download profvis sessions.
+
+You can create your own `profvis_server` and `profvis_ui` functions by calling `Rprof()` to start and stop profiling (as described in [this answer](#can-i-profile-code-without-using-profvis)), and trigger it with an `actionButton`. For example, you could put this in your UI:
+
+```{r eval=FALSE}
+  radioButtons("profile", "Profiling", c("off", "on"))
+```
+
+And put this in your server function:
+
+```{r eval=FALSE}
+  observe({
+    if (identical(input$profile, "off")) {
+      Rprof(NULL)
+    } else if (identical(input$profile, "on")){
+      Rprof(strftime(Sys.time(), "%Y-%m-%d-%H-%M-%S.Rprof"),
+            interval = 0.01, line.profiling = TRUE,
+            gc.profiling = TRUE, memory.profiling = TRUE)
+    }
+  })
+```
+
+
+It will add radio buttons to turn profiling on and off. Turn it on, then interact with your app, then turn it off. There will be a file with a name corresponding to the start time. You can view the profiler output with profvis, with something like this:
+
+```{r eval=FALSE}
+  profvis(prof_input = "2018-08-07-12-22-35.Rprof")
+```
+
+
+## Can I profile a Shiny application running on a remote server?
+
+Yes. One option is to include the Profvis Shiny Module desribed in the [previous question](#-can-i-profile-just-part-of-a-shiny-application?).
+
+You can also set it up manually. The main idea is to start and stop profiling (as described in [this answer](#can-i-profile-code-without-using-profvis)). At the top of your app.R or server.R, you can add the following:
+
+```{r eval=FALSE}
+Rprof(strftime(Sys.time(), "%Y-%m-%d-%H-%M-%S.Rprof"),
+      interval = 0.01, line.profiling = TRUE,
+      gc.profiling = TRUE, memory.profiling = TRUE)
+
+onStop(function() {
+  Rprof(NULL)
+})
+```
+
+This will start profiling when the app starts, and stop when it exits. 
 
 ## Why does `Sys.sleep()` not show up in profiler data?
 
