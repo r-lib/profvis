@@ -6,6 +6,7 @@
 #'   code can be captured and passed (as a string) as the \code{expr_source}
 #'   argument.
 #' @import stringr
+#' @export
 parse_rprof <- function(path = "Rprof.out", expr_source = NULL) {
   lines <- readLines(path)
 

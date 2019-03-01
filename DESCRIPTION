@@ -27,5 +27,5 @@ Suggests:
     devtools,
     shiny,
     htmltools
-RoxygenNote: 6.1.0
+RoxygenNote: 6.1.1
 URL: https://rstudio.github.io/profvis/
