@@ -59,11 +59,18 @@ profvis_ui <- function(id) {
     z_index = 9000
   )
 
-  shiny::fixedPanel(
-    top = 0, left = -200, width = "auto", height = "auto",
-    class = "profvis-module-container well", style = style, draggable = TRUE,
+  shiny::tagList(
+    tags$style(
+      ".profvis-module-container:empty() { visibility: hidden; }"
+    ),
+    shiny::fixedPanel(
+      top = 0, left = -1, width = "auto", height = "auto",
+      class = "profvis-module-container well", style = style, draggable = TRUE,
 
-    shiny::uiOutput(ns("button_group"), class = "btn-group")
+      shiny::uiOutput(ns("button_group"), class = "btn-group")
+    ),
+    # TODO: Make htmlDependency
+    shiny::singleton(shiny::includeScript(system.file("shinymodule/draggable-helper.js", package = "profvis")))
   )
 }
 
@@ -81,6 +88,10 @@ profvis_server <- function(input, output, session, dir = ".") {
   profiling <- shiny::reactiveVal(FALSE)
   # The current/most recent profile
   current_profile <- shiny::reactiveVal(NULL)
+
+  profiles <- function() {
+    dir(dir, pattern = "\\.Rprof$")
+  }
 
   shiny::setBookmarkExclude(c("start_rprof", "browse", "dl_rprof", "dl_profvis", "download"))
 
@@ -106,8 +117,7 @@ profvis_server <- function(input, output, session, dir = ".") {
       if (!profiling()) {
         htmltools::tagList(
           shiny::actionButton(class = "btn-xs", ns("start_rprof"), "Start profiling", shiny::icon("play")),
-          browseBtn,
-          shiny::singleton(shiny::includeScript(system.file("shinymodule/draggable-helper.js", package = "profvis")))
+          if (length(profiles()) > 0) browseBtn
         )
       } else {
         # Register a URL for the "Stop Recording" button to go to.
@@ -148,8 +158,7 @@ profvis_server <- function(input, output, session, dir = ".") {
         })
 
         htmltools::tagList(
-          htmltools::tags$a(class = "btn btn-default btn-xs", target = "_blank", href = url, shiny::icon("stop"), "Stop profiling"),
-          browseBtn
+          htmltools::tags$a(class = "btn btn-default btn-xs", target = "_blank", href = url, shiny::icon("stop"), "Stop profiling")
         )
       }
     })
@@ -174,7 +183,7 @@ profvis_server <- function(input, output, session, dir = ".") {
     shiny::req(!profiling(), cancelOutput = TRUE)
     ns <- session$ns
     shiny::selectInput(ns("download"), "Select profile to download",
-                choices = sort(dir(dir, pattern = "\\.Rprof$"), decreasing = TRUE)
+                choices = sort(profiles(), decreasing = TRUE)
     )
   })
 
@@ -182,7 +191,7 @@ profvis_server <- function(input, output, session, dir = ".") {
   # file they want from the server.
   download <- shiny::reactive({
     dl <- input$download
-    shiny::validate(shiny::need(isTRUE(dl %in% dir(dir, pattern = "\\.Rprof$")), "Illegal download or not found"))
+    shiny::validate(shiny::need(isTRUE(dl %in% profiles()), "Illegal download or not found"))
     dl
   })
 
