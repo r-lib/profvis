@@ -29,3 +29,4 @@ Suggests:
     htmltools
 RoxygenNote: 6.1.1
 URL: https://rstudio.github.io/profvis/
+Encoding: UTF-8
