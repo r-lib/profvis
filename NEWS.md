@@ -8,7 +8,7 @@ profvis 0.3.6
 profvis 0.3.5
 =============
 
-* Fixed problem with development build of R where source refs are turned on by defaut (reported by Tomas Kalibera).
+* Fixed problem with development build of R where source refs are turned on by default (reported by Tomas Kalibera).
 
 profvis 0.3.4
 =============
