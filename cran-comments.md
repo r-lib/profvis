@@ -6,7 +6,7 @@ Submitting small enhancements.  Please let me know if there is anything I can do
 
 Thank you for your time,
 - Winston
--
+
 
 ## Test environments
 * local OS X install, R 3.6.0
