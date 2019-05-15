@@ -60,7 +60,7 @@ profvis_ui <- function(id) {
   )
 
   shiny::tagList(
-    tags$style(
+    htmltools::tags$style(
       ".profvis-module-container:empty() { visibility: hidden; }"
     ),
     shiny::fixedPanel(

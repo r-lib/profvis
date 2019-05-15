@@ -37,7 +37,7 @@ split bar.}
   sampling profiler and garbage collection: when garbage collection triggers,
   memory allocations will be attributed to different lines of code. Using
   \code{torture = steps} helps prevent this, by making R trigger garbage
-  collection afer every \code{torture} memory allocation step.}
+  collection after every \code{torture} memory allocation step.}
 }
 \description{
 This function will run an R expression with profiling, and then return an

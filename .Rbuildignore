@@ -6,3 +6,6 @@
 ^\.travis\.yml$
 ^CONTRIBUTING.md$
 ^docs$
+^revdep$
+^cran-comments\.md$
+^scripts$

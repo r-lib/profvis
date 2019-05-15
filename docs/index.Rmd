@@ -30,7 +30,7 @@ registerS3method("knit_print", "htmlwidget", function(x, ...) {
 
 [Profvis](https://github.com/rstudio/profvis) is a tool for helping you to understand how R spends its time. It provides a interactive graphical interface for visualizing data from `Rprof`, R's built-in tool for collecting profiling data.
 
-Most R users have had times where we've wanted our code to run faster. However, it's not always clear how to accomplish this. A common approach is to rely on intuition, and on wisdom from the broader R community about speeding up R code. One drawback to this is it can lead to a focus on optimizing things that actually take a small proportion of the overall running time. 
+Most R users have had times where we've wanted our code to run faster. However, it's not always clear how to accomplish this. A common approach is to rely on intuition, and on wisdom from the broader R community about speeding up R code. One drawback to this is it can lead to a focus on optimizing things that actually take a small proportion of the overall running time.
 
 Suppose you make a loop run 5 times faster. That sounds like a huge improvement, but if that loop only takes 10% of the total time, it's still only a 8% speedup overall. Another drawback is that, although many of the commonly-held beliefs are true (for example, preallocating memory can speed things up), some are not (e.g., that `*apply` functions are inherently faster than `for` loops). This can lead us to spend time doing "optimizations" that don't really help. To make slow code faster, we need accurate information about what is making our code slow.
 
@@ -46,7 +46,7 @@ The RStudio IDE includes integrated support for profiling with profvis. These fe
 
 Below is an example of profvis in use. The code creates a scatter plot of the `diamonds` data set, which has about 54,000 rows, fits a linear model, and draws a line for the model. (The plot isn't displayed in this document, though.) If you copy and paste this code into your R console, it'll open a window with the same profvis interface that you see in this HTML document.
 
-```{r fig.show="hide"}
+```{r abline, fig.show="hide"}
 library(profvis)
 
 profvis({

@@ -2,6 +2,11 @@ language: r
 sudo: false
 cache: packages
 
+r:
+  - oldrel
+  - release
+  - devel
+
 notifications:
   email:
     on_success: change
