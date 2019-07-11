@@ -2653,30 +2653,68 @@ profvis = (function() {
   })();
 
 
+  // Polyfill for scrollIntoViewIfNeeded()
+  // From https://gist.github.com/jocki84/6ffafd003387179a988e
+  // License: CC-BY
   if (!Element.prototype.scrollIntoViewIfNeeded) {
     Element.prototype.scrollIntoViewIfNeeded = function (centerIfNeeded) {
-      centerIfNeeded = arguments.length === 0 ? true : !!centerIfNeeded;
+      "use strict";
 
-      var parent = this.parentNode,
-          parentComputedStyle = window.getComputedStyle(parent, null),
-          parentBorderTopWidth = parseInt(parentComputedStyle.getPropertyValue('border-top-width')),
-          parentBorderLeftWidth = parseInt(parentComputedStyle.getPropertyValue('border-left-width')),
-          overTop = this.offsetTop - parent.offsetTop < parent.scrollTop,
-          overBottom = (this.offsetTop - parent.offsetTop + this.clientHeight - parentBorderTopWidth) > (parent.scrollTop + parent.clientHeight),
-          overLeft = this.offsetLeft - parent.offsetLeft < parent.scrollLeft,
-          overRight = (this.offsetLeft - parent.offsetLeft + this.clientWidth - parentBorderLeftWidth) > (parent.scrollLeft + parent.clientWidth),
-          alignWithTop = overTop && !overBottom;
-
-      if ((overTop || overBottom) && centerIfNeeded) {
-        parent.scrollTop = this.offsetTop - parent.offsetTop - parent.clientHeight / 2 - parentBorderTopWidth + this.clientHeight / 2;
+      function makeRange(start, length) {
+        return {"start": start, "length": length, "end": start + length};
       }
 
-      if ((overLeft || overRight) && centerIfNeeded) {
-        parent.scrollLeft = this.offsetLeft - parent.offsetLeft - parent.clientWidth / 2 - parentBorderLeftWidth + this.clientWidth / 2;
+      function coverRange(inner, outer) {
+        if (
+          false === centerIfNeeded ||
+          (outer.start < inner.end && inner.start < outer.end)
+        ) {
+          return Math.max(
+              inner.end - outer.length,
+              Math.min(outer.start, inner.start)
+          );
+        }
+        return (inner.start + inner.end - outer.length) / 2;
       }
 
-      if ((overTop || overBottom || overLeft || overRight) && !centerIfNeeded) {
-        this.scrollIntoView(alignWithTop);
+      function makePoint(x, y) {
+        return {
+          "x": x,
+          "y": y,
+          "translate": function translate(dX, dY) {
+            return makePoint(x + dX, y + dY);
+          }
+        };
+      }
+
+      function absolute(elem, pt) {
+        while (elem) {
+          pt = pt.translate(elem.offsetLeft, elem.offsetTop);
+          elem = elem.offsetParent;
+        }
+        return pt;
+      }
+
+      var target = absolute(this, makePoint(0, 0)),
+          extent = makePoint(this.offsetWidth, this.offsetHeight),
+          elem = this.parentNode,
+          origin;
+
+      while (elem instanceof HTMLElement) {
+        // Apply desired scroll amount.
+        origin = absolute(elem, makePoint(elem.clientLeft, elem.clientTop));
+        elem.scrollLeft = coverRange(
+          makeRange(target.x - origin.x, extent.x),
+          makeRange(elem.scrollLeft, elem.clientWidth)
+        );
+        elem.scrollTop = coverRange(
+          makeRange(target.y - origin.y, extent.y),
+          makeRange(elem.scrollTop, elem.clientHeight)
+        );
+
+        // Determine actual scroll amount by reading back scroll properties.
+        target = target.translate(-elem.scrollLeft, -elem.scrollTop);
+        elem = elem.parentNode;
       }
     };
   }
