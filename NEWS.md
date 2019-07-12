@@ -1,6 +1,7 @@
 profvis 0.3.6.9000
 =============
 
+* Fixed [#111](https://github.com/rstudio/profvis/issues/111): auto-scrolling to lines of code did not work in some browsers. ([#113](https://github.com/rstudio/profvis/pull/113))
 
 profvis 0.3.6
 =============
