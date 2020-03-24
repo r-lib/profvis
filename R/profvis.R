@@ -32,6 +32,11 @@
 #'   \code{torture = steps} helps prevent this, by making R trigger garbage
 #'   collection after every \code{torture} memory allocation step.
 #'
+#' @param simplify Whether to simplify the profiles by removing
+#'   intervening frames caused by lazy evaluation. This only has an
+#'   effect on R 4.0. See the \code{filter.callframes} argument of
+#'   \code{\link{Rprof}()}.
+#'
 #' @seealso \code{\link{print.profvis}} for printing options.
 #' @seealso \code{\link{Rprof}} for more information about how the profiling
 #'   data is collected.
@@ -75,7 +80,7 @@
 #' @export
 profvis <- function(expr = NULL, interval = 0.01, prof_output = NULL,
                     prof_input = NULL, width = NULL, height = NULL,
-                    split = c("h", "v"), torture = 0)
+                    split = c("h", "v"), torture = 0, simplify = TRUE)
 {
   split <- match.arg(split)
   expr_q <- substitute(expr)
@@ -128,8 +133,14 @@ profvis <- function(expr = NULL, interval = 0.01, prof_output = NULL,
       on.exit(gctorture2(step = 0), add = TRUE)
     }
 
-    Rprof(prof_output, interval = interval, line.profiling = TRUE,
-          gc.profiling = TRUE, memory.profiling = TRUE)
+    if (getRversion() >= "4.0.0") {
+      Rprof(prof_output, interval = interval, line.profiling = TRUE,
+            gc.profiling = TRUE, memory.profiling = TRUE,
+            filter.callframes = simplify)
+    } else {
+      Rprof(prof_output, interval = interval, line.profiling = TRUE,
+            gc.profiling = TRUE, memory.profiling = TRUE)
+    }
     on.exit(Rprof(NULL), add = TRUE)
     if (remove_on_exit)
       on.exit(unlink(prof_output), add = TRUE)

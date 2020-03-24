@@ -12,7 +12,8 @@ profvis(
   width = NULL,
   height = NULL,
   split = c("h", "v"),
-  torture = 0
+  torture = 0,
+  simplify = TRUE
 )
 }
 \arguments{
@@ -45,6 +46,11 @@ split bar.}
   memory allocations will be attributed to different lines of code. Using
   \code{torture = steps} helps prevent this, by making R trigger garbage
   collection after every \code{torture} memory allocation step.}
+
+\item{simplify}{Whether to simplify the profiles by removing
+intervening frames caused by lazy evaluation. This only has an
+effect on R 4.0. See the \code{filter.callframes} argument of
+\code{\link{Rprof}()}.}
 }
 \description{
 This function will run an R expression with profiling, and then return an
