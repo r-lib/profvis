@@ -4,9 +4,17 @@
 \alias{profvis}
 \title{Profile an R expression and visualize profiling data}
 \usage{
-profvis(expr = NULL, interval = 0.01, prof_output = NULL,
-  prof_input = NULL, width = NULL, height = NULL, split = c("h",
-  "v"), torture = 0)
+profvis(
+  expr = NULL,
+  interval = 0.01,
+  prof_output = NULL,
+  prof_input = NULL,
+  width = NULL,
+  height = NULL,
+  split = c("h", "v"),
+  torture = 0,
+  simplify = TRUE
+)
 }
 \arguments{
 \item{expr}{Code to profile. Not compatible with \code{prof_input}.}
@@ -38,6 +46,11 @@ split bar.}
   memory allocations will be attributed to different lines of code. Using
   \code{torture = steps} helps prevent this, by making R trigger garbage
   collection after every \code{torture} memory allocation step.}
+
+\item{simplify}{Whether to simplify the profiles by removing
+intervening frames caused by lazy evaluation. This only has an
+effect on R 4.0. See the \code{filter.callframes} argument of
+\code{\link{Rprof}()}.}
 }
 \description{
 This function will run an R expression with profiling, and then return an

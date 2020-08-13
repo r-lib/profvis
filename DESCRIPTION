@@ -27,6 +27,6 @@ Suggests:
     devtools,
     shiny,
     htmltools
-RoxygenNote: 6.1.1
+RoxygenNote: 7.1.0
 URL: https://rstudio.github.io/profvis/
 Encoding: UTF-8

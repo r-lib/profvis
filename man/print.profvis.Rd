@@ -4,8 +4,7 @@
 \alias{print.profvis}
 \title{Print a profvis object}
 \usage{
-\method{print}{profvis}(x, ..., width = NULL, height = NULL,
-  split = NULL)
+\method{print}{profvis}(x, ..., width = NULL, height = NULL, split = NULL)
 }
 \arguments{
 \item{x}{The object to print.}
