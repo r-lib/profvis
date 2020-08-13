@@ -1,7 +1,7 @@
 profvis 0.3.6.9000
 =============
 
-* Added `simplify` argument. When `TRUE` (the default), the profiles are simplified using the new `filter.callframes` argument of R 4.0. This argument has no effect on older R versions.
+* Resolved [#102](https://github.com/rstudio/profvis/issues/102):" Added `simplify` argument. When `TRUE` (the default), the profiles are simplified using the new `filter.callframes` argument of R 4.0. This argument has no effect on older R versions. ([#118](https://github.com/rstudio/profvis/pull/118))
 
 * Fixed [#111](https://github.com/rstudio/profvis/issues/111): auto-scrolling to lines of code did not work in some browsers. ([#113](https://github.com/rstudio/profvis/pull/113))
 
