@@ -192,7 +192,7 @@ There are many ways to install a package with source refs. Here are some example
     ```{r eval=FALSE}
     ## First, restart R ##
     # Assuming sources are in a subdirectory ggplot2/
-    devtools::install("ggplot2", args="--with-keep.source")
+    devtools::install("ggplot2", keep_source = TRUE)
     ```
 
 * From sources on disk using the command line:
@@ -203,7 +203,7 @@ There are many ways to install a package with source refs. Here are some example
 * From sources on Github:
     ```{r eval=FALSE}
     ## First, restart R ##
-    devtools::install_github("hadley/ggplot2", args="--with-keep.source")
+    remotes::install_github("hadley/ggplot2", INSTALL_opts="--with-keep.source")
     ```
 
 
