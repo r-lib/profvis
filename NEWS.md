@@ -1,4 +1,4 @@
-profvis 0.3.6.9000
+profvis 0.3.7
 =============
 
 * Resolved [#102](https://github.com/rstudio/profvis/issues/102):" Added `simplify` argument. When `TRUE` (the default), the profiles are simplified using the new `filter.callframes` argument of R 4.0. This argument has no effect on older R versions. ([#118](https://github.com/rstudio/profvis/pull/118))
