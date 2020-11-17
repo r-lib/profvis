@@ -23,10 +23,11 @@ Suggests:
     knitr,
     ggplot2,
     rmarkdown,
-    testthat,
+    testthat (>= 3.0.0),
     devtools,
     shiny,
     htmltools
 RoxygenNote: 7.1.1
 URL: https://rstudio.github.io/profvis/
 Encoding: UTF-8
+Config/testthat/edition: 3
