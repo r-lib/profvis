@@ -6,14 +6,18 @@
 #' @param ... Arguments passed to `Rprof()`.
 #' @param trim_stack Whether to trim the current call stack from the
 #'   profiles.
-#'
+#' @param pattern Regexp or `NULL`. If supplied, resamples a new
+#'   profile until the regexp matches the modal profile
+#'   stack. Metadata is removed from the profiles before matching and
+#'   taking the modal value.
 #' @noRd
 rprof_lines <- function(expr,
                         env = caller_env(),
                         ...,
                         interval = 0.001,
                         filter.callframes = FALSE,
-                        trim_stack = TRUE) {
+                        trim_stack = TRUE,
+                        pattern = NULL) {
   expr <- substitute(expr)
 
   # Support injected quosures
@@ -27,7 +31,7 @@ rprof_lines <- function(expr,
 
   lines <- character()
 
-  while (!length(lines)) {
+  while (!length(lines) || !rprof_matches(lines, pattern)) {
     prof_file <- tempfile("profvis-snapshot", fileext = ".prof")
     on.exit(unlink(prof_file), add = TRUE)
 
@@ -50,11 +54,11 @@ rprof_lines <- function(expr,
 
   if (trim_stack) {
     if (filter.callframes) {
-      call <- call2(rprof_current_suffix_simplified, ...)
+      call <- call2(function() rprof_current_suffix_simplified(...))
       env_bind_lazy(current_env(), do = !!call, .eval_env = env)
       suffix <- do
     } else {
-      suffix <- rprof_current_suffix("rprof_lines", ...)
+      suffix <- rprof_current_suffix(...)
     }
     lines <- gsub(suffix, "", lines)
   }
@@ -62,18 +66,32 @@ rprof_lines <- function(expr,
   lines
 }
 
+rprof_matches <- function(lines, pattern) {
+  if (is_null(pattern)) {
+    TRUE
+  } else {
+    mode <- modal_value(zap_meta_data(lines))
+    !is_null(mode) && grepl(pattern, mode)
+  }
+}
+
 re_srcref <- "\\d+#\\d+"
 re_srcref_opt <- sprintf("( %s | )", re_srcref)
 
-rprof_current_suffix <- function(sentinel = NULL, ...) {
-  lines <- rprof_lines(pause(0.05), trim_stack = FALSE, ...)
-  line <- unique(zap_meta_data(lines))
+rprof_current_suffix <- function(...) {
+  lines <- rprof_lines(
+    pause(0.01),
+    trim_stack = FALSE,
+    ...,
+    pattern = "rprof_current_suffix"
+  )
+  line <- modal_value0(zap_meta_data(lines))
 
   pattern <- sprintf(" \"rprof_current_suffix\"( %s)?", re_srcref)
   pos <- gregexpr(pattern, line)[[1]]
 
   if (length(pos) != 1 || pos < 0) {
-    stop("Unexpected result in `rprof_current_suffix()`.")
+    stop("Unexpected state in `rprof_current_suffix()`.")
   }
   suffix <- substring(line, pos + attr(pos, "match.length"))
 
@@ -82,10 +100,21 @@ rprof_current_suffix <- function(sentinel = NULL, ...) {
 }
 
 rprof_current_suffix_simplified <- function(..., filter.callframes = NULL) {
-  lines <- rprof_lines(pause(0.01), trim_stack = FALSE, ..., filter.callframes = TRUE)
-  line <- unique(zap_meta_data(lines))
+  lines <- rprof_lines(
+    pause(0.01),
+    trim_stack = FALSE,
+    ...,
+    filter.callframes = TRUE,
+    pattern = "rprof_current_suffix_simplified"
+  )
+  line <- modal_value0(zap_meta_data(lines))
 
-  pattern <- sprintf("^\"pause\"%s\"<Anonymous>\"%s", re_srcref_opt, re_srcref_opt)
+  pattern <- sprintf(
+    "^\"pause\"%s\"rprof_current_suffix_simplified\"%s\"<Anonymous>\"%s",
+    re_srcref_opt,
+    re_srcref_opt,
+    re_srcref_opt
+  )
   suffix <- sub(pattern, "", line)
 
   suffix <- srcref_labels_as_wildcards(suffix)

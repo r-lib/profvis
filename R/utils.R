@@ -19,3 +19,24 @@ is_installed <- function(pkg) {
 inject <- function(expr, env = parent.frame()) {
   eval_bare(enexpr(expr), env)
 }
+
+modal_value <- function(x) {
+  if (!length(x)) {
+    return(NULL)
+  }
+
+  self_split <- unname(split(x, x))
+
+  lens <- lengths(self_split)
+  max_locs <- which(lens == max(lens))
+
+  if (length(max_locs) != 1) {
+    return(NULL)
+  }
+
+  modal <- self_split[[max_locs]]
+  modal[[1]]
+}
+modal_value0 <- function(x) {
+  modal_value(x) %||% abort("Expected modal value.")
+}

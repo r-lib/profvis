@@ -1,11 +1,15 @@
 
 TEST_PAUSE_TIME <- 0.01
 
-cat_rprof <- function(expr, ...) {
-  out <- inject(rprof_lines({{ expr }}, ...))
-  out <- unique(out)
-  cat(paste(out, collapse = "\n"))
-  cat("\n")
+cat_rprof <- function(expr, ..., pattern = "pause") {
+  out <- inject(rprof_lines({{ expr }}, ..., pattern = pattern))
+  out <- modal_value(out)
+
+  if (is_null(out)) {
+    abort("Unexpected profile")
+  }
+
+  cat(paste0(out, "\n"))
 }
 
 expect_snapshot0 <- function(expr, cran = TRUE) {
