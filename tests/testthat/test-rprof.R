@@ -20,6 +20,27 @@ test_that("`filter.callframes` filters out intervening frames", {
   expect_snapshot0(cat_rprof(f(), filter.callframes = TRUE))
 })
 
+test_that("stack is correctly stripped even with metadata profiling", {
+  f <- function() pause(0.1)
+  zap <- function(lines) unique(zap_srcref(zap_meta_data(lines)))
+
+  metadata <- rprof_lines(
+    f(),
+    line.profiling = TRUE,
+    memory.profiling = TRUE,
+    filter.callframes = FALSE
+  )
+  expect_snapshot(writeLines(zap(metadata)))
+
+  metadata_simplified <- rprof_lines(
+    f(),
+    line.profiling = TRUE,
+    memory.profiling = TRUE,
+    filter.callframes = TRUE
+  )
+  expect_snapshot(writeLines(zap(metadata_simplified)))
+})
+
 test_that("`pause()` does not include .Call() when `line.profiling` is set", {
   f <- function() pause(0.1)
 

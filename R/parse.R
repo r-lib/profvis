@@ -43,7 +43,7 @@ parse_rprof <- function(path = "Rprof.out", expr_source = NULL) {
   if (has_memory) {
     mem_data <- gsub("^:(\\d+:\\d+:\\d+:\\d+):.*", "\\1", prof_data)
     mem_data <- str_split(mem_data, ":")
-    prof_data <- gsub("^:\\d+:\\d+:\\d+:\\d+:", "\\1", prof_data)
+    prof_data <- zap_mem_prefix(prof_data)
   } else {
     mem_data <- rep(NA_character_, length(prof_data))
   }
@@ -258,6 +258,21 @@ parse_rprof <- function(path = "Rprof.out", expr_source = NULL) {
     interval = interval,
     files = file_contents
   )
+}
+
+zap_mem_prefix <- function(lines) {
+  gsub("^:\\d+:\\d+:\\d+:\\d+:", "\\1", lines)
+}
+zap_file_labels <- function(lines) {
+  lines[!grepl("^#", lines)]
+}
+zap_srcref <- function(lines) {
+  gsub(" \\d+#\\d+", "", lines)
+}
+zap_meta_data <- function(lines) {
+  lines <- zap_file_labels(lines)
+  lines <- zap_mem_prefix(lines)
+  lines
 }
 
 # For any rows where label is NA and there's a srcref, insert the line of code

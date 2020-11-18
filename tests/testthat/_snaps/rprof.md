@@ -26,3 +26,17 @@
     Output
       "pause" "f" 
 
+# stack is correctly stripped even with metadata profiling
+
+    Code
+      writeLines(zap(metadata))
+    Output
+      "pause" "f"
+
+---
+
+    Code
+      writeLines(zap(metadata_simplified))
+    Output
+      "pause" "f" 
+

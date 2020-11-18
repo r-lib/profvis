@@ -50,14 +50,15 @@ rprof_lines <- function(expr,
     } else {
       suffix <- rprof_current_suffix("rprof_lines", ...)
     }
-    lines <- gsub(suffix, "", lines, fixed = TRUE)
+    lines <- gsub(suffix, "", lines)
   }
 
   lines
 }
 
 rprof_current_suffix <- function(sentinel = NULL, ...) {
-  line <- rprof_lines(pause(0.05), trim_stack = FALSE, ...)[[1]]
+  lines <- rprof_lines(pause(0.05), trim_stack = FALSE, ...)
+  line <- unique(zap_meta_data(lines))
 
   pattern <- paste0(" \"", sentinel, "\" ")
   pos <- gregexpr(pattern, line, fixed = TRUE)[[1]]
@@ -66,12 +67,28 @@ rprof_current_suffix <- function(sentinel = NULL, ...) {
     stop("Unexpected number of parts in `rprof_current_suffix()`.")
   }
   pos <- pos[[length(pos)]]
+  suffix <- substring(line, pos)
 
-  substring(line, pos)
+  suffix <- srcref_labels_as_wildcards(suffix)
+  paste0(suffix, "$")
 }
 
-rprof_current_suffix_simplified <- function(...) {
+re_srcref <- "\\d+#\\d+"
+re_srcref_opt <- sprintf("( %s | )", re_srcref)
+
+rprof_current_suffix_simplified <- function(..., filter.callframes = NULL) {
   lines <- rprof_lines(pause(0.05), trim_stack = FALSE, ..., filter.callframes = TRUE)
-  suffix <- unique(lines)
-  sub("^\"pause\" \"<Anonymous>\" ", "", suffix)
+  line <- unique(zap_meta_data(lines))
+
+  pattern <- sprintf("^\"pause\"%s\"<Anonymous>\"%s", re_srcref_opt, re_srcref_opt)
+  suffix <- sub(pattern, "", line)
+
+  suffix <- srcref_labels_as_wildcards(suffix)
+  paste0(suffix, "$")
+}
+
+# File labels of the suffix will differ with those of the actual
+# profiles
+srcref_labels_as_wildcards <- function(lines) {
+  gsub("\\d+#(\\d+)", "\\\\d+#\\1", lines)
 }
