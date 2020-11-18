@@ -16,7 +16,12 @@ pause <- function(seconds) {
   .Call(c_profvis_pause, as.numeric(seconds))
 }
 
-# This guarantees that `pause()` is always compiled, even on
-# `load_all()`. This in turn ensures consistent profile output: if the
-# function is not compiled, `.Call()` is included in the profile.
-on_load(pause <- compiler::cmpfun(pause))
+# This guarantees that (1) `pause()` is always compiled, even on
+# `load_all()` and (2) it doesn't include source references. This in
+# turn ensures consistent profile output: if the function is not
+# compiled and doesn't contain srcrefs, `.Call()` is never included in
+# the profiles, even when `line.profiling` is set.
+on_load({
+  pause <- utils::removeSource(pause)
+  pause <- compiler::cmpfun(pause)
+})
