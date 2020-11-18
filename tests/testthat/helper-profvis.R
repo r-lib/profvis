@@ -5,7 +5,11 @@
 #' @param ... Arguments passed to `Rprof()`.
 #' @param trim_stack Whether to trim the current call stack from the
 #'   profiles.
-rprof_lines <- function(expr, env = caller_env(), ..., trim_stack = TRUE) {
+rprof_lines <- function(expr,
+                        env = caller_env(),
+                        ...,
+                        filter.callframes = FALSE,
+                        trim_stack = TRUE) {
   expr <- substitute(expr)
 
   # Support injected quosures
@@ -26,7 +30,7 @@ rprof_lines <- function(expr, env = caller_env(), ..., trim_stack = TRUE) {
     env_bind_lazy(current_env(), do = !!expr, .eval_env = env)
 
     gc()
-    Rprof(prof_file, ...)
+    Rprof(prof_file, ..., filter.callframes = filter.callframes)
     on.exit(Rprof(NULL), add = TRUE)
 
     do
@@ -36,14 +40,20 @@ rprof_lines <- function(expr, env = caller_env(), ..., trim_stack = TRUE) {
   }
 
   if (trim_stack) {
-    suffix <- rprof_current_suffix("rprof_lines")
+    if (filter.callframes) {
+      call <- call2(rprof_current_suffix_simplified, ...)
+      env_bind_lazy(current_env(), do = !!call, .eval_env = env)
+      suffix <- do
+    } else {
+      suffix <- rprof_current_suffix("rprof_lines", ...)
+    }
     lines <- gsub(suffix, "", lines, fixed = TRUE)
   }
 
   lines
 }
 
-rprof_current_suffix <- function(sentinel) {
+rprof_current_suffix <- function(sentinel = NULL, ...) {
   i <- 0
 
   repeat {
@@ -51,7 +61,7 @@ rprof_current_suffix <- function(sentinel) {
       stop("Can't find Rprof prefix.")
     }
 
-    lines <- rprof_lines(pause(0.05), trim_stack = FALSE)
+    lines <- rprof_lines(pause(0.05), trim_stack = FALSE, ...)
 
     complete <- which(grepl(sentinel, lines))
     if (length(complete)) {
@@ -71,6 +81,12 @@ rprof_current_suffix <- function(sentinel) {
   pos <- pos[[length(pos)]]
 
   substring(complete_line, pos)
+}
+
+rprof_current_suffix_simplified <- function(...) {
+  lines <- rprof_lines(pause(0.05), trim_stack = FALSE, ..., filter.callframes = TRUE)
+  suffix <- unique(lines)
+  sub("^\"pause\" \"<Anonymous>\" ", "", suffix)
 }
 
 cat_rprof <- function(expr, ...) {

@@ -8,6 +8,18 @@ test_that("`rprof_lines()` collects profiles", {
   expect_snapshot0(cat_rprof(f()))
 })
 
+test_that("`filter.callframes` filters out intervening frames", {
+  # Chains of calls are kept
+  f <- function() g()
+  g <- function() h()
+  h <- function() pause(0.1)
+  expect_snapshot0(cat_rprof(f(), filter.callframes = TRUE))
+
+  # Intervening frames are discarded
+  f <- function() identity(identity(pause(0.1)))
+  expect_snapshot0(cat_rprof(f(), filter.callframes = TRUE))
+})
+
 test_that("`pause()` does not include .Call() when `line.profiling` is set", {
   f <- function() pause(0.1)
 
