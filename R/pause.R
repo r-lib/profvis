@@ -15,3 +15,8 @@
 pause <- function(seconds) {
   .Call(c_profvis_pause, as.numeric(seconds))
 }
+
+# This guarantees that `pause()` is always compiled, even on
+# `load_all()`. This in turn ensures consistent profile output: if the
+# function is not compiled, `.Call()` is included in the profile.
+on_load(pause <- compiler::cmpfun(pause))

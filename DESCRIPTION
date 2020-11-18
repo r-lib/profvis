@@ -17,6 +17,7 @@ Depends:
     R (>= 3.0)
 Imports:
     htmlwidgets (>= 0.3.2),
+    rlang (>= 0.4.8),
     stringr
 License: GPL-3 | file LICENSE
 Suggests:
