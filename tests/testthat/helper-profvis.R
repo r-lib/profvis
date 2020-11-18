@@ -1,4 +1,6 @@
 
+TEST_PAUSE_TIME <- 0.01
+
 cat_rprof <- function(expr, ...) {
   out <- inject(rprof_lines({{ expr }}, ...))
   out <- unique(out)

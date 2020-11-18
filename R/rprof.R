@@ -11,6 +11,7 @@
 rprof_lines <- function(expr,
                         env = caller_env(),
                         ...,
+                        interval = 0.001,
                         filter.callframes = FALSE,
                         trim_stack = TRUE) {
   expr <- substitute(expr)
@@ -33,7 +34,12 @@ rprof_lines <- function(expr,
     env_bind_lazy(current_env(), do = !!expr, .eval_env = env)
 
     gc()
-    Rprof(prof_file, ..., filter.callframes = filter.callframes)
+    Rprof(
+      prof_file,
+      ...,
+      interval = interval,
+      filter.callframes = filter.callframes
+    )
     on.exit(Rprof(NULL), add = TRUE)
 
     do
@@ -76,7 +82,7 @@ rprof_current_suffix <- function(sentinel = NULL, ...) {
 }
 
 rprof_current_suffix_simplified <- function(..., filter.callframes = NULL) {
-  lines <- rprof_lines(pause(0.05), trim_stack = FALSE, ..., filter.callframes = TRUE)
+  lines <- rprof_lines(pause(0.01), trim_stack = FALSE, ..., filter.callframes = TRUE)
   line <- unique(zap_meta_data(lines))
 
   pattern <- sprintf("^\"pause\"%s\"<Anonymous>\"%s", re_srcref_opt, re_srcref_opt)
