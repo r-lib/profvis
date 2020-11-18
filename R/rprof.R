@@ -53,13 +53,7 @@ rprof_lines <- function(expr,
   }
 
   if (trim_stack) {
-    if (filter.callframes) {
-      call <- call2(function() rprof_current_suffix_simplified(...))
-      env_bind_lazy(current_env(), do = !!call, .eval_env = env)
-      suffix <- do
-    } else {
-      suffix <- rprof_current_suffix(...)
-    }
+    suffix <- rprof_current_suffix(env, filter.callframes, ...)
     lines <- gsub(suffix, "", lines)
   }
 
@@ -78,12 +72,25 @@ rprof_matches <- function(lines, pattern) {
 re_srcref <- "\\d+#\\d+"
 re_srcref_opt <- sprintf("( %s | )", re_srcref)
 
-rprof_current_suffix <- function(...) {
+rprof_current_suffix <- function(env, simplify, ...) {
+  if (simplify) {
+    # We need to call the suffix routine from the caller frame. We
+    # inline a closure in the call so we can refer to here despite
+    # evaluating in a foreign environment. Evaluation is done through
+    # a promise to keep the call stack simple.
+    call <- call2(function() rprof_current_suffix_linear(...))
+    env_bind_lazy(current_env(), do = !!call, .eval_env = env)
+    do
+  } else {
+    rprof_current_suffix_full(...)
+  }
+}
+rprof_current_suffix_full <- function(...) {
   lines <- rprof_lines(
     pause(0.01),
     trim_stack = FALSE,
     ...,
-    pattern = "rprof_current_suffix"
+    pattern = "rprof_current_suffix_full"
   )
   line <- modal_value0(zap_meta_data(lines))
 
@@ -99,18 +106,18 @@ rprof_current_suffix <- function(...) {
   paste0(suffix, "$")
 }
 
-rprof_current_suffix_simplified <- function(..., filter.callframes = NULL) {
+rprof_current_suffix_linear <- function(..., filter.callframes = NULL) {
   lines <- rprof_lines(
     pause(0.01),
     trim_stack = FALSE,
     ...,
     filter.callframes = TRUE,
-    pattern = "rprof_current_suffix_simplified"
+    pattern = "rprof_current_suffix_linear"
   )
   line <- modal_value0(zap_meta_data(lines))
 
   pattern <- sprintf(
-    "^\"pause\"%s\"rprof_current_suffix_simplified\"%s\"<Anonymous>\"%s",
+    "^\"pause\"%s\"rprof_current_suffix_linear\"%s\"<Anonymous>\"%s",
     re_srcref_opt,
     re_srcref_opt,
     re_srcref_opt
