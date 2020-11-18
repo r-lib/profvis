@@ -54,33 +54,17 @@ rprof_lines <- function(expr,
 }
 
 rprof_current_suffix <- function(sentinel = NULL, ...) {
-  i <- 0
-
-  repeat {
-    if (i > 200) {
-      stop("Can't find Rprof prefix.")
-    }
-
-    lines <- rprof_lines(pause(0.05), trim_stack = FALSE, ...)
-
-    complete <- which(grepl(sentinel, lines))
-    if (length(complete)) {
-      complete_line <- lines[[complete[[1]]]]
-      break
-    }
-
-    i <- i + 1
-  }
+  line <- rprof_lines(pause(0.05), trim_stack = FALSE, ...)[[1]]
 
   pattern <- paste0(" \"", sentinel, "\" ")
-  pos <- gregexpr(pattern, complete_line, fixed = TRUE)[[1]]
+  pos <- gregexpr(pattern, line, fixed = TRUE)[[1]]
 
   if (length(pos) < 1) {
     stop("Unexpected number of parts in `rprof_current_suffix()`.")
   }
   pos <- pos[[length(pos)]]
 
-  substring(complete_line, pos)
+  substring(line, pos)
 }
 
 rprof_current_suffix_simplified <- function(...) {
