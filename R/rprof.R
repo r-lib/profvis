@@ -139,3 +139,5 @@ gsub_srcref_as_wildcards <- function(lines) {
 
   lines
 }
+
+utils::globalVariables("do")
