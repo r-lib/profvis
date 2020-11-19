@@ -13,7 +13,8 @@ profvis(
   height = NULL,
   split = c("h", "v"),
   torture = 0,
-  simplify = TRUE
+  simplify = TRUE,
+  rerun = FALSE
 )
 }
 \arguments{
@@ -51,6 +52,10 @@ split bar.}
 intervening frames caused by lazy evaluation. This only has an
 effect on R 4.0. See the \code{filter.callframes} argument of
 \code{\link{Rprof}()}.}
+
+\item{rerun}{If `TRUE`, `Rprof()` is run again with `expr` until a
+profile is actually produced. This is useful for the cases where
+`expr` returns too quickly, before R had time to sample a profile.}
 }
 \description{
 This function will run an R expression with profiling, and then return an

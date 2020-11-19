@@ -31,11 +31,13 @@
 #'   memory allocations will be attributed to different lines of code. Using
 #'   \code{torture = steps} helps prevent this, by making R trigger garbage
 #'   collection after every \code{torture} memory allocation step.
-#'
 #' @param simplify Whether to simplify the profiles by removing
 #'   intervening frames caused by lazy evaluation. This only has an
 #'   effect on R 4.0. See the \code{filter.callframes} argument of
 #'   \code{\link{Rprof}()}.
+#' @param rerun If `TRUE`, `Rprof()` is run again with `expr` until a
+#'   profile is actually produced. This is useful for the cases where
+#'   `expr` returns too quickly, before R had time to sample a profile.
 #'
 #' @seealso \code{\link{print.profvis}} for printing options.
 #' @seealso \code{\link{Rprof}} for more information about how the profiling
@@ -80,10 +82,22 @@
 #' @export
 profvis <- function(expr = NULL, interval = 0.01, prof_output = NULL,
                     prof_input = NULL, width = NULL, height = NULL,
-                    split = c("h", "v"), torture = 0, simplify = TRUE)
-{
+                    split = c("h", "v"), torture = 0, simplify = TRUE,
+                    rerun = FALSE) {
   split <- match.arg(split)
+
   expr_q <- substitute(expr)
+
+  # Support injected quosures
+  if (is_quosure(expr_q)) {
+    # Warn if there are any embedded quosures as these are not supported
+    quo_squash(expr_q, warn = TRUE)
+
+    env <- quo_get_env(expr_q)
+    expr_q <- quo_get_expr(expr_q)
+  } else {
+    env <- parent.frame()
+  }
 
   if (is.null(prof_input) && is.null(expr_q)) {
     stop("profvis must be called with `expr` or `prof_input` ")
@@ -133,36 +147,47 @@ profvis <- function(expr = NULL, interval = 0.01, prof_output = NULL,
       on.exit(gctorture2(step = 0), add = TRUE)
     }
 
-    if (getRversion() >= "4.0.0") {
-      Rprof(prof_output, interval = interval, line.profiling = TRUE,
-            gc.profiling = TRUE, memory.profiling = TRUE,
-            filter.callframes = simplify)
-    } else {
-      Rprof(prof_output, interval = interval, line.profiling = TRUE,
-            gc.profiling = TRUE, memory.profiling = TRUE)
-    }
-    on.exit(Rprof(NULL), add = TRUE)
-    if (remove_on_exit)
-      on.exit(unlink(prof_output), add = TRUE)
-
-    tryCatch(
-      force(expr),
-      error = function(e) {
-        message("profvis: code exited with error:\n", e$message, "\n")
-      },
-      interrupt = function(e) {
-        message("profvis: interrupt received.")
-      }
+    rprof_args <- list(
+      interval = interval,
+      line.profiling = TRUE,
+      gc.profiling = TRUE,
+      memory.profiling = TRUE
     )
-    Rprof(NULL)
+    if (getRversion() >= "4.0.0") {
+      rprof_args <- append(rprof_args, list(filter.callframes = simplify))
+    }
 
+    on.exit(Rprof(NULL), add = TRUE)
+    if (remove_on_exit) {
+      on.exit(unlink(prof_output), add = TRUE)
+    }
+    repeat {
+      inject(Rprof(prof_output, !!!rprof_args))
+      with_profvis_handlers(expr)
+      Rprof(NULL)
+
+      lines <- readLines(prof_output)
+      if (length(lines) > 1 || !rerun) {
+        break
+      }
+
+      env_bind_lazy(current_env(), expr = !!expr_q, .eval_env = env)
+    }
+
+    # Must be in the same handler context as `expr` above to get the
+    # full stack suffix
+    with_profvis_handlers({
+      suffix <- rprof_current_suffix(env, simplify)
+      lines <- gsub(suffix, "", lines)
+    })
   } else {
     # If we got here, we were provided a prof_input file instead of expr
     expr_source <- NULL
     prof_output <- prof_input
+    lines <- readLines(prof_output)
   }
 
-  message <- parse_rprof(prof_output, expr_source)
+  message <- parse_rprof_lines(lines, expr_source)
   message$prof_output <- prof_output
 
   # Patterns to highlight on flamegraph
@@ -185,6 +210,21 @@ profvis <- function(expr = NULL, interval = 0.01, prof_output = NULL,
       knitr.figure = FALSE
     )
   )
+}
+
+with_profvis_handlers <- function(expr) {
+  tryCatch({
+    expr
+    NULL
+  },
+  error = function(cnd) {
+    message("profvis: code exited with error:\n", cnd$message, "\n")
+    cnd
+  },
+  interrupt = function(cnd) {
+    message("profvis: interrupt received.")
+    cnd
+  })
 }
 
 #' Print a profvis object
