@@ -70,7 +70,7 @@ rprof_matches <- function(lines, pattern) {
 }
 
 re_srcref <- "\\d+#\\d+"
-re_srcref_opt <- sprintf("( %s | )", re_srcref)
+re_srcref_opt <- sprintf(" (%s )?", re_srcref)
 
 rprof_current_suffix <- function(env, simplify, ...) {
   if (simplify) {
@@ -102,7 +102,7 @@ rprof_current_suffix_full <- function(...) {
   }
   suffix <- substring(line, pos + attr(pos, "match.length"))
 
-  suffix <- srcref_labels_as_wildcards(suffix)
+  suffix <- gsub_srcref_as_wildcards(suffix)
   paste0(suffix, "$")
 }
 
@@ -124,12 +124,18 @@ rprof_current_suffix_linear <- function(..., filter.callframes = NULL) {
   )
   suffix <- sub(pattern, "", line)
 
-  suffix <- srcref_labels_as_wildcards(suffix)
+  suffix <- gsub_srcref_as_wildcards(suffix)
   paste0(suffix, "$")
 }
 
 # File labels of the suffix will differ with those of the actual
 # profiles
-srcref_labels_as_wildcards <- function(lines) {
-  gsub("\\d+#\\d+", "\\\\d+#\\\\d+", lines)
+gsub_srcref_as_wildcards <- function(lines) {
+  # Strip all existing srcrefs
+  lines <- gsub("\\d+#\\d+ ", "", lines)
+
+  # Add wildcards for srcrefs
+  lines <- gsub("\" \"", sprintf("\"%s\"", re_srcref_opt), lines, fixed = TRUE)
+
+  lines
 }

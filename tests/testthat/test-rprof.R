@@ -48,3 +48,13 @@ test_that("`pause()` does not include .Call() when `line.profiling` is set", {
   out <- unique(rprof_lines(f(), line.profiling = TRUE))
   expect_true(any(grepl("^\"pause\" ", out)))
 })
+
+test_that("srcrefs do not prevent suffix replacement", {
+  line <- ":1509169:3184799:91929040:0:\"pause\" 1#1 \"f\" \"doTryCatch\" \"tryCatchOne\" \"tryCatchList\" \"doTryCatch\" \"tryCatchOne\" \"tryCatchList\" \"tryCatch\" 2#193 \"with_profvis_handlers\" 2#151 \"profvis\" "
+  suffix <- "\"doTryCatch\" \"tryCatchOne\" \"tryCatchList\" \"doTryCatch\" \"tryCatchOne\" \"tryCatchList\" \"tryCatch\" 2#193 \"with_profvis_handlers\" 2#151 \"profvis\" $"
+  re <- gsub_srcref_as_wildcards(suffix)
+  expect_equal(
+    gsub(re, "", line),
+    ":1509169:3184799:91929040:0:\"pause\" 1#1 \"f\" "
+  )
+})
