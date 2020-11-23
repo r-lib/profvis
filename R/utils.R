@@ -52,3 +52,31 @@ enquo0_list <- function(arg) {
     env = quo_get_env(quo)
   )
 }
+
+`%<-%` <- function(lhs, rhs) {
+  lhs <- substitute(lhs)
+  env <- caller_env()
+
+  if (is_symbol(lhs)) {
+    return(inject(!!lhs <- !!enquote(rhs), env))
+  }
+
+  if (!is_call(lhs, "c")) {
+    abort("LHS of `%<-%` must be a symbol or `c()`.")
+  }
+
+  vars <- as.list(lhs[-1])
+
+  if (length(vars) != length(rhs)) {
+    abort("Destructured arguments must match the number of assigned variables.")
+  }
+
+  for (i in seq_along(vars)) {
+    inject(!!vars[[i]] <- !!enquote(rhs[[i]]), env)
+  }
+
+  invisible(rhs)
+}
+
+# Work around for `!!foo <- x`
+utils::globalVariables("!<-")

@@ -18,9 +18,7 @@ rprof_lines <- function(expr,
                         filter.callframes = FALSE,
                         trim_stack = TRUE,
                         pattern = NULL) {
-  expr <- enquo0_list(expr)
-  env <- expr$env
-  expr <- expr$expr
+  c(expr, env) %<-% enquo0_list(expr)
 
   lines <- character()
 

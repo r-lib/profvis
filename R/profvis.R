@@ -85,10 +85,7 @@ profvis <- function(expr = NULL, interval = 0.01, prof_output = NULL,
                     split = c("h", "v"), torture = 0, simplify = TRUE,
                     rerun = FALSE) {
   split <- match.arg(split)
-
-  expr_q <- enquo0_list(expr)
-  env <- expr_q$env
-  expr_q <- expr_q$expr
+  c(expr_q, env) %<-% enquo0_list(expr)
 
   if (is.null(prof_input) && is.null(expr_q)) {
     stop("profvis must be called with `expr` or `prof_input` ")
