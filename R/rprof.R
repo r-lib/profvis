@@ -28,13 +28,19 @@ rprof_lines <- function(expr,
 
     env_bind_lazy(current_env(), do = !!expr, .eval_env = env)
 
+    if (has_simplify()) {
+      args <- list(filter.callframes = filter.callframes)
+    } else {
+      args <- NULL
+    }
+
     gc()
-    Rprof(
+    inject(Rprof(
       prof_file,
       ...,
       interval = interval,
-      filter.callframes = filter.callframes
-    )
+      !!!args
+    ))
     on.exit(Rprof(NULL), add = TRUE)
 
     do
@@ -132,3 +138,7 @@ gsub_srcref_as_wildcards <- function(lines) {
 }
 
 utils::globalVariables("do")
+
+has_simplify <- function() {
+  getRversion() >= "4.0.3"
+}

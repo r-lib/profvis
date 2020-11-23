@@ -22,7 +22,6 @@ repro_profvis <- function(expr, ..., rerun = TRUE, interval = 0.005) {
   inject(profvis({{ expr }}, ..., rerun = rerun, interval = interval))
 }
 
-skip_if_cannot_simplify <- function() {
-  # Requires `filter.callframes` argument
-  skip_if(getRversion() < "4.0.3")
+zap_trailing_space <- function(lines) {
+  gsub(" $", "", lines)
 }

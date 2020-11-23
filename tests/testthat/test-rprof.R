@@ -1,6 +1,4 @@
 
-skip_if_cannot_simplify()
-
 test_that("`rprof_lines()` collects profiles", {
   f <- function() pause(TEST_PAUSE_TIME)
 
@@ -11,6 +9,8 @@ test_that("`rprof_lines()` collects profiles", {
 })
 
 test_that("`filter.callframes` filters out intervening frames", {
+  skip_if_not(has_simplify())
+
   # Chains of calls are kept
   f <- function() g()
   g <- function() h()
@@ -24,7 +24,7 @@ test_that("`filter.callframes` filters out intervening frames", {
 
 test_that("stack is correctly stripped even with metadata profiling", {
   f <- function() pause(TEST_PAUSE_TIME)
-  zap <- function(lines) unique(zap_srcref(zap_meta_data(lines)))
+  zap <- function(lines) unique(zap_trailing_space(zap_srcref(zap_meta_data(lines))))
 
   metadata <- rprof_lines(
     f(),

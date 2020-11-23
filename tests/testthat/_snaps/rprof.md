@@ -38,5 +38,5 @@
     Code
       writeLines(zap(metadata_simplified))
     Output
-      "pause" "f" 
+      "pause" "f"
 
