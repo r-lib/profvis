@@ -40,3 +40,15 @@ modal_value <- function(x) {
 modal_value0 <- function(x) {
   modal_value(x) %||% abort("Expected modal value.")
 }
+
+enquo0_list <- function(arg) {
+  quo <- inject(enquo0(!!substitute(arg)), caller_env())
+
+  # Warn if there are any embedded quosures as these are not supported
+  quo_squash(quo, warn = TRUE)
+
+  list(
+    expr = quo_get_expr(quo),
+    env = quo_get_env(quo)
+  )
+}

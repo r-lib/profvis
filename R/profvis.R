@@ -86,18 +86,9 @@ profvis <- function(expr = NULL, interval = 0.01, prof_output = NULL,
                     rerun = FALSE) {
   split <- match.arg(split)
 
-  expr_q <- substitute(expr)
-
-  # Support injected quosures
-  if (is_quosure(expr_q)) {
-    # Warn if there are any embedded quosures as these are not supported
-    quo_squash(expr_q, warn = TRUE)
-
-    env <- quo_get_env(expr_q)
-    expr_q <- quo_get_expr(expr_q)
-  } else {
-    env <- parent.frame()
-  }
+  expr_q <- enquo0_list(expr)
+  env <- expr_q$env
+  expr_q <- expr_q$expr
 
   if (is.null(prof_input) && is.null(expr_q)) {
     stop("profvis must be called with `expr` or `prof_input` ")

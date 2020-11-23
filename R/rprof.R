@@ -1,8 +1,9 @@
 #' Generate profiler lines for an expression
 #'
-#' @param expr,env Expression to evaluate in `env`. The expression is
-#'   repeatedly evaluated until `Rprof()` produces an output. Can _be_
-#'   an injected quosure but cannot _contain_ injected quosures.
+#' @param expr Expression to profile. The expression is repeatedly
+#'   evaluated until `Rprof()` produces an output. Can _be_ a quosure
+#'   injected with [rlang::inject()] but cannot _contain_ injected
+#'   quosures.
 #' @param ... Arguments passed to `Rprof()`.
 #' @param trim_stack Whether to trim the current call stack from the
 #'   profiles.
@@ -12,22 +13,14 @@
 #'   taking the modal value.
 #' @noRd
 rprof_lines <- function(expr,
-                        env = caller_env(),
                         ...,
                         interval = 0.001,
                         filter.callframes = FALSE,
                         trim_stack = TRUE,
                         pattern = NULL) {
-  expr <- substitute(expr)
-
-  # Support injected quosures
-  if (is_quosure(expr)) {
-    # Warn if there are any embedded quosures as these are not supported
-    quo_squash(expr, warn = TRUE)
-
-    env <- quo_get_env(expr)
-    expr <- quo_get_expr(expr)
-  }
+  expr <- enquo0_list(expr)
+  env <- expr$env
+  expr <- expr$expr
 
   lines <- character()
 
