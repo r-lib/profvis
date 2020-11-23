@@ -1,4 +1,6 @@
 
+skip_if_cannot_simplify()
+
 test_that("`rprof_lines()` collects profiles", {
   f <- function() pause(TEST_PAUSE_TIME)
 

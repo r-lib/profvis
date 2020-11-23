@@ -21,3 +21,8 @@ expect_snapshot0 <- function(expr, cran = TRUE) {
 repro_profvis <- function(expr, ..., rerun = TRUE, interval = 0.005) {
   inject(profvis({{ expr }}, ..., rerun = rerun, interval = interval))
 }
+
+skip_if_cannot_simplify <- function() {
+  # Requires `filter.callframes` argument
+  skip_if(getRversion() < "4.0.3")
+}

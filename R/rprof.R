@@ -64,7 +64,7 @@ re_srcref <- "\\d+#\\d+"
 re_srcref_opt <- sprintf(" (%s )?", re_srcref)
 
 rprof_current_suffix <- function(env, simplify, ...) {
-  if (simplify) {
+  if (simplify && getRversion() >= "4.0.3") {
     # We need to call the suffix routine from the caller frame. We
     # inline a closure in the call so we can refer to here despite
     # evaluating in a foreign environment. Evaluation is done through

@@ -144,7 +144,7 @@ profvis <- function(expr = NULL, interval = 0.01, prof_output = NULL,
       gc.profiling = TRUE,
       memory.profiling = TRUE
     )
-    if (getRversion() >= "4.0.0") {
+    if (getRversion() >= "4.0.3") {
       rprof_args <- append(rprof_args, list(filter.callframes = simplify))
     }
 
