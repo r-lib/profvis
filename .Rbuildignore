@@ -9,3 +9,4 @@
 ^revdep$
 ^cran-comments\.md$
 ^scripts$
+^\.github$
