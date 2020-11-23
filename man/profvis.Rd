@@ -18,7 +18,10 @@ profvis(
 )
 }
 \arguments{
-\item{expr}{Code to profile. Not compatible with \code{prof_input}.}
+\item{expr}{Expression to profile. Not compatible with \code{prof_input}.
+The expression is repeatedly evaluated until `Rprof()` produces
+an output. It can _be_ a quosure injected with [rlang::inject()] but
+it cannot _contain_ injected quosures.}
 
 \item{interval}{Interval for profiling samples, in seconds. Values less than
 0.005 (5 ms) will probably not result in accurate timings}

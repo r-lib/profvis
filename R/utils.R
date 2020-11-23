@@ -16,10 +16,6 @@ is_installed <- function(pkg) {
   found
 }
 
-inject <- function(expr, env = parent.frame()) {
-  eval_bare(enexpr(expr), env)
-}
-
 modal_value <- function(x) {
   if (!length(x)) {
     return(NULL)

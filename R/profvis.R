@@ -8,7 +8,10 @@
 #' corresponding data file as the \code{prof_input} argument to
 #' \code{profvis()}.
 #'
-#' @param expr Code to profile. Not compatible with \code{prof_input}.
+#' @param expr Expression to profile. Not compatible with \code{prof_input}.
+#'   The expression is repeatedly evaluated until `Rprof()` produces
+#'   an output. It can _be_ a quosure injected with [rlang::inject()] but
+#'   it cannot _contain_ injected quosures.
 #' @param interval Interval for profiling samples, in seconds. Values less than
 #'   0.005 (5 ms) will probably not result in accurate timings
 #' @param prof_output Name of an Rprof output file or directory in which to save
