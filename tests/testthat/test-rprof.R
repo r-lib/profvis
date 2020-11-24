@@ -3,7 +3,7 @@ test_that("`rprof_lines()` collects profiles", {
   f <- function() pause(TEST_PAUSE_TIME)
 
   out <- rprof_lines(f(), pattern = "pause")
-  expect_snapshot(writeLines(unique(out)))
+  expect_snapshot(writeLines(modal_value(out)))
 
   expect_snapshot0(cat_rprof(f()))
 })
@@ -24,7 +24,7 @@ test_that("`filter.callframes` filters out intervening frames", {
 
 test_that("stack is correctly stripped even with metadata profiling", {
   f <- function() pause(TEST_PAUSE_TIME)
-  zap <- function(lines) unique(zap_trailing_space(zap_srcref(zap_meta_data(lines))))
+  zap <- function(lines) modal_value(zap_trailing_space(zap_srcref(zap_meta_data(lines))))
 
   metadata <- rprof_lines(
     f(),
@@ -49,8 +49,8 @@ test_that("`pause()` does not include .Call() when `line.profiling` is set", {
   f <- function() pause(TEST_PAUSE_TIME)
 
   # `pause()` should appear first on the line
-  out <- unique(rprof_lines(f(), line.profiling = TRUE))
-  expect_true(any(grepl("^\"pause\" ", out)))
+  out <- modal_value(rprof_lines(f(), line.profiling = TRUE, pattern = "pause"))
+  expect_true(grepl("^\"pause\" ", out))
 })
 
 test_that("srcrefs do not prevent suffix replacement", {
