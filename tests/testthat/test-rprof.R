@@ -2,7 +2,7 @@
 test_that("`rprof_lines()` collects profiles", {
   f <- function() pause(TEST_PAUSE_TIME)
 
-  out <- rprof_lines(f())
+  out <- rprof_lines(f(), pattern = "pause")
   expect_snapshot(writeLines(unique(out)))
 
   expect_snapshot0(cat_rprof(f()))
@@ -30,7 +30,8 @@ test_that("stack is correctly stripped even with metadata profiling", {
     f(),
     line.profiling = TRUE,
     memory.profiling = TRUE,
-    filter.callframes = FALSE
+    filter.callframes = FALSE,
+    pattern = "pause"
   )
   expect_snapshot(writeLines(zap(metadata)))
 
@@ -38,7 +39,8 @@ test_that("stack is correctly stripped even with metadata profiling", {
     f(),
     line.profiling = TRUE,
     memory.profiling = TRUE,
-    filter.callframes = TRUE
+    filter.callframes = TRUE,
+    pattern = "pause"
   )
   expect_snapshot(writeLines(zap(metadata_simplified)))
 })
