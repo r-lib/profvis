@@ -46,7 +46,7 @@ rprof_lines <- function(expr,
     do
     Rprof(NULL)
 
-    lines <- readLines(prof_file)[-1]
+    lines <- readLines(prof_file, warn = FALSE)[-1]
   }
 
   if (trim_stack) {
