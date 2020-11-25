@@ -47,11 +47,11 @@ rprof_lines <- function(expr,
     Rprof(NULL)
 
     lines <- readLines(prof_file, warn = FALSE)[-1]
-  }
 
-  if (trim_stack) {
-    suffix <- rprof_current_suffix(env, filter.callframes, ...)
-    lines <- gsub(suffix, "", lines)
+    if (trim_stack) {
+      suffix <- rprof_current_suffix(env, filter.callframes, ...)
+      lines <- gsub(suffix, "", lines)
+    }
   }
 
   lines
