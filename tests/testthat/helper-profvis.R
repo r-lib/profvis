@@ -25,3 +25,9 @@ repro_profvis <- function(expr, ..., rerun = "pause", interval = 0.005) {
 zap_trailing_space <- function(lines) {
   gsub(" $", "", lines)
 }
+
+profvis_modal_value <- function(prof) {
+  stacks <- split(prof$label, prof$time)
+  stacks <- vapply(stacks, paste, "", collapse = " ")
+  modal_value(stacks)
+}

@@ -21,6 +21,9 @@ modal_value <- function(x) {
     return(NULL)
   }
 
+  if (is.list(x)) {
+    abort("Can't use `modal_value()` with lists.")
+  }
   self_split <- unname(split(x, x))
 
   lens <- lengths(self_split)
