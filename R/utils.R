@@ -16,7 +16,7 @@ is_installed <- function(pkg) {
   found
 }
 
-modal_value <- function(x) {
+modal_value0 <- function(x) {
   if (!length(x)) {
     return(NULL)
   }
@@ -36,8 +36,8 @@ modal_value <- function(x) {
   modal <- self_split[[max_locs]]
   modal[[1]]
 }
-modal_value0 <- function(x) {
-  modal_value(x) %||% abort("Expected modal value.")
+modal_value <- function(x) {
+  modal_value0(x) %||% abort("Expected modal value.")
 }
 
 enquo0_list <- function(arg) {

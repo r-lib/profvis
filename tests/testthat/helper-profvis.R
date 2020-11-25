@@ -3,7 +3,7 @@ TEST_PAUSE_TIME <- 0.01
 
 cat_rprof <- function(expr, ..., rerun = "pause") {
   out <- inject(rprof_lines({{ expr }}, ..., rerun = rerun))
-  out <- modal_value(out)
+  out <- modal_value0(out)
 
   if (is_null(out)) {
     abort("Unexpected profile")
@@ -29,5 +29,5 @@ zap_trailing_space <- function(lines) {
 profvis_modal_value <- function(prof) {
   stacks <- split(prof$label, prof$time)
   stacks <- vapply(stacks, paste, "", collapse = " ")
-  modal_value(stacks)
+  modal_value0(stacks)
 }

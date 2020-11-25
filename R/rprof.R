@@ -80,7 +80,7 @@ rprof_current_suffix_full <- function(...) {
     ...,
     rerun = "rprof_current_suffix_full"
   )
-  line <- modal_value0(zap_meta_data(lines))
+  line <- modal_value(zap_meta_data(lines))
 
   pattern <- sprintf(" \"rprof_current_suffix\"( %s)?", re_srcref)
   pos <- gregexpr(pattern, line)[[1]]
@@ -102,7 +102,7 @@ rprof_current_suffix_linear <- function(..., filter.callframes = NULL) {
     filter.callframes = TRUE,
     rerun = "rprof_current_suffix_linear"
   )
-  line <- modal_value0(zap_meta_data(lines))
+  line <- modal_value(zap_meta_data(lines))
 
   pattern <- sprintf(
     "^\"pause\"%s\"rprof_current_suffix_linear\"%s\"<Anonymous>\"%s",

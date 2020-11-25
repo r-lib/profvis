@@ -210,7 +210,7 @@ prof_matches <- function(lines, rerun) {
   if (is_bool(rerun)) {
     !rerun || length(lines) > 0
   } else if (is_string(rerun)) {
-    mode <- modal_value(zap_meta_data(lines))
+    mode <- modal_value0(zap_meta_data(lines))
     !is_null(mode) && grepl(rerun, mode)
   } else {
     abort("`rerun` must be logical or a character value.")

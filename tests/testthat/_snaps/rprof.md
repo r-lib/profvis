@@ -1,7 +1,7 @@
 # `rprof_lines()` collects profiles
 
     Code
-      writeLines(modal_value(out))
+      writeLines(modal_value0(out))
     Output
       "pause" "f"
 
