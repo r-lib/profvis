@@ -1,8 +1,8 @@
 
 TEST_PAUSE_TIME <- 0.01
 
-cat_rprof <- function(expr, ..., pattern = "pause") {
-  out <- inject(rprof_lines({{ expr }}, ..., pattern = pattern))
+cat_rprof <- function(expr, ..., rerun = "pause") {
+  out <- inject(rprof_lines({{ expr }}, ..., rerun = rerun))
   out <- modal_value(out)
 
   if (is_null(out)) {

@@ -7,7 +7,7 @@
 #' @param ... Arguments passed to `Rprof()`.
 #' @param trim_stack Whether to trim the current call stack from the
 #'   profiles.
-#' @param pattern Regexp or `NULL`. If supplied, resamples a new
+#' @param rerun Regexp or `NULL`. If supplied, resamples a new
 #'   profile until the regexp matches the modal profile
 #'   stack. Metadata is removed from the profiles before matching and
 #'   taking the modal value.
@@ -17,12 +17,12 @@ rprof_lines <- function(expr,
                         interval = 0.001,
                         filter.callframes = FALSE,
                         trim_stack = TRUE,
-                        pattern = NULL) {
+                        rerun = FALSE) {
   c(expr, env) %<-% enquo0_list(expr)
 
   lines <- character()
 
-  while (!length(lines) || !rprof_matches(lines, pattern)) {
+  while (!prof_matches(lines, rerun)) {
     prof_file <- tempfile("profvis-snapshot", fileext = ".prof")
     on.exit(unlink(prof_file), add = TRUE)
 
@@ -57,15 +57,6 @@ rprof_lines <- function(expr,
   lines
 }
 
-rprof_matches <- function(lines, pattern) {
-  if (is_null(pattern)) {
-    TRUE
-  } else {
-    mode <- modal_value(zap_meta_data(lines))
-    !is_null(mode) && grepl(pattern, mode)
-  }
-}
-
 re_srcref <- "\\d+#\\d+"
 re_srcref_opt <- sprintf(" (%s )?", re_srcref)
 
@@ -87,7 +78,7 @@ rprof_current_suffix_full <- function(...) {
     pause(0.01),
     trim_stack = FALSE,
     ...,
-    pattern = "rprof_current_suffix_full"
+    rerun = "rprof_current_suffix_full"
   )
   line <- modal_value0(zap_meta_data(lines))
 
@@ -109,7 +100,7 @@ rprof_current_suffix_linear <- function(..., filter.callframes = NULL) {
     trim_stack = FALSE,
     ...,
     filter.callframes = TRUE,
-    pattern = "rprof_current_suffix_linear"
+    rerun = "rprof_current_suffix_linear"
   )
   line <- modal_value0(zap_meta_data(lines))
 

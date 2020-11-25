@@ -161,7 +161,7 @@ profvis <- function(expr = NULL, interval = 0.01, prof_output = NULL,
       Rprof(NULL)
 
       lines <- readLines(prof_output)
-      if (profvis_matches(lines, rerun)) {
+      if (prof_matches(lines[-1], rerun)) {
         break
       }
 
@@ -206,10 +206,7 @@ profvis <- function(expr = NULL, interval = 0.01, prof_output = NULL,
   )
 }
 
-profvis_matches <- function(lines, rerun) {
-  # Remove header of parameters
-  lines <- lines[-1]
-
+prof_matches <- function(lines, rerun) {
   if (is_bool(rerun)) {
     !rerun || length(lines) > 0
   } else if (is_string(rerun)) {
