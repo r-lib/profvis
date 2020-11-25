@@ -14,7 +14,7 @@
 #' @noRd
 rprof_lines <- function(expr,
                         ...,
-                        interval = 0.001,
+                        interval = 0.010,
                         filter.callframes = FALSE,
                         trim_stack = TRUE,
                         rerun = FALSE) {
@@ -75,7 +75,7 @@ rprof_current_suffix <- function(env, simplify, ...) {
 }
 rprof_current_suffix_full <- function(...) {
   lines <- rprof_lines(
-    pause(0.01),
+    pause(RPROF_SUFFIX_PAUSE_TIME),
     trim_stack = FALSE,
     ...,
     rerun = "rprof_current_suffix_full"
@@ -96,7 +96,7 @@ rprof_current_suffix_full <- function(...) {
 
 rprof_current_suffix_linear <- function(..., filter.callframes = NULL) {
   lines <- rprof_lines(
-    pause(0.01),
+    pause(RPROF_SUFFIX_PAUSE_TIME),
     trim_stack = FALSE,
     ...,
     filter.callframes = TRUE,
@@ -115,6 +115,8 @@ rprof_current_suffix_linear <- function(..., filter.callframes = NULL) {
   suffix <- gsub_srcref_as_wildcards(suffix)
   paste0(suffix, "$")
 }
+
+RPROF_SUFFIX_PAUSE_TIME <- 0.100
 
 # File labels of the suffix will differ with those of the actual
 # profiles

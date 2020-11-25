@@ -1,5 +1,5 @@
 
-TEST_PAUSE_TIME <- 0.01
+TEST_PAUSE_TIME <- 0.050
 
 cat_rprof <- function(expr, ..., rerun = "pause") {
   out <- inject(rprof_lines({{ expr }}, ..., rerun = rerun))
@@ -18,7 +18,7 @@ expect_snapshot0 <- function(expr, cran = TRUE) {
   expect_snapshot(!!quo, cran = cran)
 }
 
-repro_profvis <- function(expr, ..., rerun = "pause", interval = 0.005) {
+repro_profvis <- function(expr, ..., rerun = "pause", interval = 0.010) {
   inject(profvis({{ expr }}, ..., rerun = rerun, interval = interval))
 }
 
