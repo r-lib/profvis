@@ -22,17 +22,18 @@ rprof_lines <- function(expr,
 
   lines <- character()
 
+  prof_file <- tempfile("profvis-snapshot", fileext = ".prof")
+  on.exit(unlink(prof_file), add = TRUE)
+
+  if (has_simplify()) {
+    args <- list(filter.callframes = filter.callframes)
+  } else {
+    args <- NULL
+  }
+  on.exit(Rprof(NULL), add = TRUE)
+
   while (!prof_matches(lines, rerun)) {
-    prof_file <- tempfile("profvis-snapshot", fileext = ".prof")
-    on.exit(unlink(prof_file), add = TRUE)
-
     env_bind_lazy(current_env(), do = !!expr, .eval_env = env)
-
-    if (has_simplify()) {
-      args <- list(filter.callframes = filter.callframes)
-    } else {
-      args <- NULL
-    }
 
     gc()
     inject(Rprof(
@@ -41,7 +42,6 @@ rprof_lines <- function(expr,
       interval = interval,
       !!!args
     ))
-    on.exit(Rprof(NULL), add = TRUE)
 
     do
     Rprof(NULL)
