@@ -161,7 +161,7 @@ profvis <- function(expr = NULL, interval = 0.01, prof_output = NULL,
       Rprof(NULL)
 
       lines <- readLines(prof_output)
-      if (prof_matches(lines[-1], rerun)) {
+      if (prof_matches(zap_header(lines), rerun)) {
         break
       }
 

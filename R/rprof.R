@@ -46,7 +46,7 @@ rprof_lines <- function(expr,
     do
     Rprof(NULL)
 
-    lines <- readLines(prof_file, warn = FALSE)[-1]
+    lines <- zap_header(readLines(prof_file, warn = FALSE))
 
     if (trim_stack) {
       suffix <- rprof_current_suffix(env, filter.callframes, ...)

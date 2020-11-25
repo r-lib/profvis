@@ -267,6 +267,11 @@ zap_meta_data <- function(lines) {
   lines <- zap_mem_prefix(lines)
   lines
 }
+zap_header <- function(lines) {
+  lines <- lines[-1]
+  lines <- zap_file_labels(lines)
+  lines
+}
 
 # For any rows where label is NA and there's a srcref, insert the line of code
 # as the label.
