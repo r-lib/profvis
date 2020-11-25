@@ -40,7 +40,10 @@
 #'   \code{\link{Rprof}()}.
 #' @param rerun If `TRUE`, `Rprof()` is run again with `expr` until a
 #'   profile is actually produced. This is useful for the cases where
-#'   `expr` returns too quickly, before R had time to sample a profile.
+#'   `expr` returns too quickly, before R had time to sample a
+#'   profile. Can also be a string containing a regexp to match
+#'   profiles. In this case, `profvis()` reruns `expr` until the
+#'   regexp matches the modal value of the profile stacks.
 #'
 #' @seealso \code{\link{print.profvis}} for printing options.
 #' @seealso \code{\link{Rprof}} for more information about how the profiling
@@ -158,7 +161,7 @@ profvis <- function(expr = NULL, interval = 0.01, prof_output = NULL,
       Rprof(NULL)
 
       lines <- readLines(prof_output)
-      if (length(lines) > 1 || !rerun) {
+      if (profvis_matches(lines, rerun)) {
         break
       }
 
@@ -201,6 +204,20 @@ profvis <- function(expr = NULL, interval = 0.01, prof_output = NULL,
       knitr.figure = FALSE
     )
   )
+}
+
+profvis_matches <- function(lines, rerun) {
+  # Remove header of parameters
+  lines <- lines[-1]
+
+  if (is_bool(rerun)) {
+    !rerun || length(lines) > 0
+  } else if (is_string(rerun)) {
+    mode <- modal_value(zap_meta_data(lines))
+    !is_null(mode) && grepl(rerun, mode)
+  } else {
+    abort("`rerun` must be logical or a character value.")
+  }
 }
 
 with_profvis_handlers <- function(expr) {

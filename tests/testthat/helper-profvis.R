@@ -18,7 +18,7 @@ expect_snapshot0 <- function(expr, cran = TRUE) {
   expect_snapshot(!!quo, cran = cran)
 }
 
-repro_profvis <- function(expr, ..., rerun = TRUE, interval = 0.005) {
+repro_profvis <- function(expr, ..., rerun = "pause", interval = 0.005) {
   inject(profvis({{ expr }}, ..., rerun = rerun, interval = interval))
 }
 

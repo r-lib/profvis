@@ -58,7 +58,10 @@ effect on R 4.0. See the \code{filter.callframes} argument of
 
 \item{rerun}{If `TRUE`, `Rprof()` is run again with `expr` until a
 profile is actually produced. This is useful for the cases where
-`expr` returns too quickly, before R had time to sample a profile.}
+`expr` returns too quickly, before R had time to sample a
+profile. Can also be a string containing a regexp to match
+profiles. In this case, `profvis()` reruns `expr` until the
+regexp matches the modal value of the profile stacks.}
 }
 \description{
 This function will run an R expression with profiling, and then return an
