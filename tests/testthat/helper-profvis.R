@@ -31,3 +31,9 @@ profvis_modal_value <- function(prof) {
   stacks <- vapply(stacks, paste, "", collapse = " ")
   modal_value0(stacks)
 }
+
+skip_on_cran_if_not_ci <- function() {
+  if (!is_true(as.logical(Sys.getenv("CI")))) {
+    skip_on_cran()
+  }
+}

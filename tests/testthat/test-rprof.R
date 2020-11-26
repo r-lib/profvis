@@ -1,4 +1,6 @@
 
+skip_on_cran_if_not_ci()
+
 test_that("`rprof_lines()` collects profiles", {
   f <- function() pause(TEST_PAUSE_TIME)
 
