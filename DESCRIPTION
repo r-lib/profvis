@@ -17,7 +17,7 @@ Depends:
     R (>= 3.0)
 Imports:
     htmlwidgets (>= 0.3.2),
-    rlang (>= 0.4.8.9002),
+    rlang (>= 0.4.9),
     stringr
 License: GPL-3 | file LICENSE
 Suggests:
@@ -28,8 +28,6 @@ Suggests:
     devtools,
     shiny,
     htmltools
-Remotes:
-    r-lib/rlang
 RoxygenNote: 7.1.1
 URL: https://rstudio.github.io/profvis/
 Encoding: UTF-8
