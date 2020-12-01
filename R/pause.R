@@ -2,7 +2,7 @@
 #'
 #' This function pauses an R process for some amount of time. It differs from
 #' \code{\link{Sys.sleep}} in that time spent in \code{pause} will show up in
-#' profiler data. Another difference is that \code{pause} uses up 100% of a CPU,
+#' profiler data. Another difference is that \code{pause} uses up 100\% of a CPU,
 #' whereas \code{Sys.sleep} does not.
 #'
 #' @examples
