@@ -192,15 +192,30 @@ profvis <- function(expr = NULL, interval = 0.01, prof_output = NULL,
 #' @inheritParams profvis
 #' @param x The object to print.
 #' @param ... Further arguments to passed on to other print methods.
+#' @param sort Can be one of `"time"` (the default) or
+#'   `"alphabetical"` to control how sort functions within each row of
+#'   the flamegraph. Sorting alphabetically favours box merging and
+#'   makes it easier to see the big picture. Set your own global
+#'   default for this argument with `options(profvis.sort = )`.
 #' @export
-print.profvis <- function(x, ..., width = NULL, height = NULL, split = NULL) {
+print.profvis <- function(x,
+                          ...,
+                          width = NULL,
+                          height = NULL,
+                          split = NULL,
+                          sort = NULL) {
 
   if (!is.null(split)) {
-    split <- match.arg(split, c("h", "v"))
+    split <- arg_match(split, c("h", "v"))
     x$x$message$split <- split
   }
   if (!is.null(width)) x$width <- width
   if (!is.null(height)) x$height <- height
+
+  sort <- sort %||% getOption("profvis.sort") %||% "time"
+  if (arg_match(sort, c("time", "alphabetical")) == "alphabetical") {
+    x$x$message$prof <- prof_sort(x$x$message$prof)
+  }
 
   f <- getOption("profvis.print")
   if (is.function(f)) {

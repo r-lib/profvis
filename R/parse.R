@@ -297,3 +297,40 @@ trim_filenames <- function(filenames) {
 
   filenames
 }
+
+# The profile data is sorted by time by default. To sort it
+# alphabetically we create a data frame of stacks where columns
+# represent stack depth and rows represent samples.
+# `vctrs::vec_order()` then gives us the sorting key we need.
+prof_sort <- function(prof) {
+  # Split profile data frame by `time`. Each split corresponds to a
+  # single line of the original Rprof output, i.e. a single sampled
+  # stack.
+  prof_split <- vctrs::vec_split(prof, prof$time)$val
+
+  max_depth <- max(map_int(prof_split, nrow))
+  n_samples <- length(prof_split)
+
+  # Extract labels (function names for the stack frames) and pad
+  # them with missing values so they are of equal lengths
+  pad <- function(x) x[seq_len(max_depth)]
+  stacks <- map(prof_split, function(x) pad(rev(x$label)))
+
+  # Transpose into a data frame. The (unnamed) columns represent
+  # increasing depths in the stacks.
+  stacks <- map(transpose(stacks), simplify)
+  stacks <- vctrs::new_data_frame(stacks, n = length(prof_split))
+
+  # Reorder the profile data according to the sort key of the
+  # transposed stacks
+  key <- vctrs::vec_order(stacks)
+  prof_split <- prof_split[key]
+
+  # Assign an increasing `time` sequence in each split
+  prof_split <- map2(seq_len(n_samples), prof_split, function(n, split) {
+    split$time <- n
+    split
+  })
+
+  vctrs::vec_rbind(!!!prof_split)
+}
