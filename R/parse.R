@@ -319,7 +319,7 @@ prof_sort <- function(prof) {
   # Transpose into a data frame. The (unnamed) columns represent
   # increasing depths in the stacks.
   stacks <- map(transpose(stacks), simplify)
-  stacks <- vctrs::new_data_frame(stacks, n = n_samples)
+  stacks <- vctrs::data_frame(!!!stacks, .name_repair = "minimal")
 
   # Reorder the profile data according to the sort key of the
   # transposed stacks
@@ -333,7 +333,7 @@ prof_sort <- function(prof) {
     times <- vctrs::vec_unrep(stack)$times
     rep(rev(order(times)), times)
   })
-  runs <- vctrs::new_data_frame(runs, n = n_samples)
+  runs <- vctrs::data_frame(!!!runs, .name_repair = "minimal")
   prof_split <- prof_split[vctrs::vec_order(runs)]
 
   # Assign an increasing `time` sequence in each split
