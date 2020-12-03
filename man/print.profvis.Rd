@@ -4,7 +4,7 @@
 \alias{print.profvis}
 \title{Print a profvis object}
 \usage{
-\method{print}{profvis}(x, ..., width = NULL, height = NULL, split = NULL, sort = NULL)
+\method{print}{profvis}(x, ..., width = NULL, height = NULL, split = NULL, aggregate = NULL)
 }
 \arguments{
 \item{x}{The object to print.}
@@ -19,11 +19,10 @@
 vertical, or \code{"h"} for horizontal. This is the orientation of the
 split bar.}
 
-\item{sort}{Can be one of `"time"` (the default) or
-`"alphabetical"` to control how sort functions within each row of
-the flamegraph. Sorting alphabetically favours box merging and
-makes it easier to see the big picture. Set your own global
-default for this argument with `options(profvis.sort = )`.}
+\item{aggregate}{If `TRUE`, the profiled stacks are aggregated by
+name. This makes it easier to see the big picture. Set your own
+global default for this argument with `options(profvis.aggregate
+= )`.}
 }
 \description{
 Print a profvis object

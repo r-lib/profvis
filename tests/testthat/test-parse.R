@@ -39,8 +39,8 @@ test_that("can sort profiles alphabetically (#115)", {
   expect_equal(
     runs,
     list(
-      c("pause", "bar", "f", "root"),
       c("pause", "foo", "f", "root"),
+      c("pause", "bar", "f", "root"),
       c("pause", "foo", "root")
     )
   )

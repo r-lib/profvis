@@ -1,12 +1,10 @@
 profvis (development version)
 =============================
 
-* `print()` gains a `sort` argument. Use `print(profvis(f()), sort =
-  "alphabetical")` to sort alphabetically within each row of the
-  flamegraph instead of by time. Sorting alphabetically favours box
-  merging and makes it easier to see the big picture (#115). Set the
-  `profvis.sort` global option to `"aphabetical"` to change the
-  default sort.
+* `print()` gains an `aggregate` argument. Use `print(profvis(f()),
+  aggregate = TRUE)` to aggregate frames by name in the flamegraph.
+  This makes it easier to see the big picture (#115). Set the
+  `profvis.aggregate` global option to `TRUE` to change the default.
 
 profvis 0.3.7
 =============

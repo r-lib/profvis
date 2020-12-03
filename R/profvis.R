@@ -192,18 +192,17 @@ profvis <- function(expr = NULL, interval = 0.01, prof_output = NULL,
 #' @inheritParams profvis
 #' @param x The object to print.
 #' @param ... Further arguments to passed on to other print methods.
-#' @param sort Can be one of `"time"` (the default) or
-#'   `"alphabetical"` to control how sort functions within each row of
-#'   the flamegraph. Sorting alphabetically favours box merging and
-#'   makes it easier to see the big picture. Set your own global
-#'   default for this argument with `options(profvis.sort = )`.
+#' @param aggregate If `TRUE`, the profiled stacks are aggregated by
+#'   name. This makes it easier to see the big picture. Set your own
+#'   global default for this argument with `options(profvis.aggregate
+#'   = )`.
 #' @export
 print.profvis <- function(x,
                           ...,
                           width = NULL,
                           height = NULL,
                           split = NULL,
-                          sort = NULL) {
+                          aggregate = NULL) {
 
   if (!is.null(split)) {
     split <- arg_match(split, c("h", "v"))
@@ -212,8 +211,8 @@ print.profvis <- function(x,
   if (!is.null(width)) x$width <- width
   if (!is.null(height)) x$height <- height
 
-  sort <- sort %||% getOption("profvis.sort") %||% "time"
-  if (arg_match(sort, c("time", "alphabetical")) == "alphabetical") {
+  aggregate <- aggregate %||% getOption("profvis.aggregate") %||% FALSE
+  if (aggregate) {
     x$x$message$prof <- prof_sort(x$x$message$prof)
   }
 
