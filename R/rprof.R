@@ -32,7 +32,7 @@ rprof_lines <- function(expr,
   }
   on.exit(Rprof(NULL), add = TRUE)
 
-  while (!prof_matches(lines, rerun)) {
+  while (TRUE) {
     env_bind_lazy(current_env(), do = !!expr, .eval_env = env)
 
     gc()
@@ -51,6 +51,10 @@ rprof_lines <- function(expr,
     if (trim_stack) {
       suffix <- rprof_current_suffix(env, filter.callframes, ...)
       lines <- gsub(suffix, "", lines)
+    }
+
+    if (prof_matches(lines, rerun)) {
+      break
     }
   }
 
