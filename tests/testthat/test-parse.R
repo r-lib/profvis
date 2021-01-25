@@ -27,3 +27,37 @@ test_that("parsing prof files", {
     list(list(filename = "<expr>", content = "line 1\nline 2", normpath = "<expr>"))
   )
 })
+
+test_that("can sort profiles alphabetically (#115)", {
+  prof <- eval(parse_expr(file(test_path("test-parse-sort1.R"))))
+
+  sorted <- prof_sort(prof)
+
+  split <- vctrs::vec_split(sorted$label, sorted$time)
+  runs <- vctrs::vec_unrep(split$val)$key
+
+  expect_equal(
+    runs,
+    list(
+      c("pause", "foo", "f", "root"),
+      c("pause", "bar", "f", "root"),
+      c("pause", "foo", "root")
+    )
+  )
+
+  # Regenerate `prof`
+  if (FALSE) {
+    root <- function() {
+      for (. in 1:3) {
+        f(TRUE)
+        f(FALSE)
+        foo()
+      }
+    }
+    f <- function(x) if (x) foo() else bar()
+    foo <- function() pause(0.05)
+    bar <- function() pause(0.05)
+
+    prof <- profvis(root())$x$message$prof
+  }
+})

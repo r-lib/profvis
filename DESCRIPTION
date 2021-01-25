@@ -17,7 +17,10 @@ Depends:
     R (>= 3.0)
 Imports:
     htmlwidgets (>= 0.3.2),
-    stringr
+    purrr,
+    rlang (>= 0.4.9),
+    stringr,
+    vctrs
 License: GPL-3 | file LICENSE
 Suggests:
     knitr,
