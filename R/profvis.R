@@ -8,7 +8,10 @@
 #' corresponding data file as the \code{prof_input} argument to
 #' \code{profvis()}.
 #'
-#' @param expr Code to profile. Not compatible with \code{prof_input}.
+#' @param expr Expression to profile. Not compatible with \code{prof_input}.
+#'   The expression is repeatedly evaluated until `Rprof()` produces
+#'   an output. It can _be_ a quosure injected with [rlang::inject()] but
+#'   it cannot _contain_ injected quosures.
 #' @param interval Interval for profiling samples, in seconds. Values less than
 #'   0.005 (5 ms) will probably not result in accurate timings
 #' @param prof_output Name of an Rprof output file or directory in which to save
@@ -31,11 +34,16 @@
 #'   memory allocations will be attributed to different lines of code. Using
 #'   \code{torture = steps} helps prevent this, by making R trigger garbage
 #'   collection after every \code{torture} memory allocation step.
-#'
 #' @param simplify Whether to simplify the profiles by removing
 #'   intervening frames caused by lazy evaluation. This only has an
 #'   effect on R 4.0. See the \code{filter.callframes} argument of
 #'   \code{\link{Rprof}()}.
+#' @param rerun If `TRUE`, `Rprof()` is run again with `expr` until a
+#'   profile is actually produced. This is useful for the cases where
+#'   `expr` returns too quickly, before R had time to sample a
+#'   profile. Can also be a string containing a regexp to match
+#'   profiles. In this case, `profvis()` reruns `expr` until the
+#'   regexp matches the modal value of the profile stacks.
 #'
 #' @seealso \code{\link{print.profvis}} for printing options.
 #' @seealso \code{\link{Rprof}} for more information about how the profiling
@@ -80,10 +88,10 @@
 #' @export
 profvis <- function(expr = NULL, interval = 0.01, prof_output = NULL,
                     prof_input = NULL, width = NULL, height = NULL,
-                    split = c("h", "v"), torture = 0, simplify = TRUE)
-{
+                    split = c("h", "v"), torture = 0, simplify = TRUE,
+                    rerun = FALSE) {
   split <- match.arg(split)
-  expr_q <- substitute(expr)
+  c(expr_q, env) %<-% enquo0_list(expr)
 
   if (is.null(prof_input) && is.null(expr_q)) {
     stop("profvis must be called with `expr` or `prof_input` ")
@@ -133,36 +141,47 @@ profvis <- function(expr = NULL, interval = 0.01, prof_output = NULL,
       on.exit(gctorture2(step = 0), add = TRUE)
     }
 
-    if (getRversion() >= "4.0.0") {
-      Rprof(prof_output, interval = interval, line.profiling = TRUE,
-            gc.profiling = TRUE, memory.profiling = TRUE,
-            filter.callframes = simplify)
-    } else {
-      Rprof(prof_output, interval = interval, line.profiling = TRUE,
-            gc.profiling = TRUE, memory.profiling = TRUE)
-    }
-    on.exit(Rprof(NULL), add = TRUE)
-    if (remove_on_exit)
-      on.exit(unlink(prof_output), add = TRUE)
-
-    tryCatch(
-      force(expr),
-      error = function(e) {
-        message("profvis: code exited with error:\n", e$message, "\n")
-      },
-      interrupt = function(e) {
-        message("profvis: interrupt received.")
-      }
+    rprof_args <- list(
+      interval = interval,
+      line.profiling = TRUE,
+      gc.profiling = TRUE,
+      memory.profiling = TRUE
     )
-    Rprof(NULL)
+    if (getRversion() >= "4.0.3") {
+      rprof_args <- append(rprof_args, list(filter.callframes = simplify))
+    }
 
+    on.exit(Rprof(NULL), add = TRUE)
+    if (remove_on_exit) {
+      on.exit(unlink(prof_output), add = TRUE)
+    }
+    repeat {
+      inject(Rprof(prof_output, !!!rprof_args))
+      with_profvis_handlers(expr)
+      Rprof(NULL)
+
+      lines <- readLines(prof_output)
+      if (prof_matches(zap_header(lines), rerun)) {
+        break
+      }
+
+      env_bind_lazy(current_env(), expr = !!expr_q, .eval_env = env)
+    }
+
+    # Must be in the same handler context as `expr` above to get the
+    # full stack suffix
+    with_profvis_handlers({
+      suffix <- rprof_current_suffix(env, simplify)
+      lines <- gsub(suffix, "", lines)
+    })
   } else {
     # If we got here, we were provided a prof_input file instead of expr
     expr_source <- NULL
     prof_output <- prof_input
+    lines <- readLines(prof_output)
   }
 
-  message <- parse_rprof(prof_output, expr_source)
+  message <- parse_rprof_lines(lines, expr_source)
   message$prof_output <- prof_output
 
   # Patterns to highlight on flamegraph
@@ -185,6 +204,32 @@ profvis <- function(expr = NULL, interval = 0.01, prof_output = NULL,
       knitr.figure = FALSE
     )
   )
+}
+
+prof_matches <- function(lines, rerun) {
+  if (is_bool(rerun)) {
+    !rerun || length(lines) > 0
+  } else if (is_string(rerun)) {
+    mode <- modal_value0(zap_meta_data(lines))
+    !is_null(mode) && grepl(rerun, mode)
+  } else {
+    abort("`rerun` must be logical or a character value.")
+  }
+}
+
+with_profvis_handlers <- function(expr) {
+  tryCatch({
+    expr
+    NULL
+  },
+  error = function(cnd) {
+    message("profvis: code exited with error:\n", cnd$message, "\n")
+    cnd
+  },
+  interrupt = function(cnd) {
+    message("profvis: interrupt received.")
+    cnd
+  })
 }
 
 #' Print a profvis object

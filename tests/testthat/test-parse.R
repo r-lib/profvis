@@ -1,4 +1,3 @@
-context("parse")
 
 test_that("parsing prof files", {
   # The three lines in this file have three different kinds of call stacks.

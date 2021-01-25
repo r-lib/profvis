@@ -8,7 +8,10 @@
 #' @import stringr
 #' @export
 parse_rprof <- function(path = "Rprof.out", expr_source = NULL) {
-  lines <- readLines(path)
+  parse_rprof_lines(readLines(path), expr_source = expr_source)
+}
+parse_rprof_lines <- function(lines, expr_source = NULL) {
+  stopifnot(is_character(lines))
 
   if (length(lines) < 2) {
     stop("No parsing data available. Maybe your function was too fast?")
@@ -43,7 +46,7 @@ parse_rprof <- function(path = "Rprof.out", expr_source = NULL) {
   if (has_memory) {
     mem_data <- gsub("^:(\\d+:\\d+:\\d+:\\d+):.*", "\\1", prof_data)
     mem_data <- str_split(mem_data, ":")
-    prof_data <- gsub("^:\\d+:\\d+:\\d+:\\d+:", "\\1", prof_data)
+    prof_data <- zap_mem_prefix(prof_data)
   } else {
     mem_data <- rep(NA_character_, length(prof_data))
   }
@@ -59,16 +62,6 @@ parse_rprof <- function(path = "Rprof.out", expr_source = NULL) {
   # back to
   #  <GC> 1#7 "foo"
   prof_data <- gsub('^"<GC>",', '"<GC>" ', prof_data)
-
-  # Remove frames related to profvis itself, and all frames below it on the
-  # stack. Right now the bottom item can be `profvis`, `profvis::profvis`, or
-  # `<Anonymous>`, but once R 3.3 is widespread, the <Anonymous> part can be
-  # removed and the regex can be simplified to:
-  # ' *"force"(?!.*"force").*"(profvis::)?profvis".*$'
-  prof_data <- sub(
-    ' *"force" "doTryCatch"(?!.*"force").*"((profvis::)?profvis|<Anonymous>)".*$',
-    '', prof_data, perl = TRUE
-  )
 
   # # Split by ' ' for call stack
   # prof_data <- str_split(prof_data, " ")
@@ -258,6 +251,26 @@ parse_rprof <- function(path = "Rprof.out", expr_source = NULL) {
     interval = interval,
     files = file_contents
   )
+}
+
+zap_mem_prefix <- function(lines) {
+  gsub("^:\\d+:\\d+:\\d+:\\d+:", "\\1", lines)
+}
+zap_file_labels <- function(lines) {
+  lines[!grepl("^#", lines)]
+}
+zap_srcref <- function(lines) {
+  gsub(" \\d+#\\d+", "", lines)
+}
+zap_meta_data <- function(lines) {
+  lines <- zap_file_labels(lines)
+  lines <- zap_mem_prefix(lines)
+  lines
+}
+zap_header <- function(lines) {
+  lines <- lines[-1]
+  lines <- zap_file_labels(lines)
+  lines
 }
 
 # For any rows where label is NA and there's a srcref, insert the line of code

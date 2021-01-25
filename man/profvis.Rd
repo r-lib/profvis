@@ -13,11 +13,15 @@ profvis(
   height = NULL,
   split = c("h", "v"),
   torture = 0,
-  simplify = TRUE
+  simplify = TRUE,
+  rerun = FALSE
 )
 }
 \arguments{
-\item{expr}{Code to profile. Not compatible with \code{prof_input}.}
+\item{expr}{Expression to profile. Not compatible with \code{prof_input}.
+The expression is repeatedly evaluated until `Rprof()` produces
+an output. It can _be_ a quosure injected with [rlang::inject()] but
+it cannot _contain_ injected quosures.}
 
 \item{interval}{Interval for profiling samples, in seconds. Values less than
 0.005 (5 ms) will probably not result in accurate timings}
@@ -51,6 +55,13 @@ split bar.}
 intervening frames caused by lazy evaluation. This only has an
 effect on R 4.0. See the \code{filter.callframes} argument of
 \code{\link{Rprof}()}.}
+
+\item{rerun}{If `TRUE`, `Rprof()` is run again with `expr` until a
+profile is actually produced. This is useful for the cases where
+`expr` returns too quickly, before R had time to sample a
+profile. Can also be a string containing a regexp to match
+profiles. In this case, `profvis()` reruns `expr` until the
+regexp matches the modal value of the profile stacks.}
 }
 \description{
 This function will run an R expression with profiling, and then return an
