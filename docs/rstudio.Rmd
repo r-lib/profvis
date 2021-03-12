@@ -10,7 +10,7 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 ```
 
 
-The RStudio IDE includes integrated support for profiling with profvis. These features are available in the current [Preview Release of RStudio](https://www.rstudio.com/products/rstudio/download/preview/).
+The [RStudio IDE](https://www.rstudio.com/products/rstudio/download/) includes integrated support for profiling with profvis.
 
 ## Profiling code
 
