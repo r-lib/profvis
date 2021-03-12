@@ -73,7 +73,7 @@ profvis({
 })
 ```
 
-`colMeans` is about 6x faster than using `apply` with `mean`, but it looks like it's still using `as.matrix`, which takes a significant amount of time. `lapply`/`vapply`are faster yet -- about 10x faster than `apply`. `lapply` returns the values in a list, while `vapply` returns the values in a numeric vector, which is the form that we want, so it looks like `vapply` is the way to go for this part.
+`colMeans` is about 3x faster than using `apply` with `mean`, but it looks like it's still using `as.matrix`, which takes a significant amount of time. `lapply`/`vapply`are faster yet -- about 10x faster than `apply`. `lapply` returns the values in a list, while `vapply` returns the values in a numeric vector, which is the form that we want, so it looks like `vapply` is the way to go for this part.
 
 (If you want finer-grained comparisons of code performance, you can use the [microbenchmark](https://cran.r-project.org/web/packages/microbenchmark/index.html) package. There's more information about microbenchmark in the  [profiling](http://adv-r.had.co.nz/Profiling.html#code-organisation) chapter of Hadley Wickham's book, *Advanced R*.)
 
@@ -92,7 +92,7 @@ profvis({
 })
 ```
 
-Our code is about 3x faster than the original version. Most of the time is now spent on line 6, and the majority of that is in the `[<-` function. This is usually called with syntax `x[i, j] <- y`, which is equivalent to `` `[<-`(x, i, j, y)``. In addition to being slow, the code is ugly: on each side of the assignment operator we're indexing into `data1` twice with `[`.
+Our code is about 3x faster than the original version. Most of the time is now spent on line 6, and the majority of that is in the `[<-.data.frame` function. This is usually called with syntax `x[i, j] <- y`, which is equivalent to `` `[<-`(x, i, j, y)``. In addition to being slow, the code is ugly: on each side of the assignment operator we're indexing into `data1` twice with `[`.
 
 In this case, it's useful to take a step back and think about the broader problem. We want to normalize each column. Couldn't we we apply a function over the columns that does both steps, taking the mean and subtracting it? Because a data frame is a list, and we want to assign a list of values into the data frame, we'll need to use `lapply`.
 
@@ -110,7 +110,7 @@ profvis({
 })
 ```
 
-Now we have code that's not only about 8x faster than our original -- it's shorter and more elegant as well. Not bad! The profiler data helped us to identify performance bottlenecks, and understanding of the underlying data structures allowed us to approach the problem in a more efficient way.
+Now we have code that's not only about 6x faster than our original -- it's shorter and more elegant as well. Not bad! The profiler data helped us to identify performance bottlenecks, and understanding of the underlying data structures allowed us to approach the problem in a more efficient way.
 
 Could we further optimize the code? It seems unlikely, given that all the time is spent in functions that are implemented in C (`mean` and `-`). That doesn't necessarily mean that there's no room for improvement, but this is a good place to move on to the next example.
 
@@ -132,7 +132,7 @@ profvis({
 })
 ```
 
-This takes over 12 seconds to calculate the cumulative sum of 50,000 items. That's pretty slow for a computer program. Looking at the profvis visualization, we can see a number of notable features:
+This takes about 2.5 seconds to calculate the cumulative sum of 50,000 items. That's pretty slow for a computer program. Looking at the profvis visualization, we can see a number of notable features:
 
 Almost all the time is spent in one line of code, line 6. Although this is just one line of code, many different functions that are called on that line.
 
@@ -166,7 +166,7 @@ profvis({
 })
 ```
 
-Using this `csum` function, it takes about 20 ms, which is about 600x as fast as before.
+Using this `csum` function, it takes about 10 ms, which is about 250x as fast as before.
 
 It may appear that no functions are called from line 7, but that's not quite true: that line also calls `[`, `[<-`, `-`, and `+`.
 
@@ -175,27 +175,10 @@ It may appear that no functions are called from line 7, but that's not quite tru
 
 The code panel shows that there is still a large amount of memory being allocated in the `csum` function. In the flame graph. you probably have noticed the gray blocks labeled `<GC>`. These represent times where R is doing *garbage collection* -- that is, when it is freeing (deallocating) chunks of memory that were allocated but no longer needed. If R is spending a lot of time freeing memory, that suggests that R is also spending a lot of time allocating memory. This is another common source of slowness in R code.
 
-In the `csum` function, `sum` starts as a length-1 vector, and then grows, in a loop, to be the same length as `x`. Every time a vector grows, R allocates a new block of memory for the new, larger vector, and then copies the contents over. The memory allocated for the old vector is no longer needed, and will later be garbage collected.
+> **Note:** Before R 3.4, growing a vector in a loop was expensive -- each time the vector grew by one, R would copy the vector to a new block of memory, with the new item at the end. However, as of R 3.4, R tries to put vectors in a memory location with room to grow, and if there exists is only one reference to the vector, it can grow in place, except in the uncommon case where there's no more room to grow. (If there are two references to the vector, then R must make a copy.) This means that growing a vector is a fast operation, as long as there's only one reference to it.
+>
+> Although growing a vector is now fast, growing a **data frame** is still an expensive operation and results in copying all of the data.
 
-To avoid all that memory allocation, copying, and garbage collection, we can pre-allocate a correctly-sized vector for `sum`. For this data, that will result in 49,999 fewer allocations, copies, and deallocations.
-
-```{r ex2_csum2}
-profvis({
-  csum2 <- function(x) {
-    if (length(x) < 2) return(x)
-
-    sum <- numeric(length(x))  # Preallocate
-    sum[1] <- x[1]
-    for (i in seq(2, length(x))) {
-      sum[i] <- sum[i-1] + x[i]
-    }
-    sum
-  }
-  data$sum <- csum2(data$value)
-})
-```
-
-This version of the code, with `csum2`, is around 60x faster than our original code, and requires almost no memory allocation. These performance improvements were possible by avoiding calls to `$` and `$<-`, and by avoiding unnecessary memory allocation and copying from growing a vector in a loop.
 
 
 ### Example 3 - Profiling a Shiny Application
