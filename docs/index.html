@@ -1,43 +1,58 @@
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
 
 <head>
 
 <meta charset="utf-8" />
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
 
 
 
 <title>Profvis — Interactive Visualizations for Profiling R Code</title>
 
+<script src="site_libs/header-attrs-2.7.2/header-attrs.js"></script>
 <script src="site_libs/jquery-1.12.4/jquery.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
 <script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
 <script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
 <script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
 <link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
 <script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
-<script src="site_libs/htmlwidgets-1.3/htmlwidgets.js"></script>
+<script src="site_libs/htmlwidgets-1.5.3/htmlwidgets.js"></script>
 <script src="site_libs/d3-3.5.6/d3.min.js"></script>
-<link href="site_libs/profvis-0.3.6/profvis.css" rel="stylesheet" />
-<script src="site_libs/profvis-0.3.6/profvis.js"></script>
+<link href="site_libs/profvis-0.3.6.9000/profvis.css" rel="stylesheet" />
+<script src="site_libs/profvis-0.3.6.9000/profvis.js"></script>
+<script src="site_libs/profvis-0.3.6.9000/scroll.js"></script>
 <link href="site_libs/highlight-6.2.0/textmate.css" rel="stylesheet" />
 <script src="site_libs/highlight-6.2.0/highlight.js"></script>
-<script src="site_libs/profvis-binding-0.3.6/profvis.js"></script>
+<script src="site_libs/profvis-binding-0.3.7.9000/profvis.js"></script>
 <link href="site_libs/font-awesome-5.1.0/css/all.css" rel="stylesheet" />
 <link href="site_libs/font-awesome-5.1.0/css/v4-shims.css" rel="stylesheet" />
 
-<style type="text/css">code{white-space: pre;}</style>
 <style type="text/css">
-  pre:not([class]) {
-    background-color: white;
-  }
-</style>
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
 <script type="text/javascript">
 if (window.hljs) {
   hljs.configure({languages: []});
@@ -50,32 +65,7 @@ if (window.hljs) {
 
 
 
-<style type="text/css">
-h1 {
-  font-size: 34px;
-}
-h1.title {
-  font-size: 38px;
-}
-h2 {
-  font-size: 30px;
-}
-h3 {
-  font-size: 24px;
-}
-h4 {
-  font-size: 18px;
-}
-h5 {
-  font-size: 16px;
-}
-h6 {
-  font-size: 12px;
-}
-.table th:not([align]) {
-  text-align: left;
-}
-</style>
+
 
 <link rel="stylesheet" href="styles.css" type="text/css" />
 
@@ -87,13 +77,8 @@ h6 {
   margin-left: auto;
   margin-right: auto;
 }
-code {
-  color: inherit;
-  background-color: rgba(0, 0, 0, 0.04);
-}
 img {
   max-width:100%;
-  height: auto;
 }
 .tabbed-pane {
   padding-top: 12px;
@@ -107,40 +92,13 @@ button.code-folding-btn:focus {
 summary {
   display: list-item;
 }
+pre code {
+  padding: 0;
+}
 </style>
 
 
 <style type="text/css">
-/* padding for bootstrap navbar */
-body {
-  padding-top: 51px;
-  padding-bottom: 40px;
-}
-/* offset scroll position for anchor links (for fixed navbar)  */
-.section h1 {
-  padding-top: 56px;
-  margin-top: -56px;
-}
-.section h2 {
-  padding-top: 56px;
-  margin-top: -56px;
-}
-.section h3 {
-  padding-top: 56px;
-  margin-top: -56px;
-}
-.section h4 {
-  padding-top: 56px;
-  margin-top: -56px;
-}
-.section h5 {
-  padding-top: 56px;
-  margin-top: -56px;
-}
-.section h6 {
-  padding-top: 56px;
-  margin-top: -56px;
-}
 .dropdown-submenu {
   position: relative;
 }
@@ -168,7 +126,7 @@ body {
   margin-right: -10px;
 }
 .dropdown-submenu:hover>a:after {
-  border-left-color: #ffffff;
+  border-left-color: #adb5bd;
 }
 .dropdown-submenu.pull-left {
   float: none;
@@ -180,7 +138,7 @@ body {
 }
 </style>
 
-<script>
+<script type="text/javascript">
 // manage active state of menu based on current page
 $(document).ready(function () {
   // active menu anchor
@@ -191,10 +149,23 @@ $(document).ready(function () {
   var menuAnchor = $('a[href="' + href + '"]');
 
   // mark it active
-  menuAnchor.parent().addClass('active');
+  menuAnchor.tab('show');
 
   // if it's got a parent navbar menu mark it active as well
   menuAnchor.closest('li.dropdown').addClass('active');
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
 });
 </script>
 
@@ -206,7 +177,6 @@ $(document).ready(function () {
   max-height: 500px;
   min-height: 44px;
   overflow-y: auto;
-  background: white;
   border: 1px solid #ddd;
   border-radius: 4px;
 }
@@ -242,6 +212,7 @@ $(document).ready(function () {
   border: none;
   display: inline-block;
   border-radius: 4px;
+  background-color: transparent;
 }
 
 .tabset-dropdown > .nav-tabs.nav-tabs-open > li {
@@ -253,18 +224,6 @@ $(document).ready(function () {
   display: none;
 }
 </style>
-
-<script>
-$(document).ready(function () {
-  window.buildTabsets("TOC");
-});
-
-$(document).ready(function () {
-  $('.tabset-dropdown > .nav-tabs > li').click(function () {
-    $(this).parent().toggleClass('nav-tabs-open')
-  });
-});
-</script>
 
 <!-- code folding -->
 
@@ -309,7 +268,7 @@ $(document).ready(function () {
       <ul class="nav navbar-nav navbar-right">
         <li>
   <a href="https://github.com/rstudio/profvis/">
-    <span class="fa fa-github fa-lg"></span>
+    <span class="fas fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -318,7 +277,7 @@ $(document).ready(function () {
   </div><!--/.container -->
 </div><!--/.navbar -->
 
-<div class="fluid-row" id="header">
+<div id="header">
 
 
 
@@ -338,7 +297,7 @@ $(document).ready(function () {
 <h2>Getting started</h2>
 <p>To install <strong>profvis</strong> from CRAN:</p>
 <pre class="r"><code>install.packages(&quot;profvis&quot;)</code></pre>
-<p>The RStudio IDE includes integrated support for profiling with profvis. These features are available in the current <a href="https://www.rstudio.com/products/rstudio/download/preview/">Preview Release of RStudio</a>.</p>
+<p>The <a href="https://www.rstudio.com/products/rstudio/download/">RStudio IDE</a> includes integrated support for profiling with profvis.</p>
 <p>Below is an example of profvis in use. The code creates a scatter plot of the <code>diamonds</code> data set, which has about 54,000 rows, fits a linear model, and draws a line for the model. (The plot isn’t displayed in this document, though.) If you copy and paste this code into your R console, it’ll open a window with the same profvis interface that you see in this HTML document.</p>
 <pre class="r"><code>library(profvis)
 
@@ -349,8 +308,8 @@ profvis({
   m &lt;- lm(price ~ carat, data = diamonds)
   abline(m, col = &quot;red&quot;)
 })</code></pre>
-<div id="htmlwidget-710bd48386ec5c1b50e0" style="width:100%;height:450px;" class="profvis html-widget"></div>
-<script type="application/json" data-for="htmlwidget-710bd48386ec5c1b50e0">{"x":{"message":{"prof":{"time":[1,1,1,1,1,2,2,2,2,2,3,3,3,3,3,3,4,4,4,4,4,4,5,5,5,5,5,5,6,6,6,6,6,6,7,7,7,7,7,7,8,8,8,8,8,8,9,9,9,9,9,9,10,10,10,10,10,10,11,11,11,11,11,11,12,12,12,12,12,12,13,13,13,13,13,13,14,14,14,14,14,14,15,15,15,15,15,15,16,16,16,16,16,16,17,17,17,17,17,17,18,18,18,18,18,18,19,19,19,19,19,19,20,20,20,20,20,20,21,21,21,21,21,21,22,22,22,22,22,22,23,23,23,23,23,23,24,24,24,24,24,24,25,25,25,25,25,25,26,26,26,26,26,26,27,27,27,27,27,27,28,28,28,28,28,28,29,29,29,29,29,29,30,30,30,30,30,30,31,31,31,31,31,31,32,32,32,32,32,32,33,33,33,33,33,33,34,34,34,34,34,34,35,35,35,35,35,35,36,36,36,36,36,36,37,37,37,37,37,37,38,38,38,38,38,38,39,39,39,39,39,39,40,40,40,40,40,40,41,41,41,41,41,41,42,42,42,42,42,42,43,43,43,43,43,43,44,44,44,44,44,44,45,45,45,45,45,45,46,46,46,46,46,46,47,47,47,47,47,47,48,48,48,48,48,48,49,49,49,49,49,49,50,50,50,50,50,50,51,51,51,51,51,51,52,52,52,52,52,52,53,53,53,53,53,53,54,54,54,54,54,54,55,55,55,55,55,55,56,56,56,56,56,56,57,57,57,57,57,57,58,58,58,58,58,58,59,59,59,59,59,59,60,60,60,60,60,60,61,61,61,61,61,61,62,62,62,62,62,62,63,63,63,63,63,63,64,64,64,64,64,64,65,65,65,65,65,65,66,66,66,66,66,66,67,67,67,67,67,67,68,68,68,68,68,68,69,69,69,69,69,69,70,70,70,70,70,70,71,71,71,71,71,71,72,72,72,72,72,72,73,73,73,73,73,73,74,74,74,74,74,74,75,75,75,75,75,75,76,76,76,76,76,76,77,77,77,77,77,77,78,78,78,78,78,78,79,79,79,79,79,79,80,80,80,80,80,80,81,81,81,81,81,81,82,82,82,82,82,82,83,83,83,83,83,83,84,84,84,84,84,84,85,85,85,85,85,85,86,86,86,86,86,86,87,87,87,87,87,87,88,88,88,88,88,88,89,89,89,89,89,89,90,90,90,90,90,90,91,91,91,91,91,91,92,92,92,92,92,92,93,93,93,93,93,93,94,94,94,94,94,94,95,95,95,95,95,95,96,96,96,96,96,96,97,97,97,97,97,97,98,98,98,98,98,98,99,99,99,99,99,99,100,100,100,100,100,100,101,101,101,101,101,101,102,102,102,102,102,102,103,103,103,103,103,103,104,104,104,104,104,104,105,105,105,105,105,105,106,106,106,106,106,106,107,107,107,107,107,107,108,108,108,108,108,108,109,109,109,109,109,109,110,110,110,110,110,110,110,110,110,111,112,112,112,112,112,112,112,112,112,112,112,112],"depth":[5,4,3,2,1,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,6,5,4,3,2,1,9,8,7,6,5,4,3,2,1,1,12,11,10,9,8,7,6,5,4,3,2,1],"label":["lazyLoadDBfetch","eval","eval","plot.formula","plot","lazyLoadDBfetch","eval","eval","plot.formula","plot","deparse","plot.default","plot","do.call","plot.formula","plot","deparse","plot.default","plot","do.call","plot.formula","plot","deparse","plot.default","plot","do.call","plot.formula","plot","deparse","plot.default","plot","do.call","plot.formula","plot","deparse","plot.default","plot","do.call","plot.formula","plot","deparse","plot.default","plot","do.call","plot.formula","plot","deparse","plot.default","plot","do.call","plot.formula","plot","deparse","plot.default","plot","do.call","plot.formula","plot","deparse","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","plot.xy","plot.default","plot","do.call","plot.formula","plot","axis","Axis.default","Axis","localAxis","plot.default","plot","do.call","plot.formula","plot","lazyLoadDBfetch","anyDuplicated.default","anyDuplicated","[.data.frame","[","na.omit.data.frame","na.omit",".External2","model.frame.default","stats::model.frame","eval","eval","lm"],"filenum":[null,null,null,null,1,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,1,null,null,null,null,null,null,null,null,1,1,null,null,null,null,null,null,null,null,null,null,null,1],"linenum":[null,null,null,null,6,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,6,null,null,null,null,null,null,null,null,6,7,null,null,null,null,null,null,null,null,null,null,null,7],"memalloc":[10.9818878173828,10.9818878173828,10.9818878173828,10.9818878173828,10.9818878173828,16.1282348632812,16.1282348632812,16.1282348632812,16.1282348632812,16.1282348632812,17.8275909423828,17.8275909423828,17.8275909423828,17.8275909423828,17.8275909423828,17.8275909423828,17.8275909423828,17.8275909423828,17.8275909423828,17.8275909423828,17.8275909423828,17.8275909423828,17.8275909423828,17.8275909423828,17.8275909423828,17.8275909423828,17.8275909423828,17.8275909423828,17.8828125,17.8828125,17.8828125,17.8828125,17.8828125,17.8828125,18.0167236328125,18.0167236328125,18.0167236328125,18.0167236328125,18.0167236328125,18.0167236328125,18.1524658203125,18.1524658203125,18.1524658203125,18.1524658203125,18.1524658203125,18.1524658203125,18.2977294921875,18.2977294921875,18.2977294921875,18.2977294921875,18.2977294921875,18.2977294921875,18.3017959594727,18.3017959594727,18.3017959594727,18.3017959594727,18.3017959594727,18.3017959594727,18.6982345581055,18.6982345581055,18.6982345581055,18.6982345581055,18.6982345581055,18.6982345581055,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2368469238281,22.2664260864258,22.2664260864258,22.2664260864258,22.2664260864258,22.2664260864258,22.2664260864258,22.2664260864258,22.2664260864258,22.2664260864258,22.3360595703125,26.172981262207,26.172981262207,26.172981262207,26.172981262207,26.172981262207,26.172981262207,26.172981262207,26.172981262207,26.172981262207,26.172981262207,26.172981262207,26.172981262207],"meminc":[0,0,0,0,0,5.14634704589844,0,0,0,0,1.69935607910156,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0552215576171875,0,0,0,0,0,0.1339111328125,0,0,0,0,0,0.1357421875,0,0,0,0,0,0.145263671875,0,0,0,0,0,0.00406646728515625,0,0,0,0,0,0.396438598632812,0,0,0,0,0,3.53861236572266,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0295791625976562,0,0,0,0,0,0,0,0,0.0696334838867188,3.83692169189453,0,0,0,0,0,0,0,0,0,0,0],"filename":[null,null,null,null,"<expr>",null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,"<expr>",null,null,null,null,null,null,null,null,"<expr>","<expr>",null,null,null,null,null,null,null,null,null,null,null,"<expr>"]},"interval":10,"files":[{"filename":"<expr>","content":"library(profvis)\n\nprofvis({\n  data(diamonds, package = \"ggplot2\")\n\n  plot(price ~ carat, data = diamonds)\n  m <- lm(price ~ carat, data = diamonds)\n  abline(m, col = \"red\")\n})","normpath":"<expr>"}],"prof_output":"/var/folders/0k/bxg5lhr92sq74mb1d446ql540000gp/T//Rtmpc5eCQF/file2ba771c49b96.prof","highlight":{"output":["^output\\$"],"gc":["^<GC>$"],"stacktrace":["^\\.\\.stacktraceo(n|ff)\\.\\.$"]},"split":"h"}},"evals":[],"jsHooks":[]}</script>
+<div id="htmlwidget-02e02232f7542062f610" style="width:100%;height:450px;" class="profvis html-widget"></div>
+<script type="application/json" data-for="htmlwidget-02e02232f7542062f610">{"x":{"message":{"prof":{"time":[1,2,2,2,2,3,3,3,3,4,4,4,4,5,5,5,5,6,6,6,6,7,7,7,7,8,8,8,8,9,9,9,10,10,10,11,11,11,12,12,12,13,13,13,14,14,14,15,15,15,16,16,16,17,17,17,18,18,18,19,19,19,20,20,20,21,21,21,22,22,22,23,23,23,24,24,24,25,25,25,26,26,26,27,27,27,28,28,28,29,29,29,30,30,30,31,31,31,32,32,32,33,33,33,34,34,34,35,35,35,36,36,36,37,37,37,38,38,38,39,39,39,40,40,40,41,41,41,42,42,42,43,43,43,44,44,44,45,45,45,46,46,46,47,47,47,48,48,48,49,49,49,50,50,50,51,51,51,52,52,52,53,53,53,54,54,54,55,55,55,56,56,56,57,57,57,58,58,58,59,59,59,60,60,60,61,61,61,62,62,62,63,63,63,64,64,64,65,65,65,66,66,66,67,67,67,68,68,68,69,69,69,70,70,70,71,71,71,72,72,72,73,73,73,74,74,74,75,75,75,76,76,76,77,77,77,78,78,78,79,79,79,80,80,80,81,81,81,82,82,82,83,83,83,84,84,84,85,85,85,86,86,86,87,87,87,88,88,88,89,89,89,90,90,90,91,91,91,92,92,92,93,93,93,94,94,94,95,95,95,95,95,96,96,96,96,96,96,96,96,96,96,96,96,96,96,96,96,96,96,96,96,97,97],"depth":[1,4,3,2,1,4,3,2,1,4,3,2,1,4,3,2,1,4,3,2,1,4,3,2,1,4,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,5,4,3,2,1,20,19,18,17,16,15,14,13,12,11,10,9,8,7,6,5,4,3,2,1,2,1],"label":["lazyLoadDBfetch","deparse","deparse1","plot.default","plot.formula","deparse","deparse1","plot.default","plot.formula","deparse","deparse1","plot.default","plot.formula","deparse","deparse1","plot.default","plot.formula","deparse","deparse1","plot.default","plot.formula","deparse","deparse1","plot.default","plot.formula","deparse","deparse1","plot.default","plot.formula","plot.xy","plot.default","plot.formula","plot.xy","plot.default","plot.formula","plot.xy","plot.default","plot.formula","plot.xy","plot.default","plot.formula","plot.xy","plot.default","plot.formula","plot.xy","plot.default","plot.formula","plot.xy","plot.default","plot.formula","plot.xy","plot.default","plot.formula","plot.xy","plot.default","plot.formula","plot.xy","plot.default","plot.formula","plot.xy","plot.default","plot.formula","plot.xy","plot.default","plot.formula","plot.xy","plot.default","plot.formula","plot.xy","plot.default","plot.formula","plot.xy","plot.default","plot.formula","plot.xy","plot.default","plot.formula","plot.xy","plot.default","plot.formula","plot.xy","plot.default","plot.formula","plot.xy","plot.default","plot.formula","plot.xy","plot.default","plot.formula","plot.xy","plot.default","plot.formula","plot.xy","plot.default","plot.formula","plot.xy","plot.default","plot.formula","plot.xy","plot.default","plot.formula","plot.xy","plot.default","plot.formula","plot.xy","plot.default","plot.formula","plot.xy","plot.default","plot.formula","plot.xy","plot.default","plot.formula","plot.xy","plot.default","plot.formula","plot.xy","plot.default","plot.formula","plot.xy","plot.default","plot.formula","plot.xy","plot.default","plot.formula","plot.xy","plot.default","plot.formula","plot.xy","plot.default","plot.formula","plot.xy","plot.default","plot.formula","plot.xy","plot.default","plot.formula","plot.xy","plot.default","plot.formula","plot.xy","plot.default","plot.formula","plot.xy","plot.default","plot.formula","plot.xy","plot.default","plot.formula","plot.xy","plot.default","plot.formula","plot.xy","plot.default","plot.formula","plot.xy","plot.default","plot.formula","plot.xy","plot.default","plot.formula","plot.xy","plot.default","plot.formula","plot.xy","plot.default","plot.formula","plot.xy","plot.default","plot.formula","plot.xy","plot.default","plot.formula","plot.xy","plot.default","plot.formula","plot.xy","plot.default","plot.formula","plot.xy","plot.default","plot.formula","plot.xy","plot.default","plot.formula","plot.xy","plot.default","plot.formula","plot.xy","plot.default","plot.formula","plot.xy","plot.default","plot.formula","plot.xy","plot.default","plot.formula","plot.xy","plot.default","plot.formula","plot.xy","plot.default","plot.formula","plot.xy","plot.default","plot.formula","plot.xy","plot.default","plot.formula","plot.xy","plot.default","plot.formula","plot.xy","plot.default","plot.formula","plot.xy","plot.default","plot.formula","plot.xy","plot.default","plot.formula","plot.xy","plot.default","plot.formula","plot.xy","plot.default","plot.formula","plot.xy","plot.default","plot.formula","plot.xy","plot.default","plot.formula","plot.xy","plot.default","plot.formula","plot.xy","plot.default","plot.formula","plot.xy","plot.default","plot.formula","plot.xy","plot.default","plot.formula","plot.xy","plot.default","plot.formula","plot.xy","plot.default","plot.formula","plot.xy","plot.default","plot.formula","plot.xy","plot.default","plot.formula","plot.xy","plot.default","plot.formula","plot.xy","plot.default","plot.formula","plot.xy","plot.default","plot.formula","plot.xy","plot.default","plot.formula","plot.xy","plot.default","plot.formula","plot.xy","plot.default","plot.formula","plot.xy","plot.default","plot.formula","plot.xy","plot.default","plot.formula","plot.xy","plot.default","plot.formula","plot.xy","plot.default","plot.formula","axis","Axis.default","localAxis","plot.default","plot.formula","anyDuplicated.default","[.data.frame","na.omit.data.frame","model.frame.default","eval","eval","evaluate_call","evaluate::evaluate","evaluate","block_exec","call_block","process_group.block","process_file","knitr::knit","rmarkdown::render","render_one","FUN","lapply","sapply","generator$render","lm.fit","lm"],"filenum":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,1],"linenum":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,7],"memalloc":[15.2443008422852,18.7998275756836,18.7998275756836,18.7998275756836,18.7998275756836,18.7998275756836,18.7998275756836,18.7998275756836,18.7998275756836,18.7998275756836,18.7998275756836,18.7998275756836,18.7998275756836,18.8790588378906,18.8790588378906,18.8790588378906,18.8790588378906,19.0010375976562,19.0010375976562,19.0010375976562,19.0010375976562,19.3976669311523,19.3976669311523,19.3976669311523,19.3976669311523,19.6428909301758,19.6428909301758,19.6428909301758,19.6428909301758,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.5967559814453,23.6195678710938,23.6195678710938,23.6195678710938,23.6195678710938,23.6195678710938,27.525764465332,27.525764465332,27.525764465332,27.525764465332,27.525764465332,27.525764465332,27.525764465332,27.525764465332,27.525764465332,27.525764465332,27.525764465332,27.525764465332,27.525764465332,27.525764465332,27.525764465332,27.525764465332,27.525764465332,27.525764465332,27.525764465332,27.525764465332,32.864990234375,32.864990234375],"meminc":[0,3.55552673339844,0,0,0,0,0,0,0,0,0,0,0,0.0792312622070312,0,0,0,0.121978759765625,0,0,0,0.396629333496094,0,0,0,0.245223999023438,0,0,0,3.95386505126953,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.0228118896484375,0,0,0,0,3.90619659423828,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5.33922576904297,0],"filename":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,"<expr>"]},"interval":10,"files":[{"filename":"<expr>","content":"library(profvis)\n\nprofvis({\n  data(diamonds, package = \"ggplot2\")\n\n  plot(price ~ carat, data = diamonds)\n  m <- lm(price ~ carat, data = diamonds)\n  abline(m, col = \"red\")\n})","normpath":"<expr>"}],"prof_output":"/var/folders/vd/0_g4hj6d7kq_fw5gd_r0ml5w0000gn/T//Rtmp0RknG9/file5be44cfb797b.prof","highlight":{"output":["^output\\$"],"gc":["^<GC>$"],"stacktrace":["^\\.\\.stacktraceo(n|ff)\\.\\.$"]},"split":"h"}},"evals":[],"jsHooks":[]}</script>
 <p>On top is the code, and on the bottom is a flame graph. In the flame graph, the horizontal direction represents time in milliseconds, and the vertical direction represents the call stack. Looking at the bottom-most items on the stack, most of the time, about 2 seconds, is spent in <code>plot</code>, and then a much smaller amount of time is spent in <code>lm</code>, and almost no time at all is spent in <code>abline</code> – it doesn’t even show up on the flame graph.</p>
 <p>Traveling up the stack, <code>plot</code> called <code>plot.formula</code>, which called <code>do.call</code>, and so on. Going up a few more levels, we can see that <code>plot.default</code> called a number of functions: first <code>deparse</code>, and later, <code>plot.xy</code>. Similarly, <code>lm</code> calls a number of different functions.</p>
 <p>On top, we can see the amount of time spent on each line of code. This tells us, unsurprisingly, that most of the time is spent on the line with <code>plot</code>, and a little bit is spent on the line with <code>lm</code>.</p>
@@ -394,7 +353,7 @@ profvis({
 
 // add bootstrap table styles to pandoc tables
 function bootstrapStylePandocTables() {
-  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
 }
 $(document).ready(function () {
   bootstrapStylePandocTables();
@@ -402,6 +361,23 @@ $(document).ready(function () {
 
 
 </script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+
 
 <!-- dynamically load mathjax for compatibility with self-contained -->
 <script>
