@@ -1617,8 +1617,8 @@ profvis = (function() {
         var aggregateChildren = function(node) {
           var nameMap = {};
           node.children.forEach(function(c) {
-            var nameMapEntry = nameMap[c.label];
-            if (!nameMapEntry) {
+            var nameMapEntry;
+            if (!nameMap.hasOwnProperty(c.label)) {
               nameMapEntry = jQuery.extend({}, c);
               nameMapEntry.sumTime     = c.endTime - c.startTime;
               nameMapEntry.sumChildren = [];
@@ -1627,6 +1627,7 @@ profvis = (function() {
               nameMapEntry.sumCount    = 1;
             }
             else {
+              nameMapEntry = nameMap[c.label];
               nameMapEntry.sumMem        = nameMapEntry.sumMem        + c.sumMem;
               nameMapEntry.sumMemDealloc = nameMapEntry.sumMemDealloc + c.sumMemDealloc;
               nameMapEntry.sumMemAlloc   = nameMapEntry.sumMemAlloc   + c.sumMemAlloc;
