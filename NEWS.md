@@ -1,10 +1,12 @@
-profvis (development version)
-=============================
+profvis 0.3.7.9001
+==================
 
 * `print()` gains an `aggregate` argument. Use `print(profvis(f()),
   aggregate = TRUE)` to aggregate frames by name in the flamegraph.
   This makes it easier to see the big picture (#115). Set the
   `profvis.aggregate` global option to `TRUE` to change the default.
+
+* Closed #140: The CSS for profvis code is scoped so that it does not affect other blocks of code, such as those from rmarkdown or Quarto. (#141)
 
 profvis 0.3.7
 =============
