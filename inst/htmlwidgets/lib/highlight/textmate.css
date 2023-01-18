@@ -1,29 +1,29 @@
-span.operator,
-span.paren {
+.profvis-code span.operator,
+.profvis-code span.paren {
   color: rgb(104, 118, 135)
 }
 
-span.literal {
+.profvis-code span.literal {
   color: rgb(88, 72, 246)
 }
 
-span.number {
+.profvis-code span.number {
   color: rgb(0, 0, 205);
 }
 
-span.comment {
+.profvis-code span.comment {
   color: rgb(76, 136, 107);
 }
 
-span.keyword {
+.profvis-code span.keyword {
   color: rgb(0, 0, 255);
 }
 
-span.identifier {
+.profvis-code span.identifier {
   color: rgb(0, 0, 0);
 }
 
-span.string {
+.profvis-code span.string {
   color: rgb(3, 106, 7);
 }
 
