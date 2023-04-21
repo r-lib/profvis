@@ -30,7 +30,7 @@ Suggests:
     devtools,
     shiny,
     htmltools
-RoxygenNote: 7.1.1
+RoxygenNote: 7.2.3
 URL: https://rstudio.github.io/profvis/
 Encoding: UTF-8
 Config/testthat/edition: 3

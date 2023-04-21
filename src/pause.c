@@ -7,7 +7,7 @@
 #include <sys/time.h>
 #endif
 
-double get_time_ms() {
+double get_time_ms(void) {
 #ifdef _WIN32
   LARGE_INTEGER time_var, frequency;
   QueryPerformanceCounter(&time_var);
