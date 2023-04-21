@@ -1,10 +1,9 @@
 profvis (development version)
 =============================
 
-* `print()` gains an `aggregate` argument. Use `print(profvis(f()),
-  aggregate = TRUE)` to aggregate frames by name in the flamegraph.
-  This makes it easier to see the big picture (#115). Set the
-  `profvis.aggregate` global option to `TRUE` to change the default.
+* `print()` gains an `aggregate` argument. Use `print(profvis(f()), aggregate = TRUE)` to aggregate frames by name in the flamegraph. This makes it easier to see the big picture (#115). Set the `profvis.aggregate` global option to `TRUE` to change the default.
+
+* For C function declarations that take no parameters, added `void` parameter. (#172)
 
 profvis 0.3.7
 =============
