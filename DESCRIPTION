@@ -31,6 +31,7 @@ Suggests:
     shiny,
     htmltools
 RoxygenNote: 7.2.3
-URL: https://rstudio.github.io/profvis/
+URL: https://rstudio.github.io/profvis/, https://github.com/rstudio/profvis
+BugReports: https://github.com/rstudio/profvis/issues
 Encoding: UTF-8
 Config/testthat/edition: 3
