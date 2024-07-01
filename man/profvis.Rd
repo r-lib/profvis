@@ -19,9 +19,9 @@ profvis(
 }
 \arguments{
 \item{expr}{Expression to profile. Not compatible with \code{prof_input}.
-The expression is repeatedly evaluated until `Rprof()` produces
-an output. It can _be_ a quosure injected with [rlang::inject()] but
-it cannot _contain_ injected quosures.}
+The expression is repeatedly evaluated until \code{Rprof()} produces
+an output. It can \emph{be} a quosure injected with \code{\link[rlang:inject]{rlang::inject()}} but
+it cannot \emph{contain} injected quosures.}
 
 \item{interval}{Interval for profiling samples, in seconds. Values less than
 0.005 (5 ms) will probably not result in accurate timings}
@@ -31,7 +31,7 @@ profiling data. If \code{NULL} (the default), a temporary file will be used
 and automatically removed when the function exits. For a directory, a
 random filename is used.}
 
-\item{prof_input}{The path to an \code{\link{Rprof}} data file.  Not
+\item{prof_input}{The path to an \code{\link[=Rprof]{Rprof()}} data file.  Not
 compatible with \code{expr} or \code{prof_output}.}
 
 \item{width}{Width of the htmlwidget.}
@@ -43,24 +43,24 @@ vertical, or \code{"h"} for horizontal. This is the orientation of the
 split bar.}
 
 \item{torture}{Triggers garbage collection after every \code{torture} memory
-  allocation call.
+allocation call.
 
-  Note that memory allocation is only approximate due to the nature of the
-  sampling profiler and garbage collection: when garbage collection triggers,
-  memory allocations will be attributed to different lines of code. Using
-  \code{torture = steps} helps prevent this, by making R trigger garbage
-  collection after every \code{torture} memory allocation step.}
+Note that memory allocation is only approximate due to the nature of the
+sampling profiler and garbage collection: when garbage collection triggers,
+memory allocations will be attributed to different lines of code. Using
+\code{torture = steps} helps prevent this, by making R trigger garbage
+collection after every \code{torture} memory allocation step.}
 
 \item{simplify}{Whether to simplify the profiles by removing
 intervening frames caused by lazy evaluation. This only has an
 effect on R 4.0. See the \code{filter.callframes} argument of
-\code{\link{Rprof}()}.}
+\code{\link[=Rprof]{Rprof()}}.}
 
-\item{rerun}{If `TRUE`, `Rprof()` is run again with `expr` until a
+\item{rerun}{If \code{TRUE}, \code{Rprof()} is run again with \code{expr} until a
 profile is actually produced. This is useful for the cases where
-`expr` returns too quickly, before R had time to sample a
+\code{expr} returns too quickly, before R had time to sample a
 profile. Can also be a string containing a regexp to match
-profiles. In this case, `profvis()` reruns `expr` until the
+profiles. In this case, \code{profvis()} reruns \code{expr} until the
 regexp matches the modal value of the profile stacks.}
 }
 \description{
@@ -69,7 +69,7 @@ htmlwidget for interactively exploring the profiling data.
 }
 \details{
 An alternate way to use \code{profvis} is to separately capture the profiling
-data to a file using \code{\link{Rprof}()}, and then pass the path to the
+data to a file using \code{\link[=Rprof]{Rprof()}}, and then pass the path to the
 corresponding data file as the \code{prof_input} argument to
 \code{profvis()}.
 }
@@ -109,8 +109,8 @@ browseURL("profile.html")
 }
 }
 \seealso{
-\code{\link{print.profvis}} for printing options.
+\code{\link[=print.profvis]{print.profvis()}} for printing options.
 
-\code{\link{Rprof}} for more information about how the profiling
-  data is collected.
+\code{\link[=Rprof]{Rprof()}} for more information about how the profiling
+data is collected.
 }

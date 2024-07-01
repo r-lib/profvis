@@ -19,10 +19,9 @@
 vertical, or \code{"h"} for horizontal. This is the orientation of the
 split bar.}
 
-\item{aggregate}{If `TRUE`, the profiled stacks are aggregated by
+\item{aggregate}{If \code{TRUE}, the profiled stacks are aggregated by
 name. This makes it easier to see the big picture. Set your own
-global default for this argument with `options(profvis.aggregate
-= )`.}
+global default for this argument with \code{options(profvis.aggregate = )}.}
 }
 \description{
 Print a profvis object

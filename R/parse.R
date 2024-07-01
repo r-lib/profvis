@@ -1,9 +1,9 @@
 #' Parse Rprof output file for use with profvis
 #'
-#' @param path Path to the \code{\link{Rprof}} output file.
+#' @param path Path to the [Rprof()] output file.
 #' @param expr_source If any source refs in the profiling output have an empty
 #'   filename, that means they refer to code executed at the R console. This
-#'   code can be captured and passed (as a string) as the \code{expr_source}
+#'   code can be captured and passed (as a string) as the `expr_source`
 #'   argument.
 #' @import stringr
 #' @export
