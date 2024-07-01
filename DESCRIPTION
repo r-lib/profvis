@@ -2,17 +2,26 @@ Package: profvis
 Title: Interactive Visualizations for Profiling R Code
 Version: 0.3.8
 Authors@R: c(
-    person("Winston", "Chang", email = "winston@rstudio.com", role = c("aut", "cre")),
-    person("Javier", "Luraschi", email = "javier@rstudio.com", role = "aut"),
+    person("Winston", "Chang", , "winston@rstudio.com", role = c("aut", "cre")),
+    person("Javier", "Luraschi", , "javier@rstudio.com", role = "aut"),
     person("Timothy", "Mastny", role = "aut"),
-    person(family = "RStudio", role = "cph"),
-    person(family = "jQuery Foundation", role = "cph", comment = "jQuery library"),
-    person(family = "jQuery contributors", role = c("ctb", "cph"), comment = "jQuery library; authors listed in inst/www/shared/jquery-AUTHORS.txt"),
-    person("Mike", "Bostock", role = c("ctb", "cph"), comment = "D3 library"),
-    person(family = "D3 contributors", role = "ctb", comment = "D3 library"),
-    person("Ivan", "Sagalaev", role = c("ctb", "cph"), comment = "highlight.js library")
-    )
+    person(, "RStudio", role = "cph"),
+    person(, "jQuery Foundation", role = "cph",
+           comment = "jQuery library"),
+    person(, "jQuery contributors", role = c("ctb", "cph"),
+           comment = "jQuery library; authors listed in inst/www/shared/jquery-AUTHORS.txt"),
+    person("Mike", "Bostock", role = c("ctb", "cph"),
+           comment = "D3 library"),
+    person(, "D3 contributors", role = "ctb",
+           comment = "D3 library"),
+    person("Ivan", "Sagalaev", role = c("ctb", "cph"),
+           comment = "highlight.js library")
+  )
 Description: Interactive visualizations for profiling R code.
+License: GPL-3 | file LICENSE
+URL: https://rstudio.github.io/profvis/,
+    https://github.com/rstudio/profvis
+BugReports: https://github.com/rstudio/profvis/issues
 Depends:
     R (>= 3.0)
 Imports:
@@ -21,17 +30,14 @@ Imports:
     rlang (>= 0.4.9),
     stringr,
     vctrs
-License: GPL-3 | file LICENSE
 Suggests:
-    knitr,
-    ggplot2,
-    rmarkdown,
-    testthat (>= 3.0.0),
     devtools,
+    ggplot2,
+    htmltools,
+    knitr,
+    rmarkdown,
     shiny,
-    htmltools
-RoxygenNote: 7.3.1
-URL: https://rstudio.github.io/profvis/, https://github.com/rstudio/profvis
-BugReports: https://github.com/rstudio/profvis/issues
-Encoding: UTF-8
+    testthat (>= 3.0.0)
 Config/testthat/edition: 3
+Encoding: UTF-8
+RoxygenNote: 7.3.1
