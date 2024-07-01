@@ -13,7 +13,7 @@ profvis_server(input, output, session, dir = ".")
 \item{id}{Output id from \code{profvis_server}.}
 
 \item{input, output, session}{Arguments provided by
-\code{\link[shiny]{callModule}}.}
+\code{\link[shiny:callModule]{shiny::callModule()}}.}
 
 \item{dir}{Output directory to save Rprof files.}
 }
@@ -26,14 +26,13 @@ only, and not included in production apps!
 }
 \details{
 The usual way to use Profvis with Shiny is to simply call
-`profvis(shiny::runApp())`, but this may not always be possible or desirable:
+\code{profvis(shiny::runApp())}, but this may not always be possible or desirable:
 first, if you only want to profile a particular interaction in the Shiny app
 and not capture all the calculations involved in starting up the app and
 getting it into the correct state; and second, if you're trying to profile an
 application that's been deployed to a server.
 
-For more details on how to invoke Shiny modules, see [this
-article](https://shiny.rstudio.com/articles/modules.html).
+For more details on how to invoke Shiny modules, see \href{https://shiny.rstudio.com/articles/modules.html}{this article}.
 }
 \examples{
 # In order to avoid "Hit <Return> to see next plot" prompts,

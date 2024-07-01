@@ -16,7 +16,7 @@
 #' For more details on how to invoke Shiny modules, see [this
 #' article](https://shiny.rstudio.com/articles/modules.html).
 #'
-#' @param id Output id from \code{profvis_server}.
+#' @param id Output id from `profvis_server`.
 #'
 #' @examples
 #' # In order to avoid "Hit <Return> to see next plot" prompts,
@@ -75,7 +75,7 @@ profvis_ui <- function(id) {
 }
 
 #' @param input,output,session Arguments provided by
-#'   \code{\link[shiny]{callModule}}.
+#'   [shiny::callModule()].
 #' @param dir Output directory to save Rprof files.
 #'
 #' @rdname profvis_ui

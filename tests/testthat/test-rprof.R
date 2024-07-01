@@ -7,7 +7,7 @@ test_that("`rprof_lines()` collects profiles", {
   out <- rprof_lines(f(), rerun = "pause")
   expect_snapshot(writeLines(modal_value0(out)))
 
-  expect_snapshot0(cat_rprof(f()))
+  expect_snapshot(cat_rprof(f()))
 })
 
 test_that("`filter.callframes` filters out intervening frames", {
@@ -17,11 +17,11 @@ test_that("`filter.callframes` filters out intervening frames", {
   f <- function() g()
   g <- function() h()
   h <- function() pause(TEST_PAUSE_TIME)
-  expect_snapshot0(cat_rprof(f(), filter.callframes = TRUE))
+  expect_snapshot(cat_rprof(f(), filter.callframes = TRUE))
 
   # Intervening frames are discarded
   f <- function() identity(identity(pause(TEST_PAUSE_TIME)))
-  expect_snapshot0(cat_rprof(f(), filter.callframes = TRUE))
+  expect_snapshot(cat_rprof(f(), filter.callframes = TRUE))
 })
 
 test_that("stack is correctly stripped even with metadata profiling", {

@@ -11,7 +11,7 @@ renderProfvis(expr, env = parent.frame(), quoted = FALSE)
 
 \item{env}{The environment in which to evaluate \code{expr}.}
 
-\item{quoted}{Is \code{expr} a quoted expression (with \code{\link{quote}()})?}
+\item{quoted}{Is \code{expr} a quoted expression (with \code{\link[=quote]{quote()}})?}
 }
 \description{
 Widget render function for use in Shiny
