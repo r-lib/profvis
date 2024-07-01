@@ -1,4 +1,4 @@
-Profvis
+profvis
 =======
 
 <!-- badges: start -->
@@ -14,10 +14,6 @@ Profvis is a tool for visualizing code profiling data from R. It creates a web p
 ```R
 install.packages("profvis")
 ```
-
-## Documentation
-
-See the [documentation site](https://rstudio.github.io/profvis/).
 
 ## Example
 
