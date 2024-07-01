@@ -19,7 +19,7 @@ Authors@R: c(
            comment = "highlight.js library")
   )
 Description: Interactive visualizations for profiling R code.
-License: GPL-3 | file LICENSE
+License: MIT + file LICENSE
 URL: https://rstudio.github.io/profvis/,
     https://github.com/rstudio/profvis
 BugReports: https://github.com/rstudio/profvis/issues
