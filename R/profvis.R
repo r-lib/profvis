@@ -170,7 +170,7 @@ profvis <- function(expr = NULL,
       line.profiling = TRUE,
       gc.profiling = TRUE,
       memory.profiling = TRUE,
-      event = timing,
+      event = timing
     )
     if (getRversion() >= "4.0.3") {
       rprof_args <- append(rprof_args, list(filter.callframes = simplify))
