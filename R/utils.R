@@ -42,3 +42,20 @@ enquo0_list <- function(arg) {
     env = quo_get_env(quo)
   )
 }
+
+
+split_in_half <- function(x, pattern, fixed = FALSE, perl = FALSE) {
+  pos <- regexpr(pattern, x, fixed = fixed, perl = perl)
+  
+  start <- as.vector(pos) - 1
+  length <- attr(pos, "match.length")
+  
+  no_match <- !is.na(pos) & pos == -1L
+  length[no_match] <- 0
+  start[no_match] <- nchar(x)[no_match]
+
+  cbind(
+    substr(x, 1, start),
+    substr(x, start + length + 1, nchar(x))
+  )
+}

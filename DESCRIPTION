@@ -29,7 +29,6 @@ Imports:
     htmlwidgets (>= 0.3.2),
     purrr,
     rlang (>= 0.4.9),
-    stringr,
     vctrs
 Suggests:
     devtools,
