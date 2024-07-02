@@ -1,5 +1,6 @@
 test_that("Irrelevant stack is trimmed from profiles (#123)", {
   skip_on_cran()
+  skip_on_covr()
   
   f <- function() pause(TEST_PAUSE_TIME)
 
