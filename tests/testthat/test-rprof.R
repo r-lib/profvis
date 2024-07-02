@@ -1,7 +1,6 @@
 
-skip_on_cran_if_not_ci()
-
 test_that("`rprof_lines()` collects profiles", {
+  skip_on_cran()
   f <- function() pause(TEST_PAUSE_TIME)
 
   out <- rprof_lines(f(), rerun = "pause")
@@ -11,6 +10,7 @@ test_that("`rprof_lines()` collects profiles", {
 })
 
 test_that("`filter.callframes` filters out intervening frames", {
+  skip_on_cran()
   skip_if_not(has_simplify())
 
   # Chains of calls are kept
@@ -25,6 +25,7 @@ test_that("`filter.callframes` filters out intervening frames", {
 })
 
 test_that("stack is correctly stripped even with metadata profiling", {
+  skip_on_cran()
   f <- function() pause(TEST_PAUSE_TIME)
   zap <- function(lines) modal_value0(zap_trailing_space(zap_srcref(zap_meta_data(lines))))
 
@@ -48,6 +49,7 @@ test_that("stack is correctly stripped even with metadata profiling", {
 })
 
 test_that("`pause()` does not include .Call() when `line.profiling` is set", {
+  skip_on_cran()
   f <- function() pause(TEST_PAUSE_TIME)
 
   # `pause()` should appear first on the line
@@ -56,6 +58,7 @@ test_that("`pause()` does not include .Call() when `line.profiling` is set", {
 })
 
 test_that("srcrefs do not prevent suffix replacement", {
+  skip_on_cran()
   line <- ":1509169:3184799:91929040:0:\"pause\" 1#1 \"f\" \"doTryCatch\" \"tryCatchOne\" \"tryCatchList\" \"doTryCatch\" \"tryCatchOne\" \"tryCatchList\" \"tryCatch\" 2#193 \"with_profvis_handlers\" 2#151 \"profvis\" "
   suffix <- "\"doTryCatch\" \"tryCatchOne\" \"tryCatchList\" \"doTryCatch\" \"tryCatchOne\" \"tryCatchList\" \"tryCatch\" 2#193 \"with_profvis_handlers\" 2#151 \"profvis\" $"
   re <- gsub_srcref_as_wildcards(suffix)
