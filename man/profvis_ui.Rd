@@ -40,7 +40,6 @@ For more details on how to invoke Shiny modules, see \href{https://shiny.rstudio
 
 if(interactive()) {
   library(shiny)
-  library(ggplot2)
   shinyApp(
     fluidPage(
       plotOutput("plot"),
@@ -52,7 +51,7 @@ if(interactive()) {
 
       output$plot <- renderPlot({
         input$new
-        ggplot(diamonds, aes(carat, price)) + geom_point()
+        boxplot(mpg ~ cyl, data = mtcars)
       })
     }
   )

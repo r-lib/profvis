@@ -21,23 +21,28 @@ To run code with profiling, wrap the expression in `profvis()`. By default, this
 
 ```R
 library(profvis)
-library(ggplot2)
 
-profvis({
-  g <- ggplot(diamonds, aes(carat, price)) + geom_point(size = 1, alpha = 0.2)
-  print(g)
-})
+f <- function() {
+  pause(0.1)
+  g()
+  h()
+}
+g <- function() {
+  pause(0.1)
+  h()
+}
+h <- function() {
+  pause(0.1)
+}
+
+profvis(f())
 ```
 
 
 The `profvis()` call returns an [htmlwidget](http://www.htmlwidgets.org/), which by default when printed opens a web browser. If you wish to save the object, it won't open the browser at first, but you can view it later by typing the variable name at the console, or calling `print()` on it.
 
 ```R
-p <- profvis({
-  g <- ggplot(diamonds, aes(carat, price)) + geom_point(size = 1, alpha = 0.2)
-  print(g)
-})
-
+p <- profvis(f())
 
 # View it with:
 p

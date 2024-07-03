@@ -24,7 +24,6 @@
 #'
 #' if(interactive()) {
 #'   library(shiny)
-#'   library(ggplot2)
 #'   shinyApp(
 #'     fluidPage(
 #'       plotOutput("plot"),
@@ -36,7 +35,7 @@
 #'
 #'       output$plot <- renderPlot({
 #'         input$new
-#'         ggplot(diamonds, aes(carat, price)) + geom_point()
+#'         boxplot(mpg ~ cyl, data = mtcars)
 #'       })
 #'     }
 #'   )
