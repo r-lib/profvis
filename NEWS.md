@@ -1,5 +1,7 @@
 # profvis (development version)
 
+* `profvis()` now uses elapsed time where possible (#72).
+
 profvis 0.3.8
 =============================
 

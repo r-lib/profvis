@@ -13,3 +13,14 @@ test_that("Irrelevant stack is trimmed from profiles (#123)", {
   out <- repro_profvis(f(), simplify = TRUE)
   expect_equal(profvis_modal_value(out$x$message$prof), "pause f")
 })
+
+test_that("defaults to elapsed timing", {
+  skip_on_cran()
+  skip_on_covr()
+  skip_if_not(has_event())
+  
+  f <- function() Sys.sleep(TEST_PAUSE_TIME)
+
+  out <- repro_profvis(f(), rerun = "Sys.sleep")
+  expect_equal(profvis_modal_value(out$x$message$prof), "Sys.sleep f")
+})
