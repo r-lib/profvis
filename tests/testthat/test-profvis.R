@@ -17,6 +17,7 @@ test_that("Irrelevant stack is trimmed from profiles (#123)", {
 test_that("defaults to elapsed timing", {
   skip_on_cran()
   skip_on_covr()
+  skip_if_not(has_event())
   
   f <- function() Sys.sleep(TEST_PAUSE_TIME)
 

@@ -118,7 +118,7 @@ profvis <- function(expr = NULL,
   }
 
   if (is.null(timing)) {
-    if (getRversion() >= "4.4.0" || Sys.info()$sysname == "Windows") {
+    if (has_event() || Sys.info()[["sysname"]] == "Windows") {
       timing <- "elapsed"
     } else {
       timing <- "cpu"
@@ -170,7 +170,7 @@ profvis <- function(expr = NULL,
       line.profiling = TRUE,
       gc.profiling = TRUE,
       memory.profiling = TRUE,
-      event = timing,
+      event = if (has_event()) timing,
       filter.callframes = if (has_simplify()) simplify
     ))
 
