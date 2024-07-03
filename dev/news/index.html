@@ -46,7 +46,9 @@
 
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="development version" id="profvis-development-version">profvis (development version)<a class="anchor" aria-label="anchor" href="#profvis-development-version"></a></h2>
-</div>
+<ul><li>
+<code><a href="../reference/profvis.html">profvis()</a></code> now uses elapsed time where possible (<a href="https://github.com/rstudio/profvis/issues/72" class="external-link">#72</a>).</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.3.8" id="profvis-038">profvis 0.3.8<a class="anchor" aria-label="anchor" href="#profvis-038"></a></h2><p class="text-muted">CRAN release: 2023-05-02</p>
 <ul><li><p><code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> gains an <code>aggregate</code> argument. Use <code>print(profvis(f()), aggregate = TRUE)</code> to aggregate frames by name in the flamegraph. This makes it easier to see the big picture (<a href="https://github.com/rstudio/profvis/issues/115" class="external-link">#115</a>). Set the <code>profvis.aggregate</code> global option to <code>TRUE</code> to change the default.</p></li>

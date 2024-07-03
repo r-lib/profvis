@@ -59,6 +59,7 @@ htmlwidget for interactively exploring the profiling data.</p>
 <span>  interval <span class="op">=</span> <span class="fl">0.01</span>,</span>
 <span>  prof_output <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  prof_input <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  timing <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  width <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  height <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  split <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"h"</span>, <span class="st">"v"</span><span class="op">)</span>,</span>
@@ -92,6 +93,15 @@ random filename is used.</p></dd>
 <dt>prof_input</dt>
 <dd><p>The path to an <code><a href="https://rdrr.io/r/utils/Rprof.html" class="external-link">Rprof()</a></code> data file.  Not
 compatible with <code>expr</code> or <code>prof_output</code>.</p></dd>
+
+
+<dt>timing</dt>
+<dd><p>The type of timing to use. Either <code>"elapsed"</code> (the
+default) for wall clock time, or <code>"cpu"</code> for CPU time. Wall clock time
+includes time spent waiting for other processes (e.g. waiting for a
+web page to download) so is generally more useful.</p>
+<p>If <code>NULL</code>, the default, will use elapsed time where possible, i.e.
+on Windows or on R 4.4.0 or greater.</p></dd>
 
 
 <dt>width</dt>
