@@ -1,5 +1,6 @@
 # profvis (development version)
 
+* profvis no longer requires purrr or stringr, and no longer suggests ggplot2, devtools, knitr, or rmarkdown.
 * `profvis()` now uses elapsed time where possible (#72).
 
 profvis 0.3.8
