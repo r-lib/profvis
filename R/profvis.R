@@ -147,15 +147,13 @@ profvis <- function(expr = NULL,
       on.exit(gctorture2(step = 0), add = TRUE)
     }
 
-    rprof_args <- list(
+    rprof_args <- drop_nulls(list(
       interval = interval,
       line.profiling = TRUE,
       gc.profiling = TRUE,
-      memory.profiling = TRUE
-    )
-    if (getRversion() >= "4.0.3") {
-      rprof_args <- append(rprof_args, list(filter.callframes = simplify))
-    }
+      memory.profiling = TRUE,
+      filter.callframes = if (has_simplify()) simplify
+    ))
 
     on.exit(Rprof(NULL), add = TRUE)
     if (remove_on_exit) {
