@@ -28,7 +28,6 @@ Depends:
 Imports:
     htmlwidgets (>= 0.3.2),
     rlang (>= 0.4.9),
-    stringr,
     vctrs
 Suggests:
     htmltools,

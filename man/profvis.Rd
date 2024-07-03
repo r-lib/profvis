@@ -9,6 +9,7 @@ profvis(
   interval = 0.01,
   prof_output = NULL,
   prof_input = NULL,
+  timing = NULL,
   width = NULL,
   height = NULL,
   split = c("h", "v"),
@@ -33,6 +34,14 @@ random filename is used.}
 
 \item{prof_input}{The path to an \code{\link[=Rprof]{Rprof()}} data file.  Not
 compatible with \code{expr} or \code{prof_output}.}
+
+\item{timing}{The type of timing to use. Either \code{"elapsed"} (the
+default) for wall clock time, or \code{"cpu"} for CPU time. Wall clock time
+includes time spent waiting for other processes (e.g. waiting for a
+web page to download) so is generally more useful.
+
+If \code{NULL}, the default, will use elapsed time where possible, i.e.
+on Windows or on R 4.4.0 or greater.}
 
 \item{width}{Width of the htmlwidget.}
 

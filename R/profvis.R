@@ -21,6 +21,13 @@
 #'
 #' @param prof_input The path to an [Rprof()] data file.  Not
 #'   compatible with `expr` or `prof_output`.
+#' @param timing The type of timing to use. Either `"elapsed"` (the
+#'  default) for wall clock time, or `"cpu"` for CPU time. Wall clock time
+#'  includes time spent waiting for other processes (e.g. waiting for a 
+#'  web page to download) so is generally more useful. 
+#' 
+#'  If `NULL`, the default, will use elapsed time where possible, i.e.
+#'  on Windows or on R 4.4.0 or greater.
 #' @param width Width of the htmlwidget.
 #' @param height Height of the htmlwidget
 #' @param split Direction of split. Either `"v"` (the default) for
@@ -90,6 +97,7 @@ profvis <- function(expr = NULL,
                     interval = 0.01,
                     prof_output = NULL,
                     prof_input = NULL,
+                    timing = NULL,
                     width = NULL,
                     height = NULL,
                     split = c("h", "v"),
@@ -107,6 +115,16 @@ profvis <- function(expr = NULL,
   }
   if (interval < 0.005) {
     message("Intervals smaller than ~5ms will probably not result in accurate timings.")
+  }
+
+  if (is.null(timing)) {
+    if (has_event() || Sys.info()[["sysname"]] == "Windows") {
+      timing <- "elapsed"
+    } else {
+      timing <- "cpu"
+    }
+  } else {
+    timing <- arg_match(timing, c("elapsed", "cpu"))
   }
 
   if (!is.null(expr_q)) {
@@ -152,6 +170,7 @@ profvis <- function(expr = NULL,
       line.profiling = TRUE,
       gc.profiling = TRUE,
       memory.profiling = TRUE,
+      event = if (has_event()) timing,
       filter.callframes = if (has_simplify()) simplify
     ))
 
@@ -161,7 +180,10 @@ profvis <- function(expr = NULL,
     }
     repeat {
       inject(Rprof(prof_output, !!!rprof_args))
-      with_profvis_handlers(expr)
+      cnd <- with_profvis_handlers(expr)
+      if (!is.null(cnd)) {
+        break
+      }
       Rprof(NULL)
 
       lines <- readLines(prof_output)

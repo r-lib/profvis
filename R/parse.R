@@ -5,7 +5,6 @@
 #'   filename, that means they refer to code executed at the R console. This
 #'   code can be captured and passed (as a string) as the `expr_source`
 #'   argument.
-#' @import stringr
 #' @export
 parse_rprof <- function(path = "Rprof.out", expr_source = NULL) {
   parse_rprof_lines(readLines(path), expr_source = expr_source)
@@ -18,15 +17,15 @@ parse_rprof_lines <- function(lines, expr_source = NULL) {
   }
 
   # Parse header, including interval (in ms)
-  opts <- str_split(lines[[1]], ": ")[[1]]
-  interval <- as.numeric(str_split(opts[length(opts)], "=")[[1]][2]) / 1e3
+  opts <- strsplit(lines[[1]], ": ", fixed = TRUE)[[1]]
+  interval <- as.numeric(strsplit(opts[length(opts)], "=", fixed = TRUE)[[1]][2]) / 1e3
   lines <- lines[-1]
 
   # Separate file labels and profiling data
   is_label <- grepl("^#", lines)
 
   label_lines <- lines[is_label]
-  label_pieces <- str_split_fixed(label_lines, ": ", 2)
+  label_pieces <- split_in_half(label_lines, ": ", fixed = TRUE)
   labels <- data.frame(
     label = as.integer(sub("^#File ", "", label_pieces[, 1])),
     path = label_pieces[, 2],
@@ -45,7 +44,7 @@ parse_rprof_lines <- function(lines, expr_source = NULL) {
   # stuff from the prof_data strings.
   if (has_memory) {
     mem_data <- gsub("^:(\\d+:\\d+:\\d+:\\d+):.*", "\\1", prof_data)
-    mem_data <- str_split(mem_data, ":")
+    mem_data <- strsplit(mem_data, ":", fixed = TRUE)
     prof_data <- zap_mem_prefix(prof_data)
   } else {
     mem_data <- rep(NA_character_, length(prof_data))
@@ -64,7 +63,7 @@ parse_rprof_lines <- function(lines, expr_source = NULL) {
   prof_data <- gsub('^"<GC>",', '"<GC>" ', prof_data)
 
   # # Split by ' ' for call stack
-  # prof_data <- str_split(prof_data, " ")
+  # prof_data <- strsplit(prof_data, " ")
   #
   # prof_data <- lapply(prof_data, function(s) {
   #   if (identical(s, "")) character(0)
@@ -277,7 +276,7 @@ zap_header <- function(lines) {
 # as the label.
 insert_code_line_labels <- function(prof_data, file_contents) {
   file_label_contents <- lapply(file_contents, function(content) {
-    content <- str_split(content, "\n")[[1]]
+    content <- strsplit(content, "\n", fixed = TRUE)[[1]]
     sub("^ +", "", content)
   })
 
