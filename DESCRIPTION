@@ -31,11 +31,7 @@ Imports:
     stringr,
     vctrs
 Suggests:
-    devtools,
-    ggplot2,
     htmltools,
-    knitr,
-    rmarkdown,
     shiny,
     testthat (>= 3.0.0)
 Config/Needs/website: tidyverse/tidytemplate
