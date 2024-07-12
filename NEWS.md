@@ -2,6 +2,7 @@
 
 * profvis no longer requires purrr or stringr, and no longer suggests ggplot2, devtools, knitr, or rmarkdown.
 * `profvis()` now uses elapsed time where possible (#72).
+* The version of jQuery bundled in profvis has been upgraded to 3.7.1 (#139).
 
 profvis 0.3.8
 =============================
