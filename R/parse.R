@@ -5,6 +5,7 @@
 #'   filename, that means they refer to code executed at the R console. This
 #'   code can be captured and passed (as a string) as the `expr_source`
 #'   argument.
+#' @keywords internal
 #' @export
 parse_rprof <- function(path = "Rprof.out", expr_source = NULL) {
   parse_rprof_lines(readLines(path), expr_source = expr_source)
