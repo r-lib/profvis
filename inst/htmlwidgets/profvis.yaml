@@ -17,7 +17,7 @@ dependencies:
       - scroll.js
     stylesheet: profvis.css
   - name: highlight
-    version: 6.2.0
+    version: 11.10.0
     src: "htmlwidgets/lib/highlight"
-    script: highlight.js
+    script: highlight.min.js
     stylesheet: textmate.css

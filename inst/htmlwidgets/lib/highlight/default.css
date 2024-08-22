@@ -1,30 +1,30 @@
-.profvis-code span.operator,
-.profvis-code span.paren {
+span.hljs-operator,
+span.hljs-paren {
  color: rgb(104, 118, 135)
 }
 
-.profvis-code span.literal {
+span.hljs-literal {
  color: #990073
 }
 
-.profvis-code span.number {
+span.hljs-number {
  color: #099;
 }
 
-.profvis-code span.comment {
+span.hljs-comment {
  color: #998;
  font-style: italic
 }
 
-.profvis-code span.keyword {
+span.hljs-keyword {
  color: #900;
  font-weight: bold
 }
 
-.profvis-code span.identifier {
+span.hljs-identifier {
  color: rgb(0, 0, 0);
 }
 
-.profvis-code span.string {
+span.hljs-string {
  color: #d14;
 }
