@@ -24,24 +24,18 @@ rprof_lines <- function(expr,
 
   prof_file <- tempfile("profvis-snapshot", fileext = ".prof")
   on.exit(unlink(prof_file), add = TRUE)
-
-  if (has_simplify()) {
-    args <- list(filter.callframes = filter.callframes)
-  } else {
-    args <- NULL
-  }
   on.exit(Rprof(NULL), add = TRUE)
 
   while (TRUE) {
     env_bind_lazy(current_env(), do = !!expr, .eval_env = env)
 
     gc()
-    inject(Rprof(
+    Rprof(
       prof_file,
       ...,
       interval = interval,
-      !!!args
-    ))
+      filter.callframes = filter.callframes
+    )
 
     do
     Rprof(NULL)
@@ -65,7 +59,7 @@ re_srcref <- "\\d+#\\d+"
 re_srcref_opt <- sprintf(" (%s )?", re_srcref)
 
 rprof_current_suffix <- function(env, simplify, ...) {
-  if (simplify && getRversion() >= "4.0.3") {
+  if (simplify) {
     # We need to call the suffix routine from the caller frame. We
     # inline a closure in the call so we can refer to here despite
     # evaluating in a foreign environment. Evaluation is done through
@@ -135,10 +129,6 @@ gsub_srcref_as_wildcards <- function(lines) {
 }
 
 utils::globalVariables("do")
-
-has_simplify <- function() {
-  getRversion() >= "4.0.3"
-}
 
 has_event <- function() {
   getRversion() >= "4.4.0"

@@ -147,6 +147,8 @@ Finally, many of the flame graph cells contain the entire expression from line 6
 This profiling data tells us that much of the time is spent in `$` and `$<-`. Maybe avoiding these functions entirely will speed things up. To do that, instead of operating on data frame columns, we can operate on temporary vectors. As it turns out, writing a function that takes a vector as input and returns a vector as output is not only convenient; it provides a natural way of creating temporary variables so that we can avoid calling `$` and `$<-` in a loop.
 
 ```{r ex2_csum}
+x <- runif(5e5)
+
 profvis({
   csum <- function(x) {
     if (length(x) < 2) return(x)
@@ -157,7 +159,6 @@ profvis({
     }
     sum
   }
-  x <- runif(5e5)
   x$sum <- csum(x)
 })
 ```
@@ -170,12 +171,6 @@ It may appear that no functions are called from line 7, but that's not quite tru
 * The `-` and `+` functions can show up in a flame graph, but they are very fast so the sampling profiler may or may not happen to take a sample when they're on the call stack.
 
 The code panel shows that there is still a large amount of memory being allocated in the `csum` function. In the flame graph. you probably have noticed the gray blocks labeled `<GC>`. These represent times where R is doing *garbage collection* -- that is, when it is freeing (deallocating) chunks of memory that were allocated but no longer needed. If R is spending a lot of time freeing memory, that suggests that R is also spending a lot of time allocating memory. This is another common source of slowness in R code.
-
-> **Note:** Before R 3.4, growing a vector in a loop was expensive -- each time the vector grew by one, R would copy the vector to a new block of memory, with the new item at the end. However, as of R 3.4, R tries to put vectors in a memory location with room to grow, and if there exists is only one reference to the vector, it can grow in place, except in the uncommon case where there's no more room to grow. (If there are two references to the vector, then R must make a copy.) This means that growing a vector is a fast operation, as long as there's only one reference to it.
->
-> Although growing a vector is now fast, growing a **data frame** is still an expensive operation and results in copying all of the data.
-
-
 
 ### Example 3 - Profiling a Shiny Application
 

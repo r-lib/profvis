@@ -60,9 +60,8 @@ memory allocations will be attributed to different lines of code. Using
 collection after every \code{torture} memory allocation step.}
 
 \item{simplify}{Whether to simplify the profiles by removing
-intervening frames caused by lazy evaluation. This only has an
-effect on R 4.0. See the \code{filter.callframes} argument of
-\code{\link[=Rprof]{Rprof()}}.}
+intervening frames caused by lazy evaluation. Equivalent to the
+\code{filter.callframes} argument to \code{\link[=Rprof]{Rprof()}}.}
 
 \item{rerun}{If \code{TRUE}, \code{Rprof()} is run again with \code{expr} until a
 profile is actually produced. This is useful for the cases where
