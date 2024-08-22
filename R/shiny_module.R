@@ -16,7 +16,7 @@
 #' For more details on how to invoke Shiny modules, see [this
 #' article](https://shiny.rstudio.com/articles/modules.html).
 #'
-#' @param id Output id from \code{profvis_server}.
+#' @param id Output id from `profvis_server`.
 #'
 #' @examples
 #' # In order to avoid "Hit <Return> to see next plot" prompts,
@@ -24,7 +24,6 @@
 #'
 #' if(interactive()) {
 #'   library(shiny)
-#'   library(ggplot2)
 #'   shinyApp(
 #'     fluidPage(
 #'       plotOutput("plot"),
@@ -36,7 +35,7 @@
 #'
 #'       output$plot <- renderPlot({
 #'         input$new
-#'         ggplot(diamonds, aes(carat, price)) + geom_point()
+#'         boxplot(mpg ~ cyl, data = mtcars)
 #'       })
 #'     }
 #'   )
@@ -75,7 +74,7 @@ profvis_ui <- function(id) {
 }
 
 #' @param input,output,session Arguments provided by
-#'   \code{\link[shiny]{callModule}}.
+#'   [shiny::callModule()].
 #' @param dir Output directory to save Rprof files.
 #'
 #' @rdname profvis_ui

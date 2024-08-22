@@ -139,3 +139,7 @@ utils::globalVariables("do")
 has_simplify <- function() {
   getRversion() >= "4.0.3"
 }
+
+has_event <- function() {
+  getRversion() >= "4.4.0"
+}

@@ -1,12 +1,15 @@
-profvis 0.3.7.9001
-==================
+# profvis (development version)
 
-* `print()` gains an `aggregate` argument. Use `print(profvis(f()),
-  aggregate = TRUE)` to aggregate frames by name in the flamegraph.
-  This makes it easier to see the big picture (#115). Set the
-  `profvis.aggregate` global option to `TRUE` to change the default.
+* The CSS for profvis code is scoped so that it does not affect other blocks of code, such as those from RMarkdown or Quarto (@wch, #140).
+* profvis no longer requires purrr or stringr, and no longer suggests ggplot2, devtools, knitr, or rmarkdown.
+* `profvis()` now uses elapsed time where possible (#72).
 
-* Closed #140: The CSS for profvis code is scoped so that it does not affect other blocks of code, such as those from rmarkdown or Quarto. (#141)
+profvis 0.3.8
+=============================
+
+* `print()` gains an `aggregate` argument. Use `print(profvis(f()), aggregate = TRUE)` to aggregate frames by name in the flamegraph. This makes it easier to see the big picture (#115). Set the `profvis.aggregate` global option to `TRUE` to change the default.
+
+* For C function declarations that take no parameters, added `void` parameter.
 
 profvis 0.3.7
 =============

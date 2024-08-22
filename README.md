@@ -1,11 +1,12 @@
-Profvis
+profvis
 =======
 
 <!-- badges: start -->
-[![R-CMD-check](https://github.com/rstudio/profvis/workflows/R-CMD-check/badge.svg)](https://github.com/rstudio/profvis/actions)
+[![R-CMD-check](https://github.com/r-lib/profvis/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/r-lib/profvis/actions/workflows/R-CMD-check.yaml)
+[![Codecov test coverage](https://codecov.io/gh/r-lib/profvis/graph/badge.svg)](https://codecov.io/gh/r-lib/profvis)
 <!-- badges: end -->
-  
-Profvis is a tool for visualizing code profiling data from R. It creates a web page which provides a graphical interface for exploring the data. [Live demo](http://rstudio.github.io/profvis/livedemo.html).
+
+Profvis is a tool for visualizing code profiling data from R. It creates a web page which provides a graphical interface for exploring the data.
 
 
 ## Installation
@@ -14,33 +15,34 @@ Profvis is a tool for visualizing code profiling data from R. It creates a web p
 install.packages("profvis")
 ```
 
-## Documentation
-
-See the [documentation site](https://rstudio.github.io/profvis/).
-
 ## Example
 
-To run code with profiling, wrap the expression in `profvis()`. By default, this will result in the interactive profile visualizer opening in a web browser. You can see a live demo [here](http://rstudio.github.io/profvis/livedemo.html).
+To run code with profiling, wrap the expression in `profvis()`. By default, this will result in the interactive profile visualizer opening in a web browser.
 
 ```R
 library(profvis)
-library(ggplot2)
 
-profvis({
-  g <- ggplot(diamonds, aes(carat, price)) + geom_point(size = 1, alpha = 0.2)
-  print(g)
-})
+f <- function() {
+  pause(0.1)
+  g()
+  h()
+}
+g <- function() {
+  pause(0.1)
+  h()
+}
+h <- function() {
+  pause(0.1)
+}
+
+profvis(f())
 ```
 
 
 The `profvis()` call returns an [htmlwidget](http://www.htmlwidgets.org/), which by default when printed opens a web browser. If you wish to save the object, it won't open the browser at first, but you can view it later by typing the variable name at the console, or calling `print()` on it.
 
 ```R
-p <- profvis({
-  g <- ggplot(diamonds, aes(carat, price)) + geom_point(size = 1, alpha = 0.2)
-  print(g)
-})
-
+p <- profvis(f())
 
 # View it with:
 p

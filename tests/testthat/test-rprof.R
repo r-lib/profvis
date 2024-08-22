@@ -1,30 +1,36 @@
 
-skip_on_cran_if_not_ci()
-
 test_that("`rprof_lines()` collects profiles", {
+  skip_on_cran()
+  skip_on_covr()
+  
   f <- function() pause(TEST_PAUSE_TIME)
 
   out <- rprof_lines(f(), rerun = "pause")
   expect_snapshot(writeLines(modal_value0(out)))
 
-  expect_snapshot0(cat_rprof(f()))
+  expect_snapshot(cat_rprof(f()))
 })
 
 test_that("`filter.callframes` filters out intervening frames", {
+  skip_on_cran()
+  skip_on_covr()
   skip_if_not(has_simplify())
 
   # Chains of calls are kept
   f <- function() g()
   g <- function() h()
   h <- function() pause(TEST_PAUSE_TIME)
-  expect_snapshot0(cat_rprof(f(), filter.callframes = TRUE))
+  expect_snapshot(cat_rprof(f(), filter.callframes = TRUE))
 
   # Intervening frames are discarded
   f <- function() identity(identity(pause(TEST_PAUSE_TIME)))
-  expect_snapshot0(cat_rprof(f(), filter.callframes = TRUE))
+  expect_snapshot(cat_rprof(f(), filter.callframes = TRUE))
 })
 
 test_that("stack is correctly stripped even with metadata profiling", {
+  skip_on_cran()
+  skip_on_covr()
+  
   f <- function() pause(TEST_PAUSE_TIME)
   zap <- function(lines) modal_value0(zap_trailing_space(zap_srcref(zap_meta_data(lines))))
 
@@ -48,6 +54,9 @@ test_that("stack is correctly stripped even with metadata profiling", {
 })
 
 test_that("`pause()` does not include .Call() when `line.profiling` is set", {
+  skip_on_cran()
+  skip_on_covr()
+  
   f <- function() pause(TEST_PAUSE_TIME)
 
   # `pause()` should appear first on the line

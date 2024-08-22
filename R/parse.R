@@ -1,11 +1,10 @@
 #' Parse Rprof output file for use with profvis
 #'
-#' @param path Path to the \code{\link{Rprof}} output file.
+#' @param path Path to the [Rprof()] output file.
 #' @param expr_source If any source refs in the profiling output have an empty
 #'   filename, that means they refer to code executed at the R console. This
-#'   code can be captured and passed (as a string) as the \code{expr_source}
+#'   code can be captured and passed (as a string) as the `expr_source`
 #'   argument.
-#' @import stringr
 #' @export
 parse_rprof <- function(path = "Rprof.out", expr_source = NULL) {
   parse_rprof_lines(readLines(path), expr_source = expr_source)
@@ -18,15 +17,15 @@ parse_rprof_lines <- function(lines, expr_source = NULL) {
   }
 
   # Parse header, including interval (in ms)
-  opts <- str_split(lines[[1]], ": ")[[1]]
-  interval <- as.numeric(str_split(opts[length(opts)], "=")[[1]][2]) / 1e3
+  opts <- strsplit(lines[[1]], ": ", fixed = TRUE)[[1]]
+  interval <- as.numeric(strsplit(opts[length(opts)], "=", fixed = TRUE)[[1]][2]) / 1e3
   lines <- lines[-1]
 
   # Separate file labels and profiling data
   is_label <- grepl("^#", lines)
 
   label_lines <- lines[is_label]
-  label_pieces <- str_split_fixed(label_lines, ": ", 2)
+  label_pieces <- split_in_half(label_lines, ": ", fixed = TRUE)
   labels <- data.frame(
     label = as.integer(sub("^#File ", "", label_pieces[, 1])),
     path = label_pieces[, 2],
@@ -45,7 +44,7 @@ parse_rprof_lines <- function(lines, expr_source = NULL) {
   # stuff from the prof_data strings.
   if (has_memory) {
     mem_data <- gsub("^:(\\d+:\\d+:\\d+:\\d+):.*", "\\1", prof_data)
-    mem_data <- str_split(mem_data, ":")
+    mem_data <- strsplit(mem_data, ":", fixed = TRUE)
     prof_data <- zap_mem_prefix(prof_data)
   } else {
     mem_data <- rep(NA_character_, length(prof_data))
@@ -64,7 +63,7 @@ parse_rprof_lines <- function(lines, expr_source = NULL) {
   prof_data <- gsub('^"<GC>",', '"<GC>" ', prof_data)
 
   # # Split by ' ' for call stack
-  # prof_data <- str_split(prof_data, " ")
+  # prof_data <- strsplit(prof_data, " ")
   #
   # prof_data <- lapply(prof_data, function(s) {
   #   if (identical(s, "")) character(0)
@@ -277,7 +276,7 @@ zap_header <- function(lines) {
 # as the label.
 insert_code_line_labels <- function(prof_data, file_contents) {
   file_label_contents <- lapply(file_contents, function(content) {
-    content <- str_split(content, "\n")[[1]]
+    content <- strsplit(content, "\n", fixed = TRUE)[[1]]
     sub("^ +", "", content)
   })
 
@@ -321,18 +320,14 @@ prof_sort <- function(prof) {
   # stack.
   prof_split <- vctrs::vec_split(prof, prof$time)$val
 
-  max_depth <- max(map_int(prof_split, nrow))
+  max_depth <- max(vapply(prof_split, nrow, integer(1)))
   n_samples <- length(prof_split)
 
-  # Extract labels (function names for the stack frames) and pad
-  # them with missing values so they are of equal lengths
+  # Extract labels (function names for the stack frames) and pad with NAs
+  # so we can easily make a data frame
   pad <- function(x) x[seq_len(max_depth)]
-  stacks <- map(prof_split, function(x) pad(rev(x$label)))
-
-  # Transpose into a data frame. The (unnamed) columns represent
-  # increasing depths in the stacks.
-  stacks <- map(transpose(stacks), simplify)
-  stacks <- vctrs::data_frame(!!!stacks, .name_repair = "minimal")
+  stacks <- lapply(prof_split, function(x) pad(rev(x$label)))
+  stacks <- as.data.frame(do.call(rbind, stacks))
 
   # Reorder the profile data according to the sort key of the
   # transposed stacks
@@ -342,7 +337,7 @@ prof_sort <- function(prof) {
 
   # Now that stacks are in alphabetical order we sort them again by
   # contiguous run
-  runs <- map(stacks, function(stack) {
+  runs <- lapply(stacks, function(stack) {
     times <- vctrs::vec_unrep(stack)$times
     rep(rev(order(times)), times)
   })
@@ -350,7 +345,7 @@ prof_sort <- function(prof) {
   prof_split <- prof_split[vctrs::vec_order(runs)]
 
   # Assign an increasing `time` sequence in each split
-  prof_split <- map2(seq_len(n_samples), prof_split, function(n, split) {
+  prof_split <- Map(seq_len(n_samples), prof_split, f = function(n, split) {
     split$time <- n
     split
   })

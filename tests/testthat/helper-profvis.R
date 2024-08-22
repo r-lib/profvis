@@ -12,12 +12,6 @@ cat_rprof <- function(expr, ..., rerun = "pause") {
   cat(paste0(out, "\n"))
 }
 
-expect_snapshot0 <- function(expr, cran = TRUE) {
-  # Prevent `expect_snapshot()` from processing injection operators
-  quo <- new_quosure(substitute(expr), parent.frame())
-  expect_snapshot(!!quo, cran = cran)
-}
-
 repro_profvis <- function(expr, ..., rerun = "pause", interval = 0.010) {
   inject(profvis({{ expr }}, ..., rerun = rerun, interval = interval))
 }
@@ -30,10 +24,4 @@ profvis_modal_value <- function(prof) {
   stacks <- split(prof$label, prof$time)
   stacks <- vapply(stacks, paste, "", collapse = " ")
   modal_value0(stacks)
-}
-
-skip_on_cran_if_not_ci <- function() {
-  if (!is_true(as.logical(Sys.getenv("CI")))) {
-    skip_on_cran()
-  }
 }

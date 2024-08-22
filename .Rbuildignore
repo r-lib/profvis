@@ -10,3 +10,7 @@
 ^cran-comments\.md$
 ^scripts$
 ^\.github$
+^codecov\.yml$
+^_pkgdown\.yml$
+^pkgdown$
+^LICENSE\.md$
