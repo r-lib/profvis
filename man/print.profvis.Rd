@@ -15,9 +15,8 @@
 
 \item{height}{Height of the htmlwidget}
 
-\item{split}{Direction of split. Either \code{"v"} (the default) for
-vertical, or \code{"h"} for horizontal. This is the orientation of the
-split bar.}
+\item{split}{Orientation of the split bar: either \code{"h"} (the default) for
+horizontal or \code{"v"} for vertical.}
 
 \item{aggregate}{If \code{TRUE}, the profiled stacks are aggregated by
 name. This makes it easier to see the big picture. Set your own

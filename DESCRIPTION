@@ -10,7 +10,7 @@ Authors@R: c(
     person(, "jQuery Foundation", role = "cph",
            comment = "jQuery library"),
     person(, "jQuery contributors", role = c("ctb", "cph"),
-           comment = "jQuery library; authors listed in inst/www/shared/jquery-AUTHORS.txt"),
+           comment = "jQuery library; authors listed in inst/htmlwidgets/lib/jquery/AUTHORS.txt"),
     person("Mike", "Bostock", role = c("ctb", "cph"),
            comment = "D3 library"),
     person(, "D3 contributors", role = "ctb",
@@ -20,8 +20,7 @@ Authors@R: c(
   )
 Description: Interactive visualizations for profiling R code.
 License: MIT + file LICENSE
-URL: https://r-lib.github.io/profvis/,
-    https://github.com/r-lib/profvis
+URL: https://r-lib.github.io/profvis/, https://github.com/r-lib/profvis
 BugReports: https://github.com/r-lib/profvis/issues
 Depends:
     R (>= 3.0)
@@ -31,10 +30,14 @@ Imports:
     vctrs
 Suggests:
     htmltools,
+    knitr,
+    rmarkdown,
     shiny,
     testthat (>= 3.0.0)
-Config/Needs/website: tidyverse/tidytemplate
+VignetteBuilder: 
+    knitr
+Config/Needs/website: tidyverse/tidytemplate, rmarkdown
 Config/testthat/edition: 3
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.1
+RoxygenNote: 7.3.2

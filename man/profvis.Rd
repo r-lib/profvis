@@ -47,9 +47,8 @@ on Windows or on R 4.4.0 or greater.}
 
 \item{height}{Height of the htmlwidget}
 
-\item{split}{Direction of split. Either \code{"v"} (the default) for
-vertical, or \code{"h"} for horizontal. This is the orientation of the
-split bar.}
+\item{split}{Orientation of the split bar: either \code{"h"} (the default) for
+horizontal or \code{"v"} for vertical.}
 
 \item{torture}{Triggers garbage collection after every \code{torture} memory
 allocation call.

@@ -2,9 +2,12 @@
 % Please edit documentation in R/profvis.R
 \name{profvisOutput}
 \alias{profvisOutput}
-\title{Widget output function for use in Shiny}
+\alias{renderProfvis}
+\title{Widget output and renders functions for use in Shiny}
 \usage{
 profvisOutput(outputId, width = "100\%", height = "600px")
+
+renderProfvis(expr, env = parent.frame(), quoted = FALSE)
 }
 \arguments{
 \item{outputId}{Output variable for profile visualization.}
@@ -12,7 +15,13 @@ profvisOutput(outputId, width = "100\%", height = "600px")
 \item{width}{Width of the htmlwidget.}
 
 \item{height}{Height of the htmlwidget}
+
+\item{expr}{An expression that returns a profvis object.}
+
+\item{env}{The environment in which to evaluate \code{expr}.}
+
+\item{quoted}{Is \code{expr} a quoted expression (with \code{\link[=quote]{quote()}})?}
 }
 \description{
-Widget output function for use in Shiny
+Widget output and renders functions for use in Shiny
 }

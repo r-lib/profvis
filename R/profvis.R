@@ -23,16 +23,15 @@
 #'   compatible with `expr` or `prof_output`.
 #' @param timing The type of timing to use. Either `"elapsed"` (the
 #'  default) for wall clock time, or `"cpu"` for CPU time. Wall clock time
-#'  includes time spent waiting for other processes (e.g. waiting for a 
-#'  web page to download) so is generally more useful. 
-#' 
+#'  includes time spent waiting for other processes (e.g. waiting for a
+#'  web page to download) so is generally more useful.
+#'
 #'  If `NULL`, the default, will use elapsed time where possible, i.e.
 #'  on Windows or on R 4.4.0 or greater.
 #' @param width Width of the htmlwidget.
 #' @param height Height of the htmlwidget
-#' @param split Direction of split. Either `"v"` (the default) for
-#'   vertical, or `"h"` for horizontal. This is the orientation of the
-#'   split bar.
+#' @param split Orientation of the split bar: either `"h"` (the default) for
+#'   horizontal or `"v"` for vertical.
 #' @param torture Triggers garbage collection after every `torture` memory
 #'   allocation call.
 #'
@@ -295,7 +294,7 @@ print.profvis <- function(x,
   }
 }
 
-#' Widget output function for use in Shiny
+#' Widget output and renders functions for use in Shiny
 #'
 #' @param outputId Output variable for profile visualization.
 #'
@@ -305,13 +304,11 @@ profvisOutput <- function(outputId, width = '100%', height = '600px'){
   shinyWidgetOutput(outputId, 'profvis', width, height, package = 'profvis')
 }
 
-#' Widget render function for use in Shiny
-#'
 #' @param expr An expression that returns a profvis object.
 #' @param env The environment in which to evaluate `expr`.
 #' @param quoted Is `expr` a quoted expression (with [quote()])?
-#'
 #' @export
+#' @rdname profvisOutput
 renderProfvis <- function(expr, env = parent.frame(), quoted = FALSE) {
   if (!quoted) { expr <- substitute(expr) } # force quoted
   shinyRenderWidget(expr, profvisOutput, env, quoted = TRUE)

@@ -6,7 +6,7 @@ profvis
 [![Codecov test coverage](https://codecov.io/gh/r-lib/profvis/graph/badge.svg)](https://codecov.io/gh/r-lib/profvis)
 <!-- badges: end -->
 
-Profvis is a tool for visualizing code profiling data from R. It creates a web page which provides a graphical interface for exploring the data.
+profvis is a tool for visualizing code profiling data from R. It creates a web page which provides a graphical interface for exploring the data.
 
 
 ## Installation
