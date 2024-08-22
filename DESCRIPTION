@@ -23,7 +23,7 @@ License: MIT + file LICENSE
 URL: https://r-lib.github.io/profvis/, https://github.com/r-lib/profvis
 BugReports: https://github.com/r-lib/profvis/issues
 Depends:
-    R (>= 3.0)
+    R (>= 4.0)
 Imports:
     htmlwidgets (>= 0.3.2),
     rlang (>= 0.4.9),
@@ -34,7 +34,7 @@ Suggests:
     rmarkdown,
     shiny,
     testthat (>= 3.0.0)
-VignetteBuilder: 
+VignetteBuilder:
     knitr
 Config/Needs/website: tidyverse/tidytemplate, rmarkdown
 Config/testthat/edition: 3
