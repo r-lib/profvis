@@ -294,7 +294,7 @@ print.profvis <- function(x,
   }
 }
 
-#' Widget output function for use in Shiny
+#' Widget output and renders functions for use in Shiny
 #'
 #' @param outputId Output variable for profile visualization.
 #'
@@ -304,13 +304,11 @@ profvisOutput <- function(outputId, width = '100%', height = '600px'){
   shinyWidgetOutput(outputId, 'profvis', width, height, package = 'profvis')
 }
 
-#' Widget render function for use in Shiny
-#'
 #' @param expr An expression that returns a profvis object.
 #' @param env The environment in which to evaluate `expr`.
 #' @param quoted Is `expr` a quoted expression (with [quote()])?
-#'
 #' @export
+#' @rdname profvisOutput
 renderProfvis <- function(expr, env = parent.frame(), quoted = FALSE) {
   if (!quoted) { expr <- substitute(expr) } # force quoted
   shinyRenderWidget(expr, profvisOutput, env, quoted = TRUE)
