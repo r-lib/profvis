@@ -3,7 +3,7 @@
 \name{profvis_ui}
 \alias{profvis_ui}
 \alias{profvis_server}
-\title{Profvis UI for Shiny Apps}
+\title{profvis UI for Shiny Apps}
 \usage{
 profvis_ui(id)
 
@@ -18,14 +18,14 @@ profvis_server(input, output, session, dir = ".")
 \item{dir}{Output directory to save Rprof files.}
 }
 \description{
-Use this Shiny module to inject Profvis controls into your Shiny app. The
-Profvis Shiny module injects UI that can be used to start and stop profiling,
-and either view the results in the Profvis UI or download the raw .Rprof
+Use this Shiny module to inject profvis controls into your Shiny app. The
+profvis Shiny module injects UI that can be used to start and stop profiling,
+and either view the results in the profvis UI or download the raw .Rprof
 data. It is highly recommended that this be used for testing and debugging
 only, and not included in production apps!
 }
 \details{
-The usual way to use Profvis with Shiny is to simply call
+The usual way to use profvis with Shiny is to simply call
 \code{profvis(shiny::runApp())}, but this may not always be possible or desirable:
 first, if you only want to profile a particular interaction in the Shiny app
 and not capture all the calculations involved in starting up the app and

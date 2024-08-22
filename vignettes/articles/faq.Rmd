@@ -168,7 +168,7 @@ Now the flame graph shows that the function is no longer being compiled. And aft
 
 In typical use, only code written by the user is shown in the code panel. (This is code for which *source references* are available.) Yellow blocks in the flame graph have corresponding lines of code in the code panel, and when moused over, the line of code will be highlighted. White blocks in the flame graph don't have corresponding lines in the code panel. In most cases, the calls represented by the white blocks are to functions that are in base R and other packages.
 
-Profvis can also show code that's inside an R package. To do this, source refs for the package code must be available. There are two general ways to do this: you can install the package with source refs, or you can use `devtools::load_all()` to load a package from sources on disk.
+profvis can also show code that's inside an R package. To do this, source refs for the package code must be available. There are two general ways to do this: you can install the package with source refs, or you can use `devtools::load_all()` to load a package from sources on disk.
 
 
 ### Installing with source refs
@@ -307,7 +307,7 @@ profvis({
 readRDS("shinyapp.rds")
 ```
 
-To make the hiding work, Shiny has special functions called `..stacktraceon..` and  `..stacktraceoff..`. Profvis goes up the stack, and when it sees a `..stacktraceoff..`, it will hide all function calls until it sees a corresponding `..stacktraceon..`. If there are nukltiple `..stacktraceoff..` calls in the stack, it requires an equal number of `..stacktraceon..` calls before it starts displaying function calls again.
+To make the hiding work, Shiny has special functions called `..stacktraceon..` and  `..stacktraceoff..`. profvis goes up the stack, and when it sees a `..stacktraceoff..`, it will hide all function calls until it sees a corresponding `..stacktraceon..`. If there are nukltiple `..stacktraceoff..` calls in the stack, it requires an equal number of `..stacktraceon..` calls before it starts displaying function calls again.
 
 
 ## Can I profile just part of a Shiny application?
@@ -373,7 +373,7 @@ It will add radio buttons to turn profiling on and off. Turn it on, then interac
 
 ## Can I profile a Shiny application running on a remote server?
 
-Yes. One option is to include the Profvis Shiny Module desribed in the [previous question](#-can-i-profile-just-part-of-a-shiny-application?).
+Yes. One option is to include the profvis Shiny Module desribed in the [previous question](#-can-i-profile-just-part-of-a-shiny-application?).
 
 You can also set it up manually. The main idea is to start and stop profiling (as described in [this answer](#can-i-profile-code-without-using-profvis)). At the top of your app.R or server.R, you can add the following:
 

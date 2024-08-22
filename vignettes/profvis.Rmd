@@ -61,7 +61,7 @@ The code panel also shows memory allocation and deallocation. Interpreting this 
 
 ### Navigating profvis
 
-Profvis is interactive. You can try the following:
+profvis is interactive. You can try the following:
 
 * As you mouse over the flame graph, information about each block will show in the info box.
 * Yellow flame graph blocks have corresponding lines of code on the left. (White blocks represent code where profvis doesn't have the source code -- for example, in base R and in R packages. But see [this FAQ](#how-do-i-get-code-from-an-r-package-to-show-in-the-code-panel) if you want package code to show up in the code panel.) If you mouse over a yellow block, the corresponding line of code will be highlighted. Note that the highlighted line of code is where the yellow function is called *from*, not the content of that function.
@@ -85,4 +85,4 @@ In addition to the flame graph view, profvis provides a *data view*, which can b
 
 ## How profiling data is collected
 
-Profvis uses data collected by `Rprof()`, which is part of the base R distribution. At each time interval (`profvis()` uses a default interval of 10ms), the profiler stops the R interpreter, looks at the current function call stack, and records it to a file. Because it works by *sampling*, the result isn't deterministic. Each time you profile your code, the result will be slightly different.
+profvis uses data collected by `Rprof()`, which is part of the base R distribution. At each time interval (`profvis()` uses a default interval of 10ms), the profiler stops the R interpreter, looks at the current function call stack, and records it to a file. Because it works by *sampling*, the result isn't deterministic. Each time you profile your code, the result will be slightly different.
