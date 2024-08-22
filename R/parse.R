@@ -28,7 +28,7 @@ parse_rprof_lines <- function(lines, expr_source = NULL) {
   label_lines <- lines[is_label]
   label_pieces <- split_in_half(label_lines, ": ", fixed = TRUE)
   labels <- data.frame(
-    label = as.integer(sub("^#File ", "", label_pieces[, 1])),
+    label = as.numeric(sub("^#File ", "", label_pieces[, 1])),
     path = label_pieces[, 2],
     stringsAsFactors = FALSE
   )
@@ -84,7 +84,7 @@ parse_rprof_lines <- function(lines, expr_source = NULL) {
       # confusing to users. For instance, profiling profvis::pause(1) can yield
       # several hundred MB due to busy waits of pause that trigger significant
       # creation of expressions that is not enterily useful to the end user.
-      memalloc <- sum(as.integer(mem[1:2])) / 1024 ^ 2
+      memalloc <- sum(as.numeric(mem[1:2])) / 1024 ^ 2
 
       # get_current_mem provides the results as either R_SmallVallocSize or R_LargeVallocSize
       # which are internal untis of allocation.
@@ -158,8 +158,8 @@ parse_rprof_lines <- function(lines, expr_source = NULL) {
 
     # Get file and line numbers
     ref_strs <- sub('^,', '', ref_strs)
-    filenum <- as.integer(sub('#.*', '', ref_strs))
-    linenum <- as.integer(sub('.*#', '', ref_strs))
+    filenum <- as.numeric(sub('#.*', '', ref_strs))
+    linenum <- as.numeric(sub('.*#', '', ref_strs))
 
     nrows <- length(labels)
     # Return what is essentially a data frame, but in list format because R is
