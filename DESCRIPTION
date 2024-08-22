@@ -10,7 +10,7 @@ Authors@R: c(
     person(, "jQuery Foundation", role = "cph",
            comment = "jQuery library"),
     person(, "jQuery contributors", role = c("ctb", "cph"),
-           comment = "jQuery library; authors listed in inst/www/shared/jquery-AUTHORS.txt"),
+           comment = "jQuery library; authors listed in inst/htmlwidgets/lib/jquery/AUTHORS.txt"),
     person("Mike", "Bostock", role = c("ctb", "cph"),
            comment = "D3 library"),
     person(, "D3 contributors", role = "ctb",
