@@ -37,16 +37,16 @@ Suppose you make a loop run 5 times faster. That sounds like a huge improvement,
 
 ## Getting started
 
-Below is an example of profvis in use. The code creates a scatter plot of the `diamonds` data set, which has about 54,000 rows, fits a linear model, and draws a line for the model. (The plot isn't displayed in this document, though.) If you copy and paste this code into your R console, it'll open a window with the same profvis interface that you see in this HTML document.
+Below is an example of profvis in use. The code generates a random 50,000 row data set, draws a plot, then fits a linear model, and draws a line for the model. (The plot isn't displayed in this document, though.) If you copy and paste this code into your R console, it'll open a window with the same profvis interface that you see in this HTML document.
 
 ```{r abline, fig.show="hide"}
 library(profvis)
 
 profvis({
-  data(diamonds, package = "ggplot2")
+  df <- data.frame(x = rnorm(5e5), y = rnorm(5e5))
 
-  plot(price ~ carat, data = diamonds)
-  m <- lm(price ~ carat, data = diamonds)
+  plot(y ~ x, data = df)
+  m <- lm(y ~ x, data = df)
   abline(m, col = "red")
 })
 ```
