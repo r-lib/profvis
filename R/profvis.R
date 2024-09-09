@@ -41,9 +41,8 @@
 #'   `torture = steps` helps prevent this, by making R trigger garbage
 #'   collection after every `torture` memory allocation step.
 #' @param simplify Whether to simplify the profiles by removing
-#'   intervening frames caused by lazy evaluation. This only has an
-#'   effect on R 4.0. See the `filter.callframes` argument of
-#'   [Rprof()].
+#'   intervening frames caused by lazy evaluation. Equivalent to the
+#'   `filter.callframes` argument to [Rprof()].
 #' @param rerun If `TRUE`, `Rprof()` is run again with `expr` until a
 #'   profile is actually produced. This is useful for the cases where
 #'   `expr` returns too quickly, before R had time to sample a
@@ -170,7 +169,7 @@ profvis <- function(expr = NULL,
       gc.profiling = TRUE,
       memory.profiling = TRUE,
       event = if (has_event()) timing,
-      filter.callframes = if (has_simplify()) simplify
+      filter.callframes = simplify
     ))
 
     on.exit(Rprof(NULL), add = TRUE)

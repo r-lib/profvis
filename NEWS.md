@@ -1,6 +1,7 @@
 # profvis (development version)
 
 * The CSS for profvis code is scoped so that it does not affect other blocks of code, such as those from RMarkdown or Quarto (@wch, #140).
+* profvis now relies on R 4.0.0.
 * `profvis()` now uses doubles instead of integers (#114).
 * The version of jQuery bundled in profvis has been upgraded to 3.7.1 (@hedsnz, #139).
 * profvis no longer requires purrr or stringr, and no longer suggests ggplot2, devtools, knitr, or rmarkdown.

@@ -80,8 +80,6 @@ profvis({
 })
 ```
 
-Similarly, in versions of R before 3.3.0, functions that are accessed with `::` or `$` will also appear as `<Anonymous>`. The form `package::function()` is a common way to explicitly use a namespace to find a function. The form `x$fun()` is a common way to call functions that are contained in a list, environment, reference class, or R6 object. As of R 3.3.0, these will display as `package::function`, or `x$fun`.
-
 Those are equivalent to `` `::`(package, function)`` and `` `$`(x, "fun")``, respectively. These calls return anonymous functions, and so R's internal profiling code labels these as `<Anonymous>`. If you want labels in the profiler to have a different label, you can assign the value to a temporary variable (like `adder2` above), and then invoke that.
 
 Finally, if a function is passed to `lapply`, it will be show up as `FUN` in the flame graph. If we inspect the source code for `lapply`, it's clear why: when a function is passed to `lapply`, the name used for the function inside of `lapply` is `FUN`.
@@ -156,7 +154,7 @@ profvis({
 readRDS("cmpfun-profile1.rds")
 ```
 
-As of R 3.4.0, R attempts to compile functions when they are first ran to byte code. On subsequent function calls, instead of reinterpreting the body of the function, R executes the saved and compiled byte code. Typically, this results in faster execution times on later function calls. For example, let's profile `csum` a second time in the same R session:
+R attempts to compile functions when they are first ran to byte code. On subsequent function calls, instead of reinterpreting the body of the function, R executes the saved and compiled byte code. Typically, this results in faster execution times on later function calls. For example, let's profile `csum` a second time in the same R session:
 
 ```{r echo=FALSE}
 readRDS("cmpfun-profile2.rds")
