@@ -24,11 +24,11 @@ double get_time_ms(void) {
 }
 
 SEXP profvis_pause (SEXP seconds) {
-  if (TYPEOF(seconds) != REALSXP)
-    error("`seconds` must be a numeric");
+  if (TYPEOF(seconds) != REALSXP || Rf_length(seconds) != 1)
+    Rf_error("`seconds` must be a single number.");
 
   double start = get_time_ms();
-  double sec = asReal(seconds);
+  double sec = Rf_asReal(seconds);
 
   while(get_time_ms() - start < sec) {
     R_CheckUserInterrupt();
