@@ -1,5 +1,6 @@
 # profvis (development version)
 
+* Bundled `highlight.js` updated to the latest version 11.10.0.
 * The CSS for profvis code is scoped so that it does not affect other blocks of code, such as those from RMarkdown or Quarto (@wch, #140).
 * profvis now relies on R 4.0.0.
 * `profvis()` now uses doubles instead of integers (#114).
