@@ -6,7 +6,7 @@ articles:
   articles/faq: faq.html
   profvis: profvis.html
   articles/rstudio: rstudio.html
-last_built: 2024-09-12T21:06Z
+last_built: 2024-09-12T21:09Z
 urls:
   reference: https://profvis.r-lib.org/reference
   article: https://profvis.r-lib.org/articles
