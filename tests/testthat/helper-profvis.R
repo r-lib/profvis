@@ -20,8 +20,12 @@ zap_trailing_space <- function(lines) {
   gsub(" $", "", lines)
 }
 
-profvis_modal_value <- function(prof) {
+profile_calls <- function(x) {
+  prof <- x$x$message$prof
   stacks <- split(prof$label, prof$time)
-  stacks <- vapply(stacks, paste, "", collapse = " ")
-  modal_value0(stacks)
+  vapply(stacks, paste, "", collapse = " ")
+}
+
+profile_mode <- function(x) {
+  modal_value0(profile_calls(x))
 }

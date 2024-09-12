@@ -102,15 +102,11 @@ profvis <- function(expr = NULL,
                     torture = 0,
                     simplify = TRUE,
                     rerun = FALSE) {
+  check_exclusive(expr, prof_input)
   split <- match.arg(split)
   c(expr_q, env) %<-% enquo0_list(expr)
 
-  if (is.null(prof_input) && is.null(expr_q)) {
-    stop("profvis must be called with `expr` or `prof_input` ")
-  }
-  if (!is.null(prof_input) && (!is.null(expr_q) && !is.null(prof_output))) {
-    stop("The `prof_input` argument cannot be used with `expr` or `prof_output`.")
-  }
+
   if (interval < 0.005) {
     message("Intervals smaller than ~5ms will probably not result in accurate timings.")
   }

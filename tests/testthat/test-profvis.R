@@ -5,13 +5,13 @@ test_that("Irrelevant stack is trimmed from profiles (#123)", {
   f <- function() pause(TEST_PAUSE_TIME)
 
   out <- repro_profvis(f(), simplify = FALSE)
-  expect_equal(profvis_modal_value(out$x$message$prof), "pause f")
+  expect_equal(profile_mode(out), "pause f")
 
   out <- profvis(f(), simplify = TRUE, rerun = "pause", interval = 0.005)
-  expect_equal(profvis_modal_value(out$x$message$prof), "pause f")
+  expect_equal(profile_mode(out), "pause f")
 
   out <- repro_profvis(f(), simplify = TRUE)
-  expect_equal(profvis_modal_value(out$x$message$prof), "pause f")
+  expect_equal(profile_mode(out), "pause f")
 })
 
 test_that("defaults to elapsed timing", {
@@ -22,7 +22,11 @@ test_that("defaults to elapsed timing", {
   f <- function() Sys.sleep(TEST_PAUSE_TIME)
 
   out <- repro_profvis(f(), rerun = "Sys.sleep")
-  expect_equal(profvis_modal_value(out$x$message$prof), "Sys.sleep f")
+  expect_equal(profile_mode(out), "Sys.sleep f")
+})
+
+test_that("expr and prof_input are mutually exclusive", {
+  expect_snapshot(profvis(expr = f(), prof_input = "foo.R"), error = TRUE)
 })
 
 test_that("can capture profile of code with error", {
