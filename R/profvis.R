@@ -177,19 +177,19 @@ profvis <- function(expr = NULL,
       on.exit(unlink(prof_output), add = TRUE)
     }
     repeat {
+      eval(substitute(delayedAssign("expr", expr_q, eval.env = env)))
+
       inject(Rprof(prof_output, !!!rprof_args))
       cnd <- with_profvis_handlers(expr)
-      if (!is.null(cnd)) {
-        break
-      }
       Rprof(NULL)
 
       lines <- readLines(prof_output)
+      if (!is.null(cnd)) {
+        break
+      }
       if (prof_matches(zap_header(lines), rerun)) {
         break
       }
-
-      env_bind_lazy(current_env(), expr = !!expr_q, .eval_env = env)
     }
 
     # Must be in the same handler context as `expr` above to get the
