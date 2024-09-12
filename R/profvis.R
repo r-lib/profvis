@@ -172,11 +172,11 @@ profvis <- function(expr = NULL,
       filter.callframes = simplify
     ))
 
-    on.exit(Rprof(NULL), add = TRUE)
     if (remove_on_exit) {
       on.exit(unlink(prof_output), add = TRUE)
     }
     repeat {
+      # Work around https://github.com/r-lib/rlang/issues/1749
       eval(substitute(delayedAssign("expr", expr_q, eval.env = env)))
 
       inject(Rprof(prof_output, !!!rprof_args))
