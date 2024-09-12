@@ -30,6 +30,8 @@ test_that("expr and prof_input are mutually exclusive", {
 })
 
 test_that("can capture profile of code with error", {
+  skip_on_covr()
+
   f <- function() {
     pause(TEST_PAUSE_TIME)
     stop("error")

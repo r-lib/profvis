@@ -171,12 +171,13 @@ profvis <- function(expr = NULL,
     if (remove_on_exit) {
       on.exit(unlink(prof_output), add = TRUE)
     }
-    repeat {
-      # Work around https://github.com/r-lib/rlang/issues/1749
-      eval(substitute(delayedAssign("expr", expr_q, eval.env = env)))
 
+    # Use unique name so we can easily trim below
+    `__profvis_execute__` <- new_function(list(), expr_q, env)
+
+    repeat {
       inject(Rprof(prof_output, !!!rprof_args))
-      cnd <- with_profvis_handlers(expr)
+      cnd <- with_profvis_handlers(`__profvis_execute__`())
       Rprof(NULL)
 
       lines <- readLines(prof_output)
@@ -188,12 +189,7 @@ profvis <- function(expr = NULL,
       }
     }
 
-    # Must be in the same handler context as `expr` above to get the
-    # full stack suffix
-    with_profvis_handlers({
-      suffix <- rprof_current_suffix(env, simplify)
-      lines <- gsub(suffix, "", lines)
-    })
+    lines <- gsub('"__profvis_execute__".*$', "", lines)
   } else {
     # If we got here, we were provided a prof_input file instead of expr
     expr_source <- NULL
@@ -307,4 +303,9 @@ profvisOutput <- function(outputId, width = '100%', height = '600px'){
 renderProfvis <- function(expr, env = parent.frame(), quoted = FALSE) {
   if (!quoted) { expr <- substitute(expr) } # force quoted
   shinyRenderWidget(expr, profvisOutput, env, quoted = TRUE)
+}
+
+
+has_event <- function() {
+  getRversion() >= "4.4.0"
 }
