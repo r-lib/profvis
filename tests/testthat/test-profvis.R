@@ -24,3 +24,7 @@ test_that("defaults to elapsed timing", {
   out <- repro_profvis(f(), rerun = "Sys.sleep")
   expect_equal(profile_mode(out), "Sys.sleep f")
 })
+
+test_that("expr and prof_input are mutually exclusive", {
+  expect_snapshot(profvis(expr = f(), prof_input = "foo.R"), error = TRUE)
+})
