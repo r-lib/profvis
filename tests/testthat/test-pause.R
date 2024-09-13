@@ -1,7 +1,7 @@
 test_that("pause takes expected time", {
   time <- system.time(pause(0.2))[[3]]
   # system.time is a little inaccurate so allow 10% padding
-  expect_true(abs(time - 0.2) < 1e-2)
+  expect_lt(abs(time - 0.2) / 0.2, 0.1)
 })
 
 test_that("works with integers", {
