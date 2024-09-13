@@ -28,3 +28,12 @@ test_that("defaults to elapsed timing", {
 test_that("expr and prof_input are mutually exclusive", {
   expect_snapshot(profvis(expr = f(), prof_input = "foo.R"), error = TRUE)
 })
+
+test_that("can capture profile of code with error", {
+  f <- function() {
+    pause(TEST_PAUSE_TIME)
+    stop("error")
+  }
+  expect_snapshot(out <- profvis(f(), rerun = "pause"))
+  expect_equal(profile_mode(out), "pause f")
+})
