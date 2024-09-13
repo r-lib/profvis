@@ -35,5 +35,5 @@ test_that("can capture profile of code with error", {
     stop("error")
   }
   expect_snapshot(out <- profvis(f(), rerun = "pause"))
-  expect_equal(profvis_modal_value(out$x$message$prof), "pause f")
+  expect_equal(profile_mode(out), "pause f")
 })
