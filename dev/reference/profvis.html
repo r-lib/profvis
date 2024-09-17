@@ -71,7 +71,8 @@ htmlwidget for interactively exploring the profiling data.</p>
 <dl><dt id="arg-expr">expr<a class="anchor" aria-label="anchor" href="#arg-expr"></a></dt>
 <dd><p>Expression to profile. The expression will be turned into the
 body of a zero-argument anonymous function which is then called repeatedly
-as needed.</p>
+as needed. This means that if you create variables inside of <code>expr</code> they
+will not be available outside of it.</p>
 <p>The expression is repeatedly evaluated until <code><a href="https://rdrr.io/r/utils/Rprof.html" class="external-link">Rprof()</a></code> produces
 an output. It can <em>be</em> a quosure injected with <code><a href="https://rlang.r-lib.org/reference/inject.html" class="external-link">rlang::inject()</a></code> but
 it cannot <em>contain</em> injected quosures.</p>
