@@ -69,10 +69,13 @@ htmlwidget for interactively exploring the profiling data.</p>
 
 
 <dl><dt id="arg-expr">expr<a class="anchor" aria-label="anchor" href="#arg-expr"></a></dt>
-<dd><p>Expression to profile. Not compatible with <code>prof_input</code>.
-The expression is repeatedly evaluated until <code><a href="https://rdrr.io/r/utils/Rprof.html" class="external-link">Rprof()</a></code> produces
+<dd><p>Expression to profile. The expression will be turned into the
+body of a zero-argument anonymous function which is then called repeatedly
+as needed.</p>
+<p>The expression is repeatedly evaluated until <code><a href="https://rdrr.io/r/utils/Rprof.html" class="external-link">Rprof()</a></code> produces
 an output. It can <em>be</em> a quosure injected with <code><a href="https://rlang.r-lib.org/reference/inject.html" class="external-link">rlang::inject()</a></code> but
-it cannot <em>contain</em> injected quosures.</p></dd>
+it cannot <em>contain</em> injected quosures.</p>
+<p>Not compatible with <code>prof_input</code>.</p></dd>
 
 
 <dt id="arg-interval">interval<a class="anchor" aria-label="anchor" href="#arg-interval"></a></dt>

@@ -41,7 +41,8 @@
 
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="development version" id="profvis-development-version">profvis (development version)<a class="anchor" aria-label="anchor" href="#profvis-development-version"></a></h2>
-<ul><li>Bundled <code>highlight.js</code> updated to the latest version 11.10.0.</li>
+<ul><li>New technique for trimming uninteresting frames from the stack (<a href="https://github.com/r-lib/profvis/issues/130" class="external-link">#130</a>). This requires a new evaluationg model where the code you supply to <code><a href="../reference/profvis.html">profvis()</a></code> is turned into the body of a zero-argument anonymous function that is then called by profvis. This subtly changes the semantics of evaluation, but it’s very unlikely to affect the type of code that you are typically profiling.</li>
+<li>Bundled <code>highlight.js</code> updated to the latest version 11.10.0.</li>
 <li>The CSS for profvis code is scoped so that it does not affect other blocks of code, such as those from RMarkdown or Quarto (<a href="https://github.com/wch" class="external-link">@wch</a>, <a href="https://github.com/r-lib/profvis/issues/140" class="external-link">#140</a>).</li>
 <li>profvis now relies on R 4.0.0.</li>
 <li>
