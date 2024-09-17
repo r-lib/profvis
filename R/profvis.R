@@ -8,10 +8,15 @@
 #' corresponding data file as the `prof_input` argument to
 #' `profvis()`.
 #'
-#' @param expr Expression to profile. Not compatible with `prof_input`.
+#' @param expr Expression to profile. The expression will be turned into the
+#'   body of a zero-argument anonymous function which is then called repeatedly
+#'   as needed.
+#'
 #'   The expression is repeatedly evaluated until `Rprof()` produces
 #'   an output. It can _be_ a quosure injected with [rlang::inject()] but
 #'   it cannot _contain_ injected quosures.
+#'
+#'   Not compatible with `prof_input`.
 #' @param interval Interval for profiling samples, in seconds. Values less than
 #'   0.005 (5 ms) will probably not result in accurate timings
 #' @param prof_output Name of an Rprof output file or directory in which to save
@@ -172,7 +177,10 @@ profvis <- function(expr = NULL,
       on.exit(unlink(prof_output), add = TRUE)
     }
 
-    # Use unique name so we can easily trim below
+    # We call the quoted expression directly inside a function to make it
+    # easy to detect in both raw and simplified stack traces. The simplified
+    # case is particularly tricky because evaluating a promise fails to create
+    # a call on the trailing edges of the tree returned by simplification
     `__profvis_execute__` <- new_function(list(), expr_q, env)
 
     repeat {
