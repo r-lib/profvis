@@ -14,6 +14,17 @@ test_that("Irrelevant stack is trimmed from profiles (#123)", {
   expect_equal(profile_mode(out), "pause f")
 })
 
+test_that("Irrelevant stack is trimmed from profiles from inlined code", {
+  skip_on_cran()
+  skip_on_covr()
+
+  out <- profvis(for (i in 1:1e4) rnorm(100), simplify = TRUE)
+  expect_equal(profile_mode(out), "rnorm")
+
+  out <- profvis(for (i in 1:1e4) rnorm(100), simplify = FALSE)
+  expect_equal(profile_mode(out), "rnorm")
+})
+
 test_that("defaults to elapsed timing", {
   skip_on_cran()
   skip_on_covr()
