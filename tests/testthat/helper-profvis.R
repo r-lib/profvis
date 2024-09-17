@@ -1,9 +1,5 @@
 TEST_PAUSE_TIME <- 0.050
 
-repro_profvis <- function(expr, ..., rerun = "pause", interval = 0.010) {
-  inject(profvis({{ expr }}, ..., rerun = rerun, interval = interval))
-}
-
 call_stacks <- function(x) {
   prof <- x$x$message$prof
   stacks <- split(prof$label, prof$time)
