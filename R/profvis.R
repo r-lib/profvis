@@ -10,7 +10,8 @@
 #'
 #' @param expr Expression to profile. The expression will be turned into the
 #'   body of a zero-argument anonymous function which is then called repeatedly
-#'   as needed.
+#'   as needed. This means that if you create variables inside of `expr` they
+#'   will not be available outside of it.
 #'
 #'   The expression is repeatedly evaluated until `Rprof()` produces
 #'   an output. It can _be_ a quosure injected with [rlang::inject()] but

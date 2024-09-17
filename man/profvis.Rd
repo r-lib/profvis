@@ -21,7 +21,8 @@ profvis(
 \arguments{
 \item{expr}{Expression to profile. The expression will be turned into the
 body of a zero-argument anonymous function which is then called repeatedly
-as needed.
+as needed. This means that if you create variables inside of \code{expr} they
+will not be available outside of it.
 
 The expression is repeatedly evaluated until \code{Rprof()} produces
 an output. It can \emph{be} a quosure injected with \code{\link[rlang:inject]{rlang::inject()}} but

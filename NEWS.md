@@ -9,8 +9,8 @@
   stack (#130). This requires a new evaluation model where the code you supply
   to `profvis()` is turned into the body of a zero-argument anonymous function
   that is then called by profvis. This subtly changes the semantics of
-  evaluation, but it's very unlikely to affect the type of code that you are
-  typically profiling.
+  evaluation, but the primary effect is that if you create variables inside of
+  the profiled code they will no longer be available outside of it.
 
 * `profvis()` now uses elapsed time where possible (#72).
 
