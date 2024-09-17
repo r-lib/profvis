@@ -19,10 +19,15 @@ profvis(
 )
 }
 \arguments{
-\item{expr}{Expression to profile. Not compatible with \code{prof_input}.
+\item{expr}{Expression to profile. The expression will be turned into the
+body of a zero-argument anonymous function which is then called repeatedly
+as needed.
+
 The expression is repeatedly evaluated until \code{Rprof()} produces
 an output. It can \emph{be} a quosure injected with \code{\link[rlang:inject]{rlang::inject()}} but
-it cannot \emph{contain} injected quosures.}
+it cannot \emph{contain} injected quosures.
+
+Not compatible with \code{prof_input}.}
 
 \item{interval}{Interval for profiling samples, in seconds. Values less than
 0.005 (5 ms) will probably not result in accurate timings}

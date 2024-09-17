@@ -1,5 +1,6 @@
 # profvis (development version)
 
+* New technique for trimming uninteresting frames from the stack (#130). This requires a new evaluationg model where the code you supply to `profvis()` is turned into the body of a zero-argument anonymous function that is then called by profvis. This subtly changes the semantics of evaluation, but it's very unlikely to affect the type of code that you are typically profiling.
 * Bundled `highlight.js` updated to the latest version 11.10.0.
 * The CSS for profvis code is scoped so that it does not affect other blocks of code, such as those from RMarkdown or Quarto (@wch, #140).
 * profvis now relies on R 4.0.0.
