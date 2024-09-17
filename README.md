@@ -3,7 +3,7 @@ profvis
 
 <!-- badges: start -->
 [![R-CMD-check](https://github.com/r-lib/profvis/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/r-lib/profvis/actions/workflows/R-CMD-check.yaml)
-[![Codecov test coverage](https://codecov.io/gh/r-lib/profvis/graph/badge.svg)](https://codecov.io/gh/r-lib/profvis)
+[![Codecov test coverage](https://codecov.io/gh/r-lib/profvis/graph/badge.svg)](https://app.codecov.io/gh/r-lib/profvis)
 <!-- badges: end -->
 
 profvis is a tool for visualizing code profiling data from R. It creates a web page which provides a graphical interface for exploring the data.

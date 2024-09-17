@@ -49,7 +49,7 @@ p <- profvis({
 htmlwidgets::saveWidget(p, "profile.html")
 ```
 
-It's also possible to put a profvis visualization in a knitr document. At this time, some CSS workarounds are needed needed for them to display properly. You can look at the source of [this website](https://github.com/rstudio/profvis/tree/gh-pages/) to see the workarounds.
+It's also possible to put a profvis visualization in a knitr document. At this time, some CSS workarounds are needed needed for them to display properly. You can look at the source of [this website](https://github.com/r-lib/profvis/tree/gh-pages/) to see the workarounds.
 
 
 ## What does `<Anonymous>` mean?

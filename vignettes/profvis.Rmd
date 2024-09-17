@@ -29,7 +29,7 @@ registerS3method("knit_print", "htmlwidget", function(x, ...) {
 
 ## Introduction
 
-[profvis](https://github.com/rstudio/profvis) is a tool for helping you to understand how R spends its time. It provides a interactive graphical interface for visualizing data from `Rprof()`, R's built-in tool for collecting profiling data.
+[profvis](https://github.com/r-lib/profvis) is a tool for helping you to understand how R spends its time. It provides a interactive graphical interface for visualizing data from `Rprof()`, R's built-in tool for collecting profiling data.
 
 Most R users have had times where we've wanted our code to run faster. However, it's not always clear how to accomplish this. A common approach is to rely on intuition, and on wisdom from the broader R community about speeding up R code. One drawback to this is it can lead to a focus on optimizing things that actually take a small proportion of the overall running time.
 

@@ -132,7 +132,7 @@ profvis <- function(expr = NULL,
     # have "<text>". This value is used by the profiler as the filename listed
     # in the profiler output. We need to do this to distinguish code that was
     # run in the profvis({}) code block from code that was run outside of it.
-    # See https://github.com/rstudio/profvis/issues/57
+    # See https://github.com/r-lib/profvis/issues/57
     attr(expr_q, "srcfile")$filename <- "<expr>"
 
     # Keep original expression source code
