@@ -1,3 +1,5 @@
+# profvis (development version)
+
 # profvis 0.4.0
 
 * profvis now requires R 4.0.0. The bundled version of jQuery has been upgraded
