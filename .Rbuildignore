@@ -15,3 +15,4 @@
 ^pkgdown$
 ^LICENSE\.md$
 ^vignettes/articles$
+^CRAN-SUBMISSION$
