@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">profvis</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.3.8.9000</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.4.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,6 +41,9 @@
 
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="development version" id="profvis-development-version">profvis (development version)<a class="anchor" aria-label="anchor" href="#profvis-development-version"></a></h2>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.4.0" id="profvis-040">profvis 0.4.0<a class="anchor" aria-label="anchor" href="#profvis-040"></a></h2><p class="text-muted">CRAN release: 2024-09-20</p>
 <ul><li><p>profvis now requires R 4.0.0. The bundled version of jQuery has been upgraded to 3.7.1 (<a href="https://github.com/hedsnz" class="external-link">@hedsnz</a>, <a href="https://github.com/r-lib/profvis/issues/139" class="external-link">#139</a>) and the bundled <code>highlight.js</code> has been updated to the 11.10.0 (<a href="https://github.com/r-lib/profvis/issues/140" class="external-link">#140</a>). It no longer longer requires purrr or stringr, and no longer suggests ggplot2, devtools, knitr, or rmarkdown.</p></li>
 <li><p><code>provis()</code> uses a new technique for trimming uninteresting frames from the stack (<a href="https://github.com/r-lib/profvis/issues/130" class="external-link">#130</a>). This requires a new evaluation model where the code you supply to <code><a href="../reference/profvis.html">profvis()</a></code> is turned into the body of a zero-argument anonymous function that is then called by profvis. This subtly changes the semantics of evaluation, but the primary effect is that if you create variables inside of the profiled code they will no longer be available outside of it.</p></li>
 <li><p><code><a href="../reference/profvis.html">profvis()</a></code> now uses elapsed time where possible (<a href="https://github.com/r-lib/profvis/issues/72" class="external-link">#72</a>).</p></li>
@@ -92,7 +95,7 @@
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
 </div>
 
   </div></footer></body></html>
