@@ -1546,11 +1546,17 @@ profvis = (function() {
         newRows.append("td")
           .attr("class", "path")
           .text(function(d) {
+            var name;
             var lastSlash = d.filename ? d.filename.lastIndexOf("/") : -1;
             if (lastSlash >= 0)
-              return d.filename.substr(lastSlash + 1);
+              name = d.filename.substr(lastSlash + 1);
+            else
+              name = d.filename;
 
-            return d.filename;
+            if (name && d.linenum)
+              name = name + ":" + d.linenum;
+
+            return name;
           });
 
         newRows.append("td")
