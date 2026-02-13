@@ -598,6 +598,15 @@ table.profvis-table .membar-right-cell > .membar {
   text-align: left;
 }
 
+.profvis-treetable .path a {
+  color: inherit;
+  text-decoration: underline;
+}
+
+.profvis-treetable .path a:hover {
+  color: #2a7ae2;
+}
+
 .profvis-treetable .treetable-expand > div {
 	display: inline-block;
 	width: 15px;

@@ -1545,7 +1545,7 @@ profvis = (function() {
 
         newRows.append("td")
           .attr("class", "path")
-          .text(function(d) {
+          .each(function(d) {
             var name;
             var lastSlash = d.filename ? d.filename.lastIndexOf("/") : -1;
             if (lastSlash >= 0)
@@ -1556,7 +1556,14 @@ profvis = (function() {
             if (name && d.linenum)
               name = name + ":" + d.linenum;
 
-            return name;
+            var normpath = d.filename ? getNormPath(vis.files, d.filename) : null;
+            if (normpath && d.linenum) {
+              d3.select(this).append("a")
+                .attr("href", "vscode://file/" + encodeURI(normpath) + ":" + d.linenum)
+                .text(name);
+            } else {
+              d3.select(this).text(name);
+            }
           });
 
         newRows.append("td")
