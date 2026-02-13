@@ -1,0 +1,69 @@
+# profvis UI for Shiny Apps
+
+Use this Shiny module to inject profvis controls into your Shiny app.
+The profvis Shiny module injects UI that can be used to start and stop
+profiling, and either view the results in the profvis UI or download the
+raw .Rprof data. It is highly recommended that this be used for testing
+and debugging only, and not included in production apps!
+
+## Usage
+
+``` r
+profvis_ui(id)
+
+profvis_server(input, output, session, dir = ".")
+```
+
+## Arguments
+
+- id:
+
+  Output id from `profvis_server`.
+
+- input, output, session:
+
+  Arguments provided by
+  [`shiny::callModule()`](https://rdrr.io/pkg/shiny/man/callModule.html).
+
+- dir:
+
+  Output directory to save Rprof files.
+
+## Details
+
+The usual way to use profvis with Shiny is to simply call
+`profvis(shiny::runApp())`, but this may not always be possible or
+desirable: first, if you only want to profile a particular interaction
+in the Shiny app and not capture all the calculations involved in
+starting up the app and getting it into the correct state; and second,
+if you're trying to profile an application that's been deployed to a
+server.
+
+For more details on how to invoke Shiny modules, see [this
+article](https://shiny.rstudio.com/articles/modules.html).
+
+## Examples
+
+``` r
+# In order to avoid "Hit <Return> to see next plot" prompts,
+# run this example with `example(profvis_ui, ask=FALSE)`
+
+if(interactive()) {
+  library(shiny)
+  shinyApp(
+    fluidPage(
+      plotOutput("plot"),
+      actionButton("new", "New plot"),
+      profvis_ui("profiler")
+    ),
+    function(input, output, session) {
+      callModule(profvis_server, "profiler")
+
+      output$plot <- renderPlot({
+        input$new
+        boxplot(mpg ~ cyl, data = mtcars)
+      })
+    }
+  )
+}
+```
